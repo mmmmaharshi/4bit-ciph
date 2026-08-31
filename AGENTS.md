@@ -17,6 +17,8 @@ Operating guide for AI coding agents working in this repository.
   - `quartet_runner.c` — thin stdin/stdout adapter over `quartet.h`.
   - `compare.py` — harness: random Python vs C vectors through the runner.
   - `cross_check.py` — harness: C self-test plus 65536×4 roundtrip.
+  - `prove_bounds.py` — machine-checked wide-trail bound (S-box DU/LAT, branch number, min active S-boxes per 2/4/8/16 rounds).
+  - `check_constant_time.py` — static analysis of the cipher core for data-dependent control flow.
   - `quartet_round_asm.s` — one-round AVR assembly reference, cycle count.
   - `SPEC.md` — authoritative spec (cipher parameters, test vectors, files section).
 
@@ -38,7 +40,7 @@ This project uses the terms from `/codebase-design`: **module, interface, implem
 
 1. Read `SPEC.md` and `@CODING_STANDARDS.md` before changing anything.
 2. Prefer editing existing files to creating new ones. A new file is justified only when it carries a distinct concept the existing files don't own.
-3. Run `python compare.py` and `python cross_check.py` after any change to the cipher, the S-box, the key schedule, the test vectors, or the C/Python harness contract. Both must pass.
+3. Run `python compare.py`, `python cross_check.py`, `python prove_bounds.py`, and `python check_constant_time.py` after any change to the cipher, the S-box, the key schedule, the test vectors, or the C/Python harness contract. All four must pass.
 4. If a change contradicts `SPEC.md`, update `SPEC.md` in the same change.
 5. If a change contradicts a rule in `CODING_STANDARDS.md`, do not make the change.
 6. Prompt the user before committing. Use conventional commit messages.
@@ -56,6 +58,8 @@ This project uses the terms from `/codebase-design`: **module, interface, implem
 |------|------|--------------------|
 | `cipher.py` | The cipher (S-box, FullMix, round, key schedule, encrypt, decrypt, self-test) | stdlib only |
 | `cryptanalysis.py` | DDT, LAT, SAC, differential, linear, statistics, benchmark, test vectors | `cipher` |
+| `prove_bounds.py` | Machine-checked wide-trail bound (S-box DU/LAT, branch number, min active S-boxes per 2/4/8/16 rounds) | `cipher` |
+| `check_constant_time.py` | Static analysis of the cipher core for data-dependent control flow | stdlib only |
 | `sbox.h` | PRESENT S-box and inverse initializers | `<stdint.h>` |
 | `quartet.h` | Cipher interface and implementation (header-only) | `sbox.h` is included by the consumer; `quartet.h` requires `SBOX_READ` / `INV_SBOX_READ` |
 | `quartetchiffre.c` | C reference: defines the S-box tables, runs the self-test | `sbox.h`, `quartet.h` |

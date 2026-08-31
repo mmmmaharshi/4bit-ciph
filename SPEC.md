@@ -333,6 +333,29 @@ intermediate-round differentials being non-zero (any 2-round trail with
 a zero intermediate differential has a branch-number violation and is
 not a valid trail).
 
+**Machine-checked verification.** The bound claims in this subsection
+are checked exhaustively in `prove_bounds.py`. The script enumerates
+all 2^16 non-zero input differentials, computes the intermediate and
+final state differentials through FullMix, and reports:
+
+| Property | Spec claim | Verified |
+|----------|------------|----------|
+| S-box differential uniformity (DU) | 4 | yes (exhaustive DDT) |
+| S-box max LP numerator (max \|count − 8\|) | 4 | yes (exhaustive LAT) |
+| FullMix branch number | 4 | yes (2^16 pairs) |
+| Min 2-round active S-boxes | 4 | yes (2^16 trails) |
+| Min 4-round active S-boxes | 8 | yes (2^16 trails) |
+| Min 8-round active S-boxes | 16 | yes (2^16 trails) |
+| Min 16-round active S-boxes | 32 | yes (2^16 trails) |
+| 2-round DP bound | 2^(−8) | yes |
+| 16-round DP bound | 2^(−64) | yes |
+
+The 16-round DP bound of 2^(−64) is computed two independent ways in
+`prove_bounds.py`: (a) via the 2-round chain argument above
+(4 active × 8 disjoint sub-trails = 32 active → (1/4)^32 = 2^(−64)),
+and (b) via direct enumeration of min total active S-boxes over 16
+rounds (also 32, giving 2^(−64)). The two methods agree.
+
 **Tightness.** The 2^(-64) bound is a **lower bound on the security**
 (DP/LP ≤ 2^(-64) means at least 2^64 chosen-plaintext pairs are needed to
 distinguish QUARTET from a random permutation). The actual maximum DP/LP
@@ -769,13 +792,29 @@ The reference C implementation (`quartet.h`, `quartet_runner.c`,
   key is recomputed from the 64-bit master key every round; no
   precomputed round-key table is used.
 
-A TVLA t-test (Goodwill et al., 2011) on 1,000,000 traces of the
-software reference (x86-64, single-thread, single-core) yields
-|t| < 4.5 for both the fixed-vs-random and fixed-vs-fixed-with-different-key
-tests at the 95% confidence level. The implementation passes the
-TVLA. The t-test is reproducible with the script `tests/tvla.c` (not
-included in the artifact set; the methodology and parameters are
-documented above).
+**Code inspection claim, not measurement.** The constant-time
+property is verified by static analysis in `check_constant_time.py`,
+which scans the cipher core (the `static inline` definitions of
+`quartet_fullmix`, `quartet_round_key`, `quartet_round`,
+`quartet_inv_round`, `quartet_encrypt`, and `quartet_decrypt` in
+`quartet.h`) and reports any data-dependent `if`, `while`, `switch`,
+ternary, or computed-control-flow construct. The current source
+contains none: the inspection passes.
+
+A passing code-inspection check is a **necessary** condition for a
+constant-time implementation, not a **sufficient** one. It rules out
+data-dependent control flow in the C source; it does not rule out
+data-dependent micro-architectural timing (cache misses, TLB misses,
+branch predictor state, variable-cycle instructions).
+
+**TVLA not included.** A Test Vector Leakage Assessment (Goodwill
+et al., 2011) on the software reference was not performed for this
+artifact set. The fixed-vs-random and fixed-vs-fixed-with-different-key
+t-tests require power or EM trace capture on a target, and neither
+is available here. A reviewer reproducing this paper on a target
+with side-channel capture equipment should run the t-test on at
+least 1,000,000 traces per test and report the |t|-statistic at the
+95% confidence threshold (|t| < 4.5).
 
 #### 12.4.2 What the software reference does *not* protect against
 
@@ -925,6 +964,8 @@ replacement.
 
 - `cipher.py` — Python reference implementation of the cipher
 - `cryptanalysis.py` — DDT / LAT / SAC / differential / linear / statistics / benchmark
+- `prove_bounds.py` — Machine-checked wide-trail bound: S-box DU, LAT, branch number, min 2/4/8/16-round active S-boxes
+- `check_constant_time.py` — Static analysis of the cipher core for data-dependent control flow
 - `compare.py` — Cross-validates Python vs C (stdin/stdout contract)
 - `cross_check.py` — Builds the C reference, runs its self-test, full-space roundtrip
 - `sbox.h` — PRESENT S-box and inverse (single source of truth for the C side)

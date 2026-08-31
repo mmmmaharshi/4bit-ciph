@@ -21,6 +21,14 @@ static const uint8_t inv_sbox[16] = QUARTET_INV_SBOX_INIT;
 
 int main(void)
 {
+    /* Fully unbuffered stdout: each printf immediately writes
+     * to the pipe, which the parent reads line-by-line. This is
+     * required for the persistent-runner mode in tests/tvla.py
+     * (the runner is launched as a long-running subprocess and
+     * driven via stdin/stdout, so default full-buffered stdout
+     * would deadlock). */
+    setbuf(stdout, NULL);
+
     uint64_t key;
     uint16_t pt;
     while (scanf("%llX %hX", (unsigned long long *)&key, &pt) == 2) {

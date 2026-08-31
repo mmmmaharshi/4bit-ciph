@@ -12,12 +12,16 @@ import os
 import random
 import subprocess
 import sys
+from pathlib import Path
 
-from cipher import quartet_decrypt, quartet_encrypt
+_REPO_ROOT = Path(__file__).resolve().parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
 
-WORK_DIR = r"C:\Users\manoh\OneDrive\Desktop\4bit-ciph"
-C_FILE = os.path.join(WORK_DIR, "quartetchiffre.c")
-EXE = os.path.join(WORK_DIR, "quartet_c.exe")
+from cipher import quartet_decrypt, quartet_encrypt  # noqa: E402
+
+C_FILE = _REPO_ROOT / "quartetchiffre.c"
+EXE = _REPO_ROOT / "quartet_c.exe"
 
 # Spec keys from SPEC.md, Section 9.
 SPEC_KEYS = [
@@ -29,9 +33,12 @@ SPEC_KEYS = [
 def compile_reference() -> None:
     """Build quartet_c.exe from quartetchiffre.c."""
     print("Compiling C reference...")
+    if EXE.exists():
+        EXE.unlink()
     result = subprocess.run(
-        ["gcc", "-O3", "-std=c11", "-march=native", "-I", WORK_DIR, "-o", EXE, C_FILE],
-        capture_output=True, text=True, cwd=WORK_DIR,
+        ["gcc", "-O3", "-std=c11", "-march=native",
+         "-I", str(_REPO_ROOT), "-o", str(EXE), str(C_FILE)],
+        capture_output=True, text=True, cwd=str(_REPO_ROOT),
     )
     if result.returncode != 0:
         print(f"FAIL: gcc error: {result.stderr}")
@@ -42,7 +49,7 @@ def compile_reference() -> None:
 def run_c_self_test() -> bool:
     """The C binary runs its own self-test on startup; we just check the verdict."""
     print("\nRunning C self-test...")
-    result = subprocess.run([EXE], capture_output=True, text=True, timeout=10)
+    result = subprocess.run([str(EXE)], capture_output=True, text=True, timeout=10)
     print(result.stdout, end="")
     if "FAIL" in result.stdout or "Self-test" not in result.stdout:
         print(f"  FAIL: C self-test failed (stderr: {result.stderr})")

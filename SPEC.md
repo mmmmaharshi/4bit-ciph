@@ -334,7 +334,7 @@ a zero intermediate differential has a branch-number violation and is
 not a valid trail).
 
 **Machine-checked verification.** The bound claims in this subsection
-are checked exhaustively in `prove_bounds.py`. The script enumerates
+are checked exhaustively in `tests/test_bounds.py`. The script enumerates
 all 2^16 non-zero input differentials, computes the intermediate and
 final state differentials through FullMix, and reports:
 
@@ -351,10 +351,16 @@ final state differentials through FullMix, and reports:
 | 16-round DP bound | 2^(−64) | yes |
 
 The 16-round DP bound of 2^(−64) is computed two independent ways in
-`prove_bounds.py`: (a) via the 2-round chain argument above
+`tests/test_bounds.py`: (a) via the 2-round chain argument above
 (4 active × 8 disjoint sub-trails = 32 active → (1/4)^32 = 2^(−64)),
 and (b) via direct enumeration of min total active S-boxes over 16
 rounds (also 32, giving 2^(−64)). The two methods agree.
+
+The same verification is applied to the linear side: the PRESENT S-box
+LAT is computed exhaustively, the linear branch number is verified to
+match the differential branch number (4), and the linear trail min
+total active S-boxes is enumerated for R = 2, 4, 8, 16 rounds. The
+linear bound is 2^(−64) at 16 rounds, matching the differential bound.
 
 **Tightness.** The 2^(-64) bound is a **lower bound on the security**
 (DP/LP ≤ 2^(-64) means at least 2^64 chosen-plaintext pairs are needed to
@@ -793,13 +799,13 @@ The reference C implementation (`quartet.h`, `quartet_runner.c`,
   precomputed round-key table is used.
 
 **Code inspection claim, not measurement.** The constant-time
-property is verified by static analysis in `check_constant_time.py`,
-which scans the cipher core (the `static inline` definitions of
-`quartet_fullmix`, `quartet_round_key`, `quartet_round`,
-`quartet_inv_round`, `quartet_encrypt`, and `quartet_decrypt` in
-`quartet.h`) and reports any data-dependent `if`, `while`, `switch`,
-ternary, or computed-control-flow construct. The current source
-contains none: the inspection passes.
+property is verified by static analysis in `tests/test_constant_time.py`,
+which uses the `pycparser` AST walk to parse the preprocessed
+`quartet_core.h` (the cipher core, separate from `quartet.h`'s
+`self_test`) and report any data-dependent `if`/`while`/`for`/`switch`
+construct, ternary, array subscript on a non-S-box array, function-
+pointer call, or computed goto. The current source contains none:
+the inspection passes.
 
 A passing code-inspection check is a **necessary** condition for a
 constant-time implementation, not a **sufficient** one. It rules out
@@ -964,13 +970,18 @@ replacement.
 
 - `cipher.py` — Python reference implementation of the cipher
 - `cryptanalysis.py` — DDT / LAT / SAC / differential / linear / statistics / benchmark
-- `prove_bounds.py` — Machine-checked wide-trail bound: S-box DU, LAT, branch number, min 2/4/8/16-round active S-boxes
-- `check_constant_time.py` — Static analysis of the cipher core for data-dependent control flow
-- `compare.py` — Cross-validates Python vs C (stdin/stdout contract)
-- `cross_check.py` — Builds the C reference, runs its self-test, full-space roundtrip
+- `compare.py` — 20-random-vector sanity check (Python vs C)
+- `cross_check.py` — C self-test plus 65536×4 full-space roundtrip
 - `sbox.h` — PRESENT S-box and inverse (single source of truth for the C side)
-- `quartet.h` — Cipher interface and implementation: FullMix, round, key schedule, encrypt, decrypt, self-test
+- `quartet_core.h` — Cipher core: 6 functions (encrypt, decrypt, round, key schedule, FullMix); the AST-checked constant-time surface
+- `quartet.h` — Umbrella header: includes `quartet_core.h` plus the `self_test`
 - `quartetchiffre.c` — Canonical C reference: defines S-box tables, includes `quartet.h`, runs the self-test and benchmark on PC
 - `quartet_runner.c` — Thin I/O adapter: stdin/stdout over the same cipher
 - `quartet_round_asm.s` — One-round AVR assembly reference, with cycle count
+- `tests/test_bounds.py` — Machine-checked wide-trail bound (differential + linear)
+- `tests/test_constant_time.py` — AST-based static analysis of the cipher core
+- `tests/test_kats.py` — KAT harness: 262,157 entries (Python + C)
+- `tests/generate_kat.py` — Regenerates the KAT file from the Python reference
+- `tests/vectors/quartet_kat.txt` — Generated KAT (262,144 full-space + 13 spec vectors)
+- `tests/fake_libc/` — Minimal libc headers for the AST preprocessor
 - `SPEC.md` — This specification

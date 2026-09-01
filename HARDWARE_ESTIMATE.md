@@ -121,17 +121,16 @@ Or pick a truly involutive matrix (e.g., Hadamard `[[0,1,1,1],[1,0,1,1],[1,1,0,1
 
 ## 5. How to make the ABC mapping finish (if reviewer asks)
 
-yowasp-yosys `abc -liberty` hangs under WASI. Alternatives:
+yowasp-yosys `abc -liberty` hangs under WASI (both NanGate and Sky130). Use native oss-cad-suite:
 
 ```bash
 # Native Yosys (oss-cad-suite) — < 2 sec
 yosys -p "read_verilog quartet_logic.v; synth -top quartet_round_logic; abc -liberty NangateOpenCellLibrary_typical.lib; stat"
-
-# Or open-source sky130 liberty (simpler)
-yosys -p "read_verilog quartet_logic.v; synth -top quartet_round_logic; stat -liberty sky130_fd_sc_hd__tt_025C_1v80.lib"
+pip install volare && volare enable --pdk sky130  # bdc9412b3e enabled at ~/.volare/volare/sky130/versions/bdc9412.../sky130A
+yosys -p "read_verilog synth/quartet_sky130.v; synth -top quartet_sky130; abc -liberty ~/.volare/volare/sky130/versions/bdc9412*/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib; stat"
 ```
 
-Expected ABC result: **≈ 85–105 GE per round** (validates 136 GE serial claim).
+Expected ABC result: **≈ 85–105 GE per round** (validates 136 GE serial claim). Quick `stat` (no ABC) already proves **176 cells = 36 AND + 8 NOT + 132 XOR** in 0.11s via `synth/run_sky130.ps1`.
 
 ---
 

@@ -42,6 +42,26 @@ KAT_PATH = _REPO_ROOT / "tests" / "vectors" / "quartet_kat.txt"
 C_RUNNER_SRC = _REPO_ROOT / "quartet_runner.c"
 C_RUNNER_EXE = _REPO_ROOT / "quartet_runner.exe"
 
+# Hard-locked golden vectors from SPEC §9 — independent of KAT file.
+# If cipher.py is broken and KAT is regenerated, Phase 1/2 still pass
+# (tautology), but this Phase 0 fails. This is the external oracle.
+# These match tests/vectors/quartet_kat.txt Section 2 and SPEC §9.
+GOLDEN_VECTORS: list[tuple[int, int, int]] = [
+    (0x0123456789ABCDEF, 0x0000, 0xDDDD),
+    (0x0123456789ABCDEF, 0x0001, 0xDDDF),
+    (0x0123456789ABCDEF, 0x1234, 0x6927),
+    (0x0123456789ABCDEF, 0xDEAD, 0xBC0B),
+    (0x0123456789ABCDEF, 0xFFFF, 0x5555),
+    (0xFFFFFFFFFFFFFFFF, 0x0000, 0x3333),
+    (0xFFFFFFFFFFFFFFFF, 0x0001, 0x333A),
+    (0xFFFFFFFFFFFFFFFF, 0x1234, 0x19B4),
+    (0x0000000000000000, 0x0000, 0x4444),
+    (0x0000000000000000, 0x0001, 0x4440),
+    (0x0000000000000000, 0x1234, 0xCF7E),
+    (0xFEDCBA9876543210, 0x0000, 0x9999),
+    (0xFEDCBA9876543210, 0x1234, 0x50CF),
+]
+
 
 def parse_kat(path: Path) -> list[tuple[int, int, int, str]]:
     """Parse a KAT file. Returns list of (key, pt, expected_ct, source).
@@ -133,7 +153,28 @@ def main() -> int:
     full_count = sum(1 for e in entries if e[3] == "kat")
     print(f"  KAT: {KAT_PATH.relative_to(_REPO_ROOT)}")
     print(f"  {len(entries)} entries: {full_count} full-space + {spec_count} spec")
+    print(f"  Golden: {len(GOLDEN_VECTORS)} locked vectors (SPEC §9)")
     print()
+
+    # Phase 0: Golden vectors (external oracle) — Python and C vs SPEC §9.
+    # This is the non-tautological test: even if KAT is stale/regenerated,
+    # these 13 vectors must match.
+    print(f"  Phase 0: Golden vectors vs SPEC §9 ({len(GOLDEN_VECTORS)} entries) ...", end="", flush=True)
+    golden_py_fail = 0
+    for k, p, exp in GOLDEN_VECTORS:
+        if quartet_encrypt(p, k) != exp:
+            golden_py_fail += 1
+    if golden_py_fail:
+        print(f" FAIL ({golden_py_fail} python mismatches)")
+        return 1
+    # Build C runner early for golden C check
+    build_c_runner()
+    golden_c_results = run_c_runner([(k, p, exp, "golden") for k, p, exp in GOLDEN_VECTORS])
+    golden_c_fail = sum(1 for (k, p, exp), got in zip(GOLDEN_VECTORS, golden_c_results) if got != exp)
+    if golden_c_fail:
+        print(f" FAIL ({golden_c_fail} C mismatches)")
+        return 1
+    print(" OK")
 
     # Phase 1: Python reference vs KAT (sanity — should never fail
     # unless the KAT was edited by hand or generated from a different
@@ -162,9 +203,13 @@ def main() -> int:
     # The C binary is built from quartet_runner.c, which is a different
     # path from the KAT generator. If they disagree, the cipher is
     # broken or the C compilation is broken.
-    print("  Phase 2: building C runner ...", end="", flush=True)
-    build_c_runner()
-    print(" OK")
+    # (Runner already built in Phase 0; rebuild if missing)
+    if not C_RUNNER_EXE.exists():
+        print("  Phase 2: building C runner ...", end="", flush=True)
+        build_c_runner()
+        print(" OK")
+    else:
+        print("  Phase 2: C runner already built ... OK")
     print(f"  Phase 2: C reference vs KAT ({len(entries)} entries) ...", end="", flush=True)
     c_results = run_c_runner(entries)
     c_mismatches = 0

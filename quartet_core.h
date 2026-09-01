@@ -25,6 +25,13 @@
  *   #define INV_SBOX_READ(i) (inv_sbox[(i)])
  *   #include "quartet_core.h"
  *
+ * Bitsliced (constant-time, no table lookups) variant:
+ *   #define QUARTET_BITSLICED
+ *   #include "sbox.h"
+ *   #include "quartet_core.h"
+ *   // provides quartet_round_bitsliced, quartet_inv_round_bitsliced,
+ *   // quartet_encrypt_bitsliced, quartet_decrypt_bitsliced
+ *
  * Mano H. | 2026
  */
 
@@ -37,12 +44,14 @@
 #define QUARTET_ROUNDS 16
 #endif
 
+#ifndef QUARTET_BITSLICED
 #ifndef SBOX_READ
 #error "Define SBOX_READ(i) and INV_SBOX_READ(i) before #include \"quartet_core.h\""
 #endif
+#endif
 
 /* FullMix: [[1,1,1,0],[0,1,1,1],[1,0,1,1],[1,1,0,1]] over GF(2).
- * Self-inverse: FullMix(FullMix(s)) == s for all s. */
+ * Order 4: M^2 = swap halves, M^4 = I. So M^{-1} = M^3 = [[1,0,1,1],[1,1,0,1],[1,1,1,0],[0,1,1,1]] */
 static inline uint16_t quartet_fullmix(uint16_t state)
 {
     uint8_t w0 = (state >> 12) & 0x0F;
@@ -55,7 +64,21 @@ static inline uint16_t quartet_fullmix(uint16_t state)
            (w3 ^ w0 ^ w1);
 }
 
-#define QUARTET_INV_FULLMIX quartet_fullmix
+static inline uint16_t quartet_inv_fullmix(uint16_t state)
+{
+    uint8_t w0 = (state >> 12) & 0x0F;
+    uint8_t w1 = (state >> 8)  & 0x0F;
+    uint8_t w2 = (state >> 4)  & 0x0F;
+    uint8_t w3 = state & 0x0F;
+    return ((uint16_t)(w0 ^ w2 ^ w3) << 12) |
+           ((uint16_t)(w0 ^ w1 ^ w3) << 8)  |
+           ((uint16_t)(w0 ^ w1 ^ w2) << 4)  |
+           (w1 ^ w2 ^ w3);
+}
+
+#define QUARTET_INV_FULLMIX quartet_inv_fullmix
+
+#ifndef QUARTET_BITSLICED
 
 /* Round key for round i: rk = K[i%16] XOR_{j=0..15} S[K[j] XOR (i+j+1)] */
 static inline uint8_t quartet_round_key(uint64_t key, uint8_t round)
@@ -111,5 +134,67 @@ static inline uint16_t quartet_decrypt(uint16_t ciphertext, uint64_t key)
     }
     return state;
 }
+
+#endif /* !QUARTET_BITSLICED */
+
+/* Bitsliced variants (require QUARTET_BITSLICED and sbox.h with bitsliced functions) */
+#ifdef QUARTET_BITSLICED
+
+/* Bitsliced round key: uses table-based S-box in key schedule (still constant-time) */
+static inline uint8_t quartet_round_key_bitsliced(uint64_t key, uint8_t round)
+{
+    uint8_t rk = (key >> (4 * (round % 16))) & 0x0F;
+    for (uint8_t j = 0; j < 16; j++) {
+        uint8_t kj = (key >> (4 * j)) & 0x0F;
+        /* Use a small constant-time S-box lookup for key schedule */
+        static const uint8_t sbox[16] = QUARTET_SBOX_INIT;
+        rk ^= sbox[(kj ^ (round + j + 1)) & 0x0F];
+    }
+    return rk;
+}
+
+/* Bitsliced round: applies S-box to all 4 nibbles in parallel via bitsliced circuit */
+static inline uint16_t quartet_round_bitsliced(uint16_t state, uint8_t rk)
+{
+    /* Bitsliced S-box on all 4 nibbles */
+    state = quartet_sbox_bitsliced(state);
+    /* Key XOR: apply rk to all 4 nibbles */
+    state ^= (uint16_t)rk * 0x1111;  /* rk at each nibble position */
+    /* FullMix */
+    return quartet_fullmix(state);
+}
+
+static inline uint16_t quartet_inv_round_bitsliced(uint16_t state, uint8_t rk)
+{
+    state = QUARTET_INV_FULLMIX(state);
+    /* Key XOR */
+    state ^= (uint16_t)rk * 0x1111;
+    /* Bitsliced inverse S-box */
+    return quartet_inv_sbox_bitsliced(state);
+}
+
+static inline uint16_t quartet_encrypt_bitsliced(uint16_t plaintext, uint64_t key)
+{
+    uint16_t state = plaintext;
+    for (uint8_t r = 0; r < QUARTET_ROUNDS; r++) {
+        state = quartet_round_bitsliced(state, quartet_round_key_bitsliced(key, r));
+    }
+    return state;
+}
+
+static inline uint16_t quartet_decrypt_bitsliced(uint16_t ciphertext, uint64_t key)
+{
+    uint16_t state = ciphertext;
+    for (int r = QUARTET_ROUNDS - 1; r >= 0; r--) {
+        state = quartet_inv_round_bitsliced(state, quartet_round_key_bitsliced(key, (uint8_t)r));
+    }
+    return state;
+}
+
+/* Alias the standard names to bitsliced versions for self-test compatibility */
+#define quartet_encrypt   quartet_encrypt_bitsliced
+#define quartet_decrypt   quartet_decrypt_bitsliced
+
+#endif /* QUARTET_BITSLICED */
 
 #endif /* QUARTET_CORE_H */

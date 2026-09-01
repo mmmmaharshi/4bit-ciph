@@ -1,10 +1,10 @@
-# QUARTET Known Answer Test (KAT) — Generated 2026-08-31
+# QUARTET Known Answer Test (KAT) — Generated 2026-09-01
 #
 # Cipher:    QUARTET-16/64
 # Block:     16 bits (4 nibbles)
 # Key:       64 bits (16 nibbles)
 # Rounds:    16
-# Generated: 2026-08-31
+# Generated: 2026-09-01
 # Source:    tests/generate_kat.py (uses cipher.py)
 #
 # DO NOT EDIT — regenerate with `python tests/generate_kat.py`

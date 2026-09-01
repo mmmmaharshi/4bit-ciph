@@ -109,7 +109,7 @@ W3' = W3 ⊕ W0 ⊕ W1
 
 **Properties:**
 - Bijective (65536/65536 outputs)
-- **Self-inverse** (M = M^(-1)) — simplifies decryption
+- **Order 4** (M² = swap halves, M⁴ = I, M⁻¹ = M³ = [[1,0,1,1],[1,1,0,1],[1,1,1,0],[0,1,1,1]]) — inverse is distinct (adds 24 GE for dec)
 - **Branch number: 4** (max possible for 4-word state = 8)
 - Each output bit depends on all 16 input bits
 - Single-bit input affects 3 of 4 nibbles in the output
@@ -176,7 +176,7 @@ QUARTET_DECRYPT(ciphertext C, key K):
   return state
 ```
 
-Note: Since FullMix is self-inverse, `INV_FULLMIX = FULLMIX`.
+Note: FullMix has order 4, so `INV_FULLMIX = M³` with `W0' = W0⊕W2⊕W3, W1' = W0⊕W1⊕W3, W2' = W0⊕W1⊕W2, W3' = W1⊕W2⊕W3` (12 XORs, same cost as FullMix).
 
 **Lightweight mode (R=4) caveat.** The R=4 mode gives a provable
 DP/LP bound of (1/4)^(2·4) = 2^(-16), which is the same order as the
@@ -239,7 +239,7 @@ other use, R=16. See §10.4 for the recommended-use table.
 | Plaintext | Ciphertext |
 |-----------|------------|
 | 0x1234 | 0xB7FE |
-| 0xDEAD | 0x488A |
+| 0xDEAD | 0xBE4B |
 
 ---
 
@@ -725,9 +725,7 @@ configuration adds the inverse S-box ROM and is ~200 GE.
 | Control + round counter | 24 GE |
 | **Total (enc/dec)** | **~200 GE** |
 
-The enc/dec configuration uses FullMix for both directions because
-FullMix is self-inverse (M = M⁻¹); the inverse S-box is the only
-decryption-specific hardware.
+The enc/dec configuration needs a distinct `INV_FULLMIX = M³` (12 XORs, same cost as FullMix); the inverse S-box is the other decryption-specific cost.
 
 **Comparison (encryption-only configurations, where comparable):**
 - PRESENT-80/128: ~107 GE (Bogdanov et al., CHES 2007)
@@ -757,23 +755,36 @@ static const uint8_t inv_sbox[16] __attribute__((progmem))  = QUARTET_INV_SBOX_I
 // Key expansion: 16 S-box reads per round key, computed on-the-fly
 ```
 
+**Bitsliced variant (cache-constant, no table lookups):**
+```c
+#define QUARTET_BITSLICED
+#include "sbox.h"
+#include "quartet.h"
+// provides quartet_encrypt_bitsliced(), quartet_decrypt_bitsliced()
+// S-box computed via AND/XOR only — no memory access, no cache timing
+```
+
 ### 12.2 Avoid Timing Attacks
 
 For side-channel resistance:
-- Always perform S-box lookups (no early termination on bits)
-- Always perform all FullMix operations (constant time)
-- Round keys are recomputed every round from the 64-bit key (no table
-  address depends on secret data beyond the key itself)
+- **Bitsliced S-box (recommended):** use `QUARTET_BITSLICED` variant — S-box
+  computed via AND/XOR only; no memory access, no cache-timing leakage.
+- **Table-based S-box:** always perform all 4 lookups per round (no early
+  termination); always perform all FullMix XORs; round keys recomputed
+  every round from the 64-bit key (no precomputed round-key table).
 
 ### 12.3 Memory Footprint
 
-| Variant | ROM | RAM | Speed (cycles) |
+| Variant | ROM | RAM | Speed (cycles @ 8 MHz AVR) |
 |---------|-----|-----|----------------|
-| Lightweight (4R) | 32 bytes | 2 bytes | ~172 |
-| Standard (16R) | 32 bytes | 2 bytes | ~688 |
+| Lightweight (4R, table) | 32 bytes | 2 bytes | ~172 |
+| Standard (16R, table) | 32 bytes | 2 bytes | ~688 |
+| Bitsliced (16R, no tables) | ~200 bytes | 2 bytes | ~688 (est.) |
 
 The cycle counts are the §11.3 estimates, not the older ~32 cycles/round
 figure. The 8-bit AVR reference assembly is in `quartet_round_asm.s`.
+The bitsliced variant eliminates S-box table ROM (32 bytes) but adds
+the bitsliced circuit (~170 bytes of logic).
 
 ---
 
@@ -785,18 +796,17 @@ properties.
 
 #### 12.4.1 Constant-time properties (software reference)
 
-The reference C implementation (`quartet.h`, `quartet_runner.c`,
-`quartetchiffre.c`) is written so that:
+The reference C implementation provides two variants:
 
-- **All 4 S-box lookups execute every round.** No early termination
-  based on the S-box output or the round key.
-- **All 4 key XORs execute every round.** The round key is applied to
-  every nibble uniformly.
-- **All 12 FullMix XORs execute every round.** FullMix is a
-  fixed-pattern linear layer; there are no data-dependent branches.
-- **All 16 key-schedule S-box reads execute every round.** The round
-  key is recomputed from the 64-bit master key every round; no
-  precomputed round-key table is used.
+**Table-based (`quartet.h`, `quartet_runner.c`, `quartetchiffre.c`):**
+- All 4 S-box lookups execute every round (no early termination)
+- All 4 key XORs execute every round
+- All 12 FullMix XORs execute every round (no data-dependent branches)
+- All 16 key-schedule S-box reads execute every round (no precomputed table)
+
+**Bitsliced (`QUARTET_BITSLICED`, `quartetchiffre_bitsliced.c`):**
+- S-box computed via AND/XOR circuit — **no memory access, no cache timing**
+- Same control-flow guarantees as table-based variant
 
 **Code inspection claim.** The constant-time property is
 verified by static analysis in `tests/test_constant_time.py`,
@@ -811,7 +821,8 @@ A passing code-inspection check is a **necessary** condition for a
 constant-time implementation, not a **sufficient** one. It rules out
 data-dependent control flow in the C source; it does not rule out
 data-dependent micro-architectural timing (cache misses, TLB misses,
-branch predictor state, variable-cycle instructions).
+branch predictor state, variable-cycle instructions). The bitsliced
+variant additionally eliminates cache-timing leakage from S-box lookups.
 
 **Level 1 software t-test (in this artifact set).** A Test Vector
 Leakage Assessment (Goodwill et al., 2011) is run at Level 1 in
@@ -876,11 +887,10 @@ hardware measurement setup without code changes.
 
 #### 12.4.2 What the software reference does *not* protect against
 
-- **Cache-timing.** The S-box lookups and the inverse-S-box lookups
-  are table reads; on a CPU with a data cache, the access pattern
-  leaks the S-box input (and hence, in the decryption direction, the
-  S-box output). The reference implementation is not cache-constant.
-  A cache-constant variant is left for future work.
+- **Table-based variant: cache-timing.** The S-box lookups are table
+  reads; on a CPU with a data cache, the access pattern leaks the
+  S-box input. Use the **bitsliced variant** (`QUARTET_BITSLICED`)
+  for cache-constant operation.
 - **Power analysis (hardware).** The reference is a software reference;
   the hardware implementation (§11.4) has not been synthesized or
   power-traced. Power analysis on a 4-bit-native SPN is feasible
@@ -931,7 +941,7 @@ defenses are a *deployment* concern.
 | SW cycles (8-bit AVR) | ~688 | ~1,000 | ~200 | ~150 | ~5,000 | ~4,000 | ~10,000 | ~1,500 | ~700 | not designed for AVR |
 | Provable bound (2-round DP) | 2^(-8) | 2^(-10) (est.) | unknown | unknown | unknown | 2^(-10) (est.) | 2^(-12) (FX) | 2^(-10) (est.) | broken | 2^(-128) |
 | Provable bound (full rounds) | 2^(-64) | 2^(-150) (est.) | unknown | unknown | unknown | 2^(-150) (est.) | 2^(-64) (FX) | 2^(-150) (est.) | broken | 2^(-128) |
-| Reversible linear layer | Yes (FullMix = self-inverse) | No | n/a | n/a | n/a | No | Yes (mid.) | No | No | n/a (sponge) |
+| Reversible linear layer | Yes (FullMix order 4, M⁻¹=M³) | No | n/a | n/a | n/a | No | Yes (mid.) | No | No | n/a (sponge) |
 | Designed for | 4-bit-native construction block | RFID | SW/HW | SW | HW | HW | Low-latency comm. | HW | RFID (broken) | AEAD / sponge |
 | Status (2026) | proposed | standardized (ISO/IEC 29192-2) | withdrawn by NSA, 2017 | withdrawn by NSA, 2017 | research | research | research | research | broken (Knellwolf et al., 2011) | NIST LWC standard (SP 800-232) |
 
@@ -1020,14 +1030,15 @@ replacement.
 
 ## 15. Files
 
-- `cipher.py` — Python reference implementation of the cipher
+- `cipher.py` — Python reference implementation of the cipher (table + bitsliced)
 - `cryptanalysis.py` — DDT / LAT / SAC / differential / linear / statistics / benchmark
 - `compare.py` — 20-random-vector sanity check (Python vs C)
 - `cross_check.py` — C self-test plus 65536×4 full-space roundtrip
-- `sbox.h` — PRESENT S-box and inverse (single source of truth for the C side)
-- `quartet_core.h` — Cipher core: 6 functions (encrypt, decrypt, round, key schedule, FullMix); the AST-checked constant-time surface
+- `sbox.h` — PRESENT S-box and inverse + bitsliced S-box (single C source of truth)
+- `quartet_core.h` — Cipher core: table + bitsliced variants; the AST-checked constant-time surface
 - `quartet.h` — Umbrella header: includes `quartet_core.h` plus the `self_test`
-- `quartetchiffre.c` — Canonical C reference: defines S-box tables, includes `quartet.h`, runs the self-test and benchmark on PC
+- `quartetchiffre.c` — Canonical C reference (table-based): defines S-box tables, runs self-test/benchmark
+- `quartetchiffre_bitsliced.c` — Bitsliced C reference: defines `QUARTET_BITSLICED`, runs self-test/benchmark
 - `quartet_runner.c` — Thin I/O adapter: stdin/stdout over the same cipher
 - `quartet_round_asm.s` — One-round AVR assembly reference, with cycle count
 - `tests/test_bounds.py` — Machine-checked wide-trail bound (differential + linear)

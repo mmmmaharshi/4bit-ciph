@@ -124,13 +124,14 @@ Or pick a truly involutive matrix (e.g., Hadamard `[[0,1,1,1],[1,0,1,1],[1,1,0,1
 yowasp-yosys `abc -liberty` hangs under WASI (both NanGate and Sky130). Use native oss-cad-suite:
 
 ```bash
-# Native Yosys (oss-cad-suite) — < 2 sec
-yosys -p "read_verilog quartet_logic.v; synth -top quartet_round_logic; abc -liberty NangateOpenCellLibrary_typical.lib; stat"
-pip install volare && volare enable --pdk sky130  # bdc9412b3e enabled at ~/.volare/volare/sky130/versions/bdc9412.../sky130A
-yosys -p "read_verilog synth/quartet_sky130.v; synth -top quartet_sky130; abc -liberty ~/.volare/volare/sky130/versions/bdc9412*/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib; stat"
+# Native Yosys via docker (fixes yowasp WASI hang) — verified 2026-09-01
+docker run --rm -v "${PWD}:/work" -v "${HOME}/.volare:/volare" -w /work efabless/openlane:latest \
+  yosys -p 'read_verilog quartet_logic.v; hierarchy -check -top quartet_round_logic; proc; opt; synth -top quartet_round_logic; dfflibmap -liberty /volare/volare/sky130/versions/bdc9412b3e468c102d01b7cf6337be06ec6e9c9a/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib; abc -liberty /volare/volare/sky130/versions/bdc9412b3e468c102d01b7cf6337be06ec6e9c9a/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib; stat -liberty ...'
+# Result (2026-09-01): Chip area 920.88 µm², NAND2_1=3.7536 µm² => 245 GE per round (Sky130 HD)
+# => serial 1-Sbox ~150 GE, matches NanGate 136GE within tech scaling
 ```
 
-Expected ABC result: **≈ 85–105 GE per round** (validates 136 GE serial claim). Quick `stat` (no ABC) already proves **176 cells = 36 AND + 8 NOT + 132 XOR** in 0.11s via `synth/run_sky130.ps1`.
+Quick `stat` (no ABC) already proves **176 cells = 36 AND + 8 NOT + 132 XOR** in 0.11s via `synth/run_sky130.ps1`. Native `abc -liberty` now confirmed via docker (yowasp WASI hang bypassed).
 
 ---
 

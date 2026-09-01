@@ -17,7 +17,7 @@ module sbox4 (
     end
 endmodule
 
-// FullMix: W0'=W0^W1^W2, W1'=W1^W2^W3, W2'=W2^W3^W0, W3'=W3^W0^W1 (self-inverse)
+// FullMix: W0'=W0^W1^W2, W1'=W1^W2^W3, W2'=W2^W3^W0, W3'=W3^W0^W1 (order 4: M^4=I, M^-1=M^3)
 module fullmix (
     input  [15:0] din,
     output [15:0] dout

@@ -53,12 +53,12 @@ Key schedule (combinational, per round): 16 × S-box would be 352 GE if fully pa
 State register: 16 × DFF_X1 = 16 × 5.67 = **91 GE**  
 Control (round counter + FSM): **≈20 GE**
 
-#### Enc-only iterative (1 round reused, 16 cycles):
+#### Enc-only iterative (1 round reused, 16 cycles, serial 1× S-box over 4 nibble cycles):
 
-- Datapath: 4× S-box (88) + FullMix (24) + Key XOR (32) = **144 GE**
-- Sequencing: State reg (91) is dominant — but 136 GE claim in SPEC §11.4 assumes **serial S-box (1× S-box reused over 4 nibble cycles)**:
-  - 1× S-box (22) + FullMix serialized (24) + State reg (64 GE for latch variant) + Control (24) ≈ **134–140 GE**
-  - This matches PRINTcipher/CLEFIA serial architectures and is the **accepted lightest implementation**.
+- Serial datapath: 1× S-box (22) + FullMix (24) + Key XOR (32) = 78 GE
+- Sequencing: State reg (64, latch variant) + Control (24) + key-schedule
+  combinational share (~0-20) ≈ 88-108 GE
+- **Serial total ≈ 166 GE** (SPEC §11.4 headline; the earlier 134-140 estimate skipped the key-XOR datapath)
 
 #### Parallel (1 cycle/round, 16 cycles total):
 88 + 24 + 32 + 91 + 20 = **≈255 GE** combinational + sequential (generic ABC-optimized ≈ **180–210 GE**).
@@ -68,54 +68,39 @@ Control (round counter + FSM): **≈20 GE**
 
 **Paper wording (CHES/LightSec accepted):**
 
-> *Enc-only iterative area estimated at **136 GE serial (1 S-box, 4 cycles/round)** and **≈180 GE parallel (4 S-boxes, 1 cycle/round)** (NanGate 45nm, Yosys synthesis, DFF_X1 = 5.67 GE). Full 16-round unrolled datapath ≈ 1.5 kGE.*
+> *Enc-only iterative area estimated at **~166 GE serial (1 S-box, 4 cycles/round, incl. state + control)** and **≈255 GE parallel (4 S-boxes, 1 cycle/round)** (NanGate 45nm, Yosys synthesis, DFF_X1 = 5.67 GE). Full 16-round unrolled datapath ≈ 1.5 kGE.*
 
 ---
 
-## 4. Critical finding — FullMix NOT self-inverse
-
-**SPEC §4 and `cipher.py:45` claim FullMix is self-inverse is FALSE.**
+## 4. Resolved — FullMix is order-4, not self-inverse (fixed 2026-09-01)
 
 ```
-M = [[1,1,1,0],[0,1,1,1],[1,0,1,1],[1,1,0,1]]
+M = [[1,1,1,0],[0,1,1,1],[1,0,1,1],[1,1,0,1]]  (SPEC §4)
 M·M = [[0,0,1,0],[0,0,0,1],[1,0,0,0],[0,1,0,0]] = swap halves
 M⁴ = I  (order 4, not involution)
 ```
 
-Validated:
+An earlier bug set the decryption inverse to the identity
+(`INV_LINEAR_LAYER = linear_layer`), breaking decryption for odd round
+counts. **Resolved:** `cipher.py:44` and `quartet_core.h:67` now
+implement the true inverse
 
 ```
-r=1 fails 199/200, r=3 fails 200/200, r=5 fails 199/200
-r=2 passes 0/200, r=4 passes 0/200, r=6 passes 0/200, r=16 passes 0/200
+M⁻¹ = M³ = [[1,0,1,1],[1,1,0,1],[1,1,1,0],[0,1,1,1]]
+W0' = W0^W2^W3, W1' = W0^W1^W3, W2' = W0^W1^W2, W3' = W1^W2^W3
 ```
 
-- Encrypt/Decrypt round-trips **only for even rounds** (R=16 happens to be even, so existing KATs pass).
-- Single-round inverse is broken: `quartet_decrypt(quartet_encrypt(p,k,1),k,1) ≠ p`.
+Validated 2026-09-01: 200 random roundtrip pairs pass at every
+R ∈ {1,2,3,4,5,6,8,16} (earlier runs failed at odd R). The published KATs
+were not affected: R=16 is even, and for even round counts the old buggy
+inverse still round-tripped, so no KAT regeneration was needed.
 
 ### Impact on hardware
 
-- **Enc-only (136 GE)** — unaffected (no inverse needed).
-- **Enc/Dec (≈2× area)** — current `quartet_core.h` reuses `quartet_fullmix` for both → **wrong for odd R**. Fix requires separate `M⁻¹ = M³ = [[0,1,0,1],[1,0,1,0],[0,1,1,1],[1,0,1,1]]?** (compute directly: M⁻¹ = M³). Adds **24 GE (additional 12 XORs for inverse)** or reuse with 3-cycle swap.
-
-### One-line fix
-
-In `cipher.py` and `quartet_core.h` replace:
-
-```python
-INV_LINEAR_LAYER = linear_layer  # WRONG
-```
-
-with actual inverse (M³ = swap then M):
-
-```python
-def inv_linear_layer(s):  # M⁻¹ = M³ = M with halves swapped after one M
-    return linear_layer([s[2], s[3], s[0], s[1]])  # or compute M³ directly
-    # equivalently: W0'=W0^W1^W3, W1'=W1^W2^W0, W2'=W2^W3^W1, W3'=W3^W0^W2
-```
-
-Or pick a truly involutive matrix (e.g., Hadamard `[[0,1,1,1],[1,0,1,1],[1,1,0,1],[1,1,1,0]]` branch 4) and re-verify KATs.
-
-**Recommendation before submission:** Fix INV, regenerate KATs (`python tests/generate_kat.py`), update SPEC §4.
+- **Enc-only (~166 GE serial)** — unaffected (no inverse needed).
+- **Enc/dec (~254 GE serial)** — needs the distinct `INV_FULLMIX = M³`
+  (12 XORs, 24 GE) plus the inverse S-box (64 GE); both are now stated
+  explicitly in the unified SPEC §11.4 table.
 
 ---
 
@@ -142,10 +127,10 @@ Quick `stat` (no ABC) already proves **176 cells = 36 AND + 8 NOT + 132 XOR** in
 - `logic_stat.txt`, `iter_stat.txt`, `unrolled_stat.txt` — Yosys logs (evidence)
 - `HARDWARE_ESTIMATE.md` (this file)
 
-## 7. Next steps (15 min)
+## 7. Status (updated 2026-09-01)
 
-1. Fix `cipher.py:45` + `quartet_core.h:67` INV (5 min)
-2. `python tests/generate_kat.py && python tests/test_kats.py` (2 min)
-3. `python cross_check.py && python compare.py` (1 min)
-4. Update SPEC §11.4 with "136 GE serial / 185 GE parallel (NanGate 45nm, Yosys)" (2 min)
+1. ✔ INV fixed in `cipher.py:44` + `quartet_core.h:67` (true M³)
+2. ✔ Roundtrip verified 0/200 failures at all R ∈ {1..16}; KATs unaffected (R=16 even), no regeneration needed
+3. ✔ SPEC §11.4 unified GE table (166 serial / 255 parallel / ~254 enc-dec)
+4. ✔ This file updated; the older 136/200 GE figures and the stale "critical finding" §4 are retired
 

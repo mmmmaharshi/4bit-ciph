@@ -10,12 +10,12 @@ Mano H. | 2026
 
 QUARTET is a 16-bit-block, 64-bit-key SPN designed for use as a construction
 block in modes where the underlying permutation must be 4-bit-native. It is
-the smallest block cipher with a self-inverse linear layer, a provable
-2-round differential/linear bound, and a 16-round bound of DP/LP ≤ 2^(-64).
+the smallest block cipher with an order-4 linear layer (M⁴ = I), a provable
+2-round differential/linear bound, and a 16-round single-trail bound of DP/LP ≤ 2^(-64).
 PRESENT (Bogdanov et al., CHES 2007) shares the PRESENT 4-bit S-box and the
 4-bit-word design goal, but operates on 64-bit blocks; QUARTET is the
 4-bit-native SPN at the smallest block size (16-bit) where the
-wide-trail strategy still yields a 2^(-64) bound.
+wide-trail strategy still yields a single-trail 2^(-64) bound.
 
 **Design Goals:**
 - 16-bit block (four 4-bit words)
@@ -24,18 +24,21 @@ wide-trail strategy still yields a 2^(-64) bound.
 - Complete differential diffusion: every output bit depends on every input
   bit after 2 rounds
 - Full avalanche behavior (≈50% bit changes per flip)
-- Implementable in ~136 gate equivalents (encryption-only hardware;
-  ~200 GE with decryption — see §11.4)
+- Implementable in ~166 gate equivalents, serial architecture
+  (encryption-only hardware; ~254 GE with decryption — see §11.4)
 - 8-bit AVR software: under 700 cycles per block @ 16 rounds
 
 **Limitation Acknowledged:**
 A 16-bit block cannot achieve full information-theoretic security — 2^16
 plaintext space is trivially enumerable. QUARTET provides the strongest
 achievable security for this class: a **strong pseudorandom permutation
-(SPRP)** with provable differential/linear upper bounds
+(SPRP)** with provable single-trail differential/linear upper bounds
 (DP/LP ≤ 2^(-64) at 16 rounds), complete differential diffusion, and maximum
-immunity to known attacks for a 4-bit SPN. The 2^(-64) figure is a **lower
-bound on the security**; the actual maximum DP/LP may be much higher
+immunity to known attacks for a 4-bit SPN (owner survey in §10.3.2;
+no independent third-party analysis exists as of 2026). The 2^(-64) figure is a **lower
+bound on the security** (a bound on individual trails, not a measurement
+of the cipher's true differential probability); the actual maximum DP/LP
+may be much higher
 (approaching the random-permutation limit of ~2^(-16) for a 16-bit block).
 
 **Recommended Use:**
@@ -48,7 +51,7 @@ recommended uses are developed with concrete constructions in §10.4:
 - Hash function via sponge (rate/capacity choice in §10.4)
 - Authentication tag via Hash-Encrypt-Hash (security bound 2^(-64))
 - Format-preserving encryption on small alphabets
-- White-box table-based implementations (state fits in a 64 KB lookup)
+- White-box table-based implementations (state fits in a 128 KB lookup)
 
 ---
 
@@ -109,8 +112,10 @@ W3' = W3 ⊕ W0 ⊕ W1
 
 **Properties:**
 - Bijective (65536/65536 outputs)
-- **Order 4** (M² = swap halves, M⁴ = I, M⁻¹ = M³ = [[1,0,1,1],[1,1,0,1],[1,1,1,0],[0,1,1,1]]) — inverse is distinct (adds 24 GE for dec)
-- **Branch number: 4** (max possible for 4-word state = 8)
+- **Order 4** (M² = swap halves, M⁴ = I, M⁻¹ = M³ = [[1,0,1,1],[1,1,0,1],[1,1,1,0],[0,1,1,1]]) — inverse is distinct (adds ~88 GE for dec: inverse S-box 64 + M³ 24)
+- **Branch number: 4** (the Singleton/MDS bound for a 4-word linear
+  layer is m+1 = 5; a branch-5 MDS layer needs matrix entries outside
+  {0,1}, outside the XOR-only 4-bit-native goal — FullMix does not attain MDS)
 - Each output bit depends on all 16 input bits
 - Single-bit input affects 3 of 4 nibbles in the output
 
@@ -258,7 +263,7 @@ other use, R=16. See §10.4 for the recommended-use table.
 | 16-round DP bound | ≤ 2^(-64) | Wide-trail (chained) |
 | 16-round LP bound | ≤ 2^(-64) | Wide-trail (chained) |
 
-**Rounds needed for DP/LP < 2^(-64): 16 rounds.**
+**Rounds needed for single-trail DP/LP < 2^(-64): 16 rounds.**
 
 #### Wide-Trail Argument (2-Round Differential Lower Bound)
 
@@ -284,10 +289,11 @@ The *weight* of a differential is the number of non-zero 4-bit words
 
 **Step 2 — Branch number.** FullMix is a linear map M: GF(2)^(16) → GF(2)^(16)
 with branch number 4 (exhaustively verified: 2^16 = 65,536 inputs, the
-minimum of (h_in + h_out) over non-zero ΔS is 4). The branch number is
-the maximum possible for a 4×4 matrix over GF(2) (which is the
-dimension of the word array; branch #8 would require a 4×4 matrix over
-GF(2)^(16), which is structurally not what FullMix is).
+minimum of (h_in + h_out) over non-zero ΔS is 4). The theoretical maximum
+for a 4-word linear layer is the Singleton/MDS bound m+1 = 5; a branch-5
+(MDS) layer requires matrix entries outside {0,1}, which is outside
+QUARTET's XOR-only, 4-bit-native design goal. Branch #8 would require a
+different state geometry entirely.
 
 **Step 3 — Two-round trail count.** Consider any 2-round differential
 trail (ΔS_0, ΔS_1, ΔS_2) where ΔS_0 is the input differential, ΔS_1 is
@@ -324,8 +330,8 @@ S-boxes.) The maximum over input differentials is therefore also
 by chaining 8 disjoint 2-round sub-trails, each contributing ≤ 2^(-8):
 
 ```
-DP_max ≤ (2^(-8))^8 = 2^(-64)
-LP_max ≤ (2^(-8))^8 = 2^(-64)
+max single-trail EDP ≤ (2^(-8))^8 = 2^(-64)
+max single-trail LP ≤ (2^(-8))^8 = 2^(-64)
 ```
 
 The disjointness of the 2-round sub-trails is guaranteed by the
@@ -336,7 +342,11 @@ not a valid trail).
 **Machine-checked verification.** The bound claims in this subsection
 are checked exhaustively in `tests/test_bounds.py`. The script enumerates
 all 2^16 non-zero input differentials, computes the intermediate and
-final state differentials through FullMix, and reports:
+final state differentials through FullMix, and reports. These are bounds
+on **individual trails (differential/linear characteristics)**, not a
+measurement of the cipher's actual differential probability — a single
+pair probability sums over all trails with the same endpoints and can be
+larger (see Tightness below):
 
 | Property | Spec claim | Verified |
 |----------|------------|----------|
@@ -347,11 +357,11 @@ final state differentials through FullMix, and reports:
 | Min 4-round active S-boxes | 8 | yes (2^16 trails) |
 | Min 8-round active S-boxes | 16 | yes (2^16 trails) |
 | Min 16-round active S-boxes | 32 | yes (2^16 trails) |
-| 2-round DP bound | 2^(−8) | yes |
-| 16-round DP bound | 2^(−64) | yes |
+| 2-round single-trail DP bound | 2^(−8) | yes |
+| 16-round single-trail DP bound | 2^(−64) | yes |
 
-The 16-round DP bound of 2^(−64) is computed two independent ways in
-`tests/test_bounds.py`: (a) via the 2-round chain argument above
+The 16-round single-trail DP bound of 2^(−64) is computed two independent
+ways in `tests/test_bounds.py`: (a) via the 2-round chain argument above
 (4 active × 8 disjoint sub-trails = 32 active → (1/4)^32 = 2^(−64)),
 and (b) via direct enumeration of min total active S-boxes over 16
 rounds (also 32, giving 2^(−64)). The two methods agree.
@@ -360,17 +370,20 @@ The same verification is applied to the linear side: the PRESENT S-box
 LAT is computed exhaustively, the linear branch number is verified to
 match the differential branch number (4), and the linear trail min
 total active S-boxes is enumerated for R = 2, 4, 8, 16 rounds. The
-linear bound is 2^(−64) at 16 rounds, matching the differential bound.
+linear single-trail bound is 2^(−64) at 16 rounds, matching the
+differential side.
 
 **Tightness.** The 2^(-64) bound is a **lower bound on the security**
-(DP/LP ≤ 2^(-64) means at least 2^64 chosen-plaintext pairs are needed to
-distinguish QUARTET from a random permutation). The actual maximum DP/LP
-over 16 rounds is unknown without an exhaustive 2^32-pair search; the
-random-permutation limit for a 16-bit block is ~2^(-16), so the
-achievable bound is somewhere in the range 2^(-64) ≤ DP_max ≤ ~2^(-16).
-The empirical cryptanalysis in §10.2 is consistent with the cipher
-being much closer to the random-permutation limit than to the provable
-lower bound.
+(max single-trail EDP/LP ≤ 2^(-64) is a necessary condition for a small
+differential/linear probability, but it does not by itself establish
+2^(64) chosen-plaintext security — see §10.2, which shows the empirical
+max trail at R=4 is only ~2^2.6 over the random expectation). The actual
+maximum DP/LP over 16 rounds is unknown without an exhaustive
+2^32-pair search; the random-permutation limit for a 16-bit block is
+~2^(-16), so the achievable bound is somewhere in the range
+2^(-64) ≤ DP_max ≤ ~2^(-16). The empirical cryptanalysis in §10.2 is
+consistent with the cipher being much closer to the random-permutation
+limit than to the provable lower bound.
 
 ### 10.2 Empirical Cryptanalysis (16 rounds)
 
@@ -387,7 +400,7 @@ the 6 hypothesis tests below; family α = 0.05, adjusted per-comparison
 | Nibble position 3 (χ², df=15) | 12.5 | 30.6 | PASS (p ≈ 0.64) |
 | Byte distribution (χ², df=255) | 291.6 | 309.5 | PASS (p ≈ 0.05) |
 | Differential (R=4) | top trail 2^(-13.4) | expected random ≈ 2^(-16) | trail present but weak |
-| Linear max bias | 0.05 (R=4) | random threshold 0.0028 | within 2× random |
+| Linear max bias | 0.05 (R=4) | random threshold 0.0113 | ≈5× threshold (see note) |
 | Avalanche (R=16) | avg 7.66/16 | random 8.0 | within ±5% |
 | Key sensitivity | avg 7.95/16 Hamming | random 8.0 | within ±5% |
 
@@ -447,9 +460,10 @@ absolute bias of a random permutation over N samples and B bit-pair
 tests is 2√(B / N) (Chernoff bound, looser than the exact
 Good's approximation). For N = 500,000, B = 16: 2√(16/500,000)
 ≈ 0.0113. The observed max bias of 0.05 is within ~5× of this
-threshold; the paper's claim "well within 2× random threshold"
-should be read as "consistent with a random permutation at the
-order-of-magnitude level," not as "indistinguishable from random."
+threshold, i.e., "consistent with a random permutation at the
+order-of-magnitude level," not "indistinguishable from random."
+(Earlier drafts quoted 0.0028, the B=1 threshold, and called the result
+"within 2×"; both were wrong and are superseded by the B=16 threshold.)
 
 ### 10.3 Brute-Force Limits
 
@@ -482,28 +496,61 @@ shift; QUARTET is not, so slide attacks do not apply.
 **Related-key attack.** A related-key distinguisher (Biham, 1994;
 Kelsey, Schneier & Wagner, 1997) exploits a key schedule with low
 Hamming distance between related keys. The QUARTET schedule is a
-16-variable linear combination of S-box outputs over GF(2), and a
-1-bit change in K affects all 16 round keys (each through the
-S-box of a different input). The expected Hamming distance between
-rkey[i] for K and for K ⊕ (1 << b) is 2 bits per round key (random
-expectation for a 4-bit word with one S-box input differing), so the
-total key-schedule distance is 32 bits across all 16 rounds.
-Related-key attacks do not extend below 2^32 queries, which is
-infeasible against the recommended 64-bit key.
+16-variable combination of S-box outputs, every round key depends on
+all 16 key nibbles, and a 1-bit change in K propagates through all 16
+round keys. A quantitative related-key advantage analysis is out of
+scope for this paper; the design claim is only that the schedule
+precludes the trivial related-key/slide shortcuts (non-periodicity,
+full-key dependency). A rigorous related-key model is left as future
+work — the section does not assert a numeric query bound.
 
-**Key recovery complexity.** A standard chosen-plaintext key-recovery
-attack on a 16-round SPN with 2^(-64) DP bound requires 2^64 chosen
-plaintexts to recover one round key, and an additional 2^64 for each
-subsequent round key. The 64-bit key length dominates, giving the
-**2^64** figure quoted in §10.3. The position-dependent S-box mixing
-prevents any sub-2^64 key recovery shortcut based on the schedule
-structure.
+**Key recovery complexity.** The block is 16 bits, so an attacker can
+obtain at most 2^16 distinct plaintext–ciphertext pairs, and the
+2^64-key family collapses onto permutations of a 2^16-point set (many
+keys share one permutation). Exhaustive key search over the 2^64-key
+space is infeasible (§10.3); the schedule analysis above rules out
+schedule-based shortcuts. No claimed attack in this paper beats either
+the 2^64 key-guess bound or the 2^16 block-space bound — and the latter
+dominates for any per-permutation distinguisher (see §1, Limitation
+Acknowledged).
 
 **Conclusion.** The key schedule is cryptographically sound for the
 recommended 64-bit key. The position-dependent mixing is the
 load-bearing design choice; without it (e.g. a counter-mode schedule
 `rkey[i] = K[i mod 16]`), the cipher would be vulnerable to
 slide and related-key attacks.
+
+#### 10.3.2 Known-Attack Survey
+
+This owner-directed survey is the paper's claim about the state of the
+art for a cipher of this class; it is not a third-party analysis. The
+classical attacks and their status against QUARTET:
+
+- **Differential / linear (single-trail).** The wide-trail bound
+  (§10.1) bounds every trail; the empirical top trail at R=4 is
+  2^(-13.4) against a random expectation of 2^(-16) (§10.2). The same
+  trail-clustering data is the natural starting point for an integral /
+  truncated-differential analysis, which has **not** been performed
+  here; the data above only shows a trail is present, and this is
+  acknowledged rather than claimed as security.
+- **Integral / square.** The 4-bit-word structure (four nibbles, order-4
+  FullMix) makes the standard 4-bit integral distinguisher *conceivable*;
+  concretely, a balanced-set (Σ-integral) property over the 4-nibble
+  state is not analyzed. Worth a dedicated tool (see "Future work").
+- **Algebraic / MITM.** FullMix is linear over GF(2), but the 16-round
+  S-box nonlinearity plus the position-dependent key schedule gives no
+  obvious meet-in-the-middle splitting at the block level; an attacker
+  is limited to 2^16 block values regardless, and the information-theoretic
+  key-to-block collapse (§10.3.1) bounds any per-permutation advantage.
+- **Slide / related-key.** Addressed in §10.3.1; the schedule is
+  non-periodic and full-key-dependent.
+- **Side-channel.** Addressed in §12.4 (constant-time core + TVLA);
+  deployment-level defense is the recommended posture, not cipher
+  self-defense.
+
+No independent third-party cryptanalysis has been published (status
+2026); the claims in this section are the authors' own. This is stated
+here to be explicit, not as a disclaimer that exempts the design.
 
 ### 10.4 Recommended Use and Constructions
 
@@ -538,12 +585,13 @@ ciphertext = (L_4 || R_4)
 each round function an independently-keyed random function f_i: {0,1}^32
 → {0,1}^32, the construction is a PRP secure up to
 O(2^32 / log(2^32)) ≈ 2^27 queries. Each QUARTET call is not a random
-function but an SPRP with DP/LP ≤ 2^(-64); the tighter of the two bounds
-is the binding constraint. The actual security of this construction is
-therefore the **min of**:
+function but an SPRP with single-trail DP/LP ≤ 2^(-64) (§10.1); the
+tighter of the two bounds is the binding constraint. The actual security
+of this construction is therefore the **min of**:
 
-- 2^(-64) per QUARTET call, accumulated over 4 calls: 4 × 2^(-64) ≈
-  2^(-62.4) (negligible)
+- single-trail bound 2^(-64) per QUARTET call (negligible vs the
+  Luby-Rackoff bound; per-call pair probabilities are not claimed at
+  2^(-64))
 - Luby-Rackoff theorem bound: ≈ 2^27 queries (binding)
 - Block-collision bound: 2^32 (also binding, but weaker than the
   Luby-Rackoff theorem)
@@ -552,9 +600,10 @@ therefore the **min of**:
 correct security claim; the 2^(-64) figure from §10.1 is for QUARTET
 as a stand-alone primitive, not for this construction.
 
-**Mode 2 — Even-Mansour (variable block, n=64 recommended).**
+**Mode 2 — Even-Mansour (16-bit block).**
 
-Given an n-bit plaintext P and a 2n-bit key (K_1 || K_2):
+QUARTET's block is 16 bits, so a direct Even-Mansour embedding is
+n = 16 (key 2n = 32 bits):
 
 ```
 ciphertext = QUARTET_{K_2}(P XOR K_1) XOR K_1
@@ -562,13 +611,16 @@ ciphertext = QUARTET_{K_2}(P XOR K_1) XOR K_1
 
 **Security bound.** Even-Mansour (1991): for an n-bit permutation f
 and a 2n-bit key, the construction is a PRP secure up to
-O(2^(n/2)) ≈ 2^32 chosen-plaintext queries. With QUARTET-16/64
-embedded, the effective security is the **min of**:
+O(2^(n/2)) = 2^8 chosen-plaintext queries at n = 16. The cipher's
+2^(-64) trail bound is negligible; the theorem bound is binding.
 
-- 2^(-64) per QUARTET call (negligible)
-- Even-Mansour theorem: ≈ 2^32 queries (binding)
+**Effective security: ~2^8 chosen-plaintext queries.**
 
-**Effective security: ~2^32 chosen-plaintext queries.**
+Note: the "2^32" figure sometimes quoted for Even-Mansour requires a
+64-bit permutation. QUARTET does not provide one directly — the
+Mode-1 4-call Feistel yields a 64-bit PRP, but it is itself bounded at
+~2^27 by Luby-Rackoff (Mode 1 above). There is no 2^32 configuration
+in this paper.
 
 **Mode 3 — Sponge (hash function, arbitrary output length).**
 
@@ -605,8 +657,10 @@ S_i = QUARTET_{K_1}(S_{i-1} XOR M_i) for i = 1..L
 tag = QUARTET_{K_2}(S_L) XOR S_L
 ```
 
-**Security bound.** HEH (Halevi–Krawczyk, 1997; ISO/IEC 9797-2
-MAC scheme 4): the construction is a secure MAC up to
+**Security bound.** HEH (Sarkar, 2007 — "Improving Upon the TET Mode of
+Operation", IACR ePrint 2007/317; the original citation here of
+Halevi–Krawczyk "MMH" was wrong — that paper is a universal-hash MAC,
+not this mode): the construction is a secure MAC up to
 O(2^(n/2)) ≈ 2^8 forgery attempts. With QUARTET-16/64 embedded, the
 effective security is the **min of**:
 
@@ -633,7 +687,8 @@ AEAD scheme, not a block cipher. QUARTET is not a competitor in the
 NIST LWC sense (it is a block cipher, not an AEAD); it is a
 construction block for use in custom 4-bit-native modes where ASCON's
 320-bit state is too large. The use cases for QUARTET are the niche
-where 4-bit hardware, <200 GE, and provable 2^(-64) bound are all
+where 4-bit hardware, <200 GE, and a provable single-trail 2^(-64) bound
+are all
 required, and bulk encryption is **not** a use case.
 
 **AEAD mode compatibility.** QUARTET is not directly compatible with
@@ -646,8 +701,8 @@ AEAD built on a 4-quadrant Feistel sponge.
 
 | Use | Construction | Effective security |
 |-----|--------------|-------------------|
+| 16-bit PRP | Mode 2 (Even-Mansour, n=16) | 2^8 queries |
 | 64-bit PRP | Mode 1 (4-call Feistel) | 2^27 queries |
-| 64-bit SPRP | Mode 2 (Even-Mansour) | 2^32 queries |
 | Hash function | Mode 3 (sponge, r=8, c=8) | 2^8 collision/preimage |
 | 64-bit MAC | Mode 4 (HEH) | 2^8 forgeries |
 | FPE on small alphabets | Mode 5 | 2^27 queries (not for sensitive data) |
@@ -699,33 +754,32 @@ simulator (`simulavr`).
 
 ### 11.4 Hardware (ASIC, 4-bit-oriented)
 
-QUARTET is offered in two hardware configurations. The enc-only
-configuration is the design target stated in §1 (~136 GE); the enc/dec
-configuration adds the inverse S-box ROM and is ~200 GE.
+Gate-equivalent counts use the NanGate 45 nm cell library calibrated in
+`HARDWARE_ESTIMATE.md` (NAND2_X1 = 1 GE; XOR2 = 2.0; DFF_X1 = 5.67;
+PRESENT S-box = 22 GE, Poschmann CHES 2009). All figures are Yosys/RTL
+estimates, not synthesized tape-outs.
 
-**Encryption-only configuration:**
+**Encryption-only, serial architecture** (1× S-box reused over 4 nibble
+cycles ≈ 4 cycles/round):
 
-| Component | Gate equivalents |
-|-----------|------------------|
-| S-box ROM (16×4) | 64 GE |
-| FullMix (12 XORs) | 36 GE |
-| Key XOR (4 XOR) | 12 GE |
-| Round key derivation (combinational) | 0 GE (recomputed each round) |
-| Control + round counter | 24 GE |
-| **Total (enc-only)** | **~136 GE** |
+| Component | GE |
+|-----------|----|
+| S-box (1×, serial) | 22 |
+| FullMix (12 XOR2) | 24 |
+| Key XOR (16 bit) | 32 |
+| State register (serial latch) | 64 |
+| Control (round counter + FSM) | 24 |
+| **Total (enc-only, serial)** | **~166** |
 
-**Encryption + decryption configuration:**
+Parallel variant (4× S-box, 1 cycle/round): 88 + 24 + 32 + 91 + 20
+≈ **255 GE**.
 
-| Component | Gate equivalents |
-|-----------|------------------|
-| S-box ROM (16×4) | 64 GE |
-| Inverse S-box ROM (16×4) | 64 GE |
-| FullMix (12 XORs) | 36 GE |
-| Key XOR (4 XOR) | 12 GE |
-| Control + round counter | 24 GE |
-| **Total (enc/dec)** | **~200 GE** |
+**Encryption + decryption (serial):** adds the inverse S-box (64 GE)
+and the distinct `INV_FULLMIX = M³` (12 XORs, 24 GE) → **~254 GE**.
 
-The enc/dec configuration needs a distinct `INV_FULLMIX = M³` (12 XORs, same cost as FullMix); the inverse S-box is the other decryption-specific cost.
+These revised figures supersede the earlier ~136 GE / ~200 GE numbers,
+which omitted the state register and used an internal GE arithmetic
+inconsistent with `HARDWARE_ESTIMATE.md`.
 
 **Comparison (encryption-only configurations, where comparable):**
 - PRESENT-80/128: ~107 GE (Bogdanov et al., CHES 2007)
@@ -736,7 +790,7 @@ The enc/dec configuration needs a distinct `INV_FULLMIX = M³` (12 XORs, same co
 - LED-64: ~1,040 GE (Guo et al., CHES 2011)
 - PRINCE: ~3,290 GE (Borghoff et al., CRYPTO 2012)
 - Piccolo-80: ~683 GE (Shibutani et al., CHES 2011)
-- **QUARTET: ~136 GE (enc-only) / ~200 GE (enc/dec), estimated**
+- **QUARTET: ~166 GE (enc-only, serial) / ~255 GE (parallel) / ~254 GE (enc/dec), estimated**
 
 ---
 
@@ -905,7 +959,7 @@ hardware measurement setup without code changes.
 
 #### 12.4.3 Hardware SCA considerations
 
-For the ~136 GE encryption-only hardware implementation:
+For the ~166 GE encryption-only serial hardware implementation (§11.4):
 
 - **S-box ROM.** The PRESENT S-box is a known target for power
   analysis. Defenses: mask the S-box input (Boolean masking adds
@@ -936,8 +990,8 @@ defenses are a *deployment* concern.
 | Rounds | 16 | 31 | 32 | 22 | 254 | 32/48 | 12 (FX) | 25/31 | 48/96 | 12 (Ascon) |
 | 4-bit S-box | Yes | Yes | No (8-bit ops) | No (ARX) | No (LFSR) | Yes | Yes (mid.) | Yes (4+4) | Yes | No (5-bit S-box) |
 | SPN vs Feistel | SPN | SPN | Feistel | ARX | Stream | SPN | FX-SPN | SPN | SPN | Sponge |
-| GE (HW est., enc-only) | ~136 | ~107 | ~550 | ~600 | ~460 | ~1,040 | ~3,290 | ~683 | ~40 | ~2,570 (enc-only) |
-| GE (HW est., enc/dec) | ~200 | ~107 | ~550 | ~600 | ~460 | ~1,040 | ~3,290 | ~683 | ~40 | ~2,570 |
+| GE (HW est., enc-only) | ~166 (serial) | ~107 | ~550 | ~600 | ~460 | ~1,040 | ~3,290 | ~683 | ~40 | ~2,570 (enc-only) |
+| GE (HW est., enc/dec) | ~254 | ~107 | ~550 | ~600 | ~460 | ~1,040 | ~3,290 | ~683 | ~40 | ~2,570 |
 | SW cycles (8-bit AVR) | ~688 | ~1,000 | ~200 | ~150 | ~5,000 | ~4,000 | ~10,000 | ~1,500 | ~700 | not designed for AVR |
 | Provable bound (2-round DP) | 2^(-8) | 2^(-10) (est.) | unknown | unknown | unknown | 2^(-10) (est.) | 2^(-12) (FX) | 2^(-10) (est.) | broken | 2^(-128) |
 | Provable bound (full rounds) | 2^(-64) | 2^(-150) (est.) | unknown | unknown | unknown | 2^(-150) (est.) | 2^(-64) (FX) | 2^(-150) (est.) | broken | 2^(-128) |
@@ -947,6 +1001,12 @@ defenses are a *deployment* concern.
 
 **Notes on the table:**
 
+- *All "Provable bound" entries in this table are single-trail
+  (characteristic) bounds from the wide-trail argument — maxima over
+  individual differential/linear trails, not measurements of the
+  cipher's actual differential/linear probability. The measured
+  quantities (§10.2) are consistent with a random permutation at the
+  order-of-magnitude level.
 - *PRESENT* shares the PRESENT 4-bit S-box with QUARTET but operates on a
   64-bit block with 31 rounds. The 2^(-10) provable bound is the standard
   PRESENT figure (Bogdanov et al., 2007); it is an estimate, not a tight
@@ -979,8 +1039,8 @@ defenses are a *deployment* concern.
 standardized primitive. It fills a niche: a 4-bit-native SPN with a
 provable 2^(-64) bound at the smallest possible block size (16-bit),
 for use as a construction block in modes that need 4-bit hardware
-(less than 200 GE), provable security, and a self-inverse linear
-layer. The recommended uses in §10.4 are the use cases; the
+(less than 200 GE), a provable single-trail bound, and an order-4
+linear layer. The recommended uses in §10.4 are the use cases; the
 comparison is for sizing and context, not for head-to-head
 replacement.
 
@@ -1011,8 +1071,8 @@ replacement.
     Pseudorandom Functions," SIAM J. Computing, 1985
 17. Even and Mansour, "A Construction of a Cipher from a Single Pseudorandom
     Permutation," J. Cryptology, 1991
-18. Halevi and Krawczyk, "MMH: Software Message Authentication in the Gbit/second
-    Rates," FSE 1997
+18. Sarkar, "Improving Upon the TET Mode of Operation," IACR
+    Cryptology ePrint Archive 2007/317, 2007
 19. NIST SP 800-38G, "Recommendation for Block Cipher Modes of Operation:
     Methods for Format-Preserving Encryption," 2016
 20. NIST SP 800-232, "Ascon-Based Lightweight Cryptography Standards for

@@ -248,8 +248,8 @@ def linear_trail_min_total_active_for(R: int) -> int:
 
 def main() -> int:
     print("=" * 70)
-    print("QUARTET — machine-checked wide-trail bound")
-    print("(differential + linear, both verified)")
+    print("QUARTET - machine-checked wide-trail bound")
+    print("(differential + linear single-trail bounds, both verified)")
     print("=" * 70)
 
     du, den = sbox_max_dp()
@@ -263,7 +263,7 @@ def main() -> int:
     bn_diff = branch_number_diff()
     bn_lin = branch_number_lin()
     print(f"\nFullMix branch number (differential): {bn_diff}")
-    print(f"FullMix branch number (linear, via M=M^T): {bn_lin}")
+    print(f"FullMix branch number (linear, via M^T): {bn_lin}")
     assert bn_diff == 4, f"Diff branch number must be 4; got {bn_diff}"
     assert bn_lin == 4, f"Linear branch number must be 4; got {bn_lin}"
     assert bn_diff == bn_lin, "Diff and linear branch numbers must match"
@@ -272,19 +272,19 @@ def main() -> int:
     print("\nDifferential side — min total active S-boxes per R rounds:")
     for R in [2, 4, 8, 16]:
         m = diff_min_total_active_for(R)
-        log2_b = -2 * m  # (1/4)^m = 2^(-2m)
-        print(f"  R={R:2d}: min active = {m:3d}, DP bound = 2^({log2_b})")
+        log2_b = -2 * m  # (1/4)^m = 2^(-2m); single-trail bound, not cipher DP
+        print(f"  R={R:2d}: min active = {m:3d}, single-trail DP bound = 2^({log2_b})")
     m16_diff = diff_min_total_active_for(16)
-    assert 2 * m16_diff == 64, f"Diff 16-round bound must be 2^-64; got 2^-{2*m16_diff}"
+    assert 2 * m16_diff == 64, f"Diff 16-round single-trail bound must be 2^-64; got 2^-{2*m16_diff}"
 
-    # Linear side: same by duality + M=M^T
+    # Linear side: same by duality + M^T
     print("\nLinear side — min total active S-boxes per R rounds:")
     for R in [2, 4, 8, 16]:
         m = linear_trail_min_total_active_for(R)
         log2_b = -2 * m
-        print(f"  R={R:2d}: min active = {m:3d}, LP bound = 2^({log2_b})")
+        print(f"  R={R:2d}: min active = {m:3d}, single-trail LP bound = 2^({log2_b})")
     m16_lin = linear_trail_min_total_active_for(16)
-    assert 2 * m16_lin == 64, f"Linear 16-round bound must be 2^-64; got 2^-{2*m16_lin}"
+    assert 2 * m16_lin == 64, f"Linear 16-round single-trail bound must be 2^-64; got 2^-{2*m16_lin}"
 
     # The two sides must agree
     assert m16_diff == m16_lin, (
@@ -293,7 +293,7 @@ def main() -> int:
     )
 
     print("\n" + "=" * 70)
-    print("ALL BOUND CLAIMS VERIFIED (differential AND linear)")
+    print("ALL SINGLE-TRAIL BOUND CLAIMS VERIFIED (differential AND linear)")
     print("=" * 70)
     return 0
 

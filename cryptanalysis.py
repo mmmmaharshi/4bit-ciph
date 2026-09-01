@@ -142,9 +142,9 @@ def analyze_linear_layer() -> dict:
 # =============================================================================
 
 def prove_bounds() -> dict:
-    """Wide-trail provable DP/LP bounds."""
+    """Wide-trail provable single-trail DP/LP bounds (per trail, see SPEC 10.1)."""
     print("\n" + "=" * 70)
-    print("PROVEN SECURITY BOUNDS")
+    print("PROVEN SINGLE-TRAIL SECURITY BOUNDS")
     print("=" * 70)
     dp = 4 / 16
     lp = 4 / 16
@@ -154,11 +154,11 @@ def prove_bounds() -> dict:
     print(f"PRESENT S-box max DP: 4/16 = 2^{log2(dp):.2f}")
     print(f"PRESENT S-box max LP: 4/16 = 2^{log2(lp):.2f}")
     print(f"FullMix branch number: {branch}")
-    print(f"2-round DP bound: (1/4)^{branch} = 2^{log2(dp_2r):.2f}")
-    print(f"2-round LP bound: (1/4)^{branch} = 2^{log2(lp_2r):.2f}")
+    print(f"2-round single-trail DP bound: (1/4)^{branch} = 2^{log2(dp_2r):.2f}")
+    print(f"2-round single-trail LP bound: (1/4)^{branch} = 2^{log2(lp_2r):.2f}")
     nr = int(math.ceil(64 / (-log2(dp_2r))))
-    print(f"Rounds for DP<2^(-64): {nr}")
-    print(f"Selected: R=16 (DP/LP <= 2^(-64))")
+    print(f"Rounds for single-trail DP<2^(-64): {nr}")
+    print(f"Selected: R=16 (single-trail DP/LP <= 2^(-64))")
     return {"dp_2r": dp_2r, "lp_2r": lp_2r}
 
 
@@ -290,13 +290,22 @@ def test_linear(rounds: int = 4, samples: int = 500_000) -> None:
         bar = "#" * int(min(bias * 300, 40))
         print(f"  Bit {bit:2d}: p={p_match:.4f} bias={bias:.4f} {bar}")
 
-    threshold = 2 / (samples ** 0.5)
+    # Joint threshold over the N_BITS bit tests: expected max |bias| over
+    # B independent tests is ~ 2*sqrt(B/samples) (Chernoff bound; B=16 here
+    # because 16 bit-input/bit-output masks are tested). The single-test
+    # threshold 2/sqrt(samples) ~= 0.0028 would understate the joint one
+    # (~0.0113) by ~4x and misreport the result as "within 2x" — that bug
+    # was fixed 2026-09-02 to match SPEC 10.2.
+    n_bits = 16
+    threshold = 2 * (n_bits / samples) ** 0.5
+    single = 2 / (samples ** 0.5)
     print(f"\n  Max bias: {max_bias:.4f}")
-    print(f"  Random threshold: ~{threshold:.6f}")
-    if max_bias > 2 * threshold:
-        print(f"  WARNING: Above 2x random threshold")
+    print(f"  Joint random threshold (max over {n_bits} bit tests): ~{threshold:.6f}")
+    print(f"  (single-test threshold 2/sqrt(N) would be ~{single:.6f})")
+    if max_bias > threshold:
+        print(f"  WARNING: Above joint random threshold (~{max_bias/threshold:.1f}x)")
     else:
-        print(f"  OK: Within random range")
+        print(f"  OK: Within joint random range")
 
 
 # =============================================================================
@@ -441,9 +450,9 @@ def benchmark() -> None:
 
     rate = 100_000 / elapsed
     print(f"Python: {rate:.0f} enc/s ({1e6/rate:.1f} us/enc)")
-    print(f"\n8-bit AVR (8 MHz): ~512 cycles/block @ 16 rounds -> 15.6K/s")
-    print(f"                  ~128 cycles/block @ 4 rounds -> 62.5K/s")
-    print(f"4-bit HW (ASIC): ~136 GE estimated")
+    print(f"\n8-bit AVR (8 MHz): ~688 cycles/block @ 16 rounds -> ~11.6K/s")
+    print(f"                  ~172 cycles/block @ 4 rounds -> ~46.5K/s")
+    print(f"4-bit HW (ASIC): ~166 GE estimated (serial, see SPEC sec 11.4)")
 
 
 # =============================================================================

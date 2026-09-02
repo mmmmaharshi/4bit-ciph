@@ -33,13 +33,13 @@ import sys
 from pathlib import Path
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
-if str(_REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(_REPO_ROOT))
+if str(_REPO_ROOT / "python") not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT / "python"))
 
 from cipher import quartet_encrypt  # noqa: E402
 
 KAT_PATH = _REPO_ROOT / "tests" / "vectors" / "quartet_kat.txt"
-C_RUNNER_SRC = _REPO_ROOT / "quartet_runner.c"
+C_RUNNER_SRC = _REPO_ROOT / "runners/quartet_runner.c"
 C_RUNNER_EXE = _REPO_ROOT / "quartet_runner.exe"
 
 # Hard-locked golden vectors from regenerated KAT (SPEC §9, post-RC cipher).
@@ -109,9 +109,9 @@ def build_c_runner() -> None:
     if C_RUNNER_EXE.exists():
         C_RUNNER_EXE.unlink()
     result = subprocess.run(
-        ["gcc", "-O2", "-std=c11", "-I", str(_REPO_ROOT),
+        ["gcc", "-O2", "-std=c11", "-I", str(_REPO_ROOT / "c"), "-I", str(_REPO_ROOT / "c"), "-I", str(_REPO_ROOT / "python"),
          "-o", str(C_RUNNER_EXE), str(C_RUNNER_SRC)],
-        capture_output=True, text=True, cwd=str(_REPO_ROOT),
+        capture_output=True, text=True, cwd=str(_REPO_ROOT / "python"),
     )
     if result.returncode != 0:
         print(f"FAIL: gcc error: {result.stderr}")
@@ -123,7 +123,7 @@ def run_c_runner(entries: list[tuple[int, int, int, str]]) -> list[int]:
     stdin = "\n".join(f"{k:016X} {p:04X}" for k, p, _, _ in entries) + "\n"
     result = subprocess.run(
         [str(C_RUNNER_EXE)], input=stdin, capture_output=True, text=True,
-        timeout=600, cwd=str(_REPO_ROOT),
+        timeout=600, cwd=str(_REPO_ROOT / "python"),
     )
     if result.returncode != 0:
         print(f"FAIL: C runner returned {result.returncode}: {result.stderr}")

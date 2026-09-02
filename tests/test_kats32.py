@@ -2,7 +2,7 @@
 import sys, subprocess
 from pathlib import Path
 REPO=Path(__file__).resolve().parent.parent
-sys.path.insert(0,str(REPO))
+sys.path.insert(0,str(REPO / "python"))
 import cipher32
 KAT=REPO/"tests"/"vectors"/"quartet32_kat.txt"
 import os

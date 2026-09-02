@@ -39,8 +39,8 @@ import pycparser
 from pycparser import c_ast
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
-if str(_REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(_REPO_ROOT))
+if str(_REPO_ROOT / "python") not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT / "python"))
 
 CORE_HEADERS = ["sbox.h", "quartet.h"]
 CORE_CS = ["quartetchiffre.c", "quartet_runner.c"]
@@ -69,11 +69,11 @@ def preprocess_quartet_core() -> str:
     if cpp is None:
         raise RuntimeError("cpp/gcc not found on PATH; cannot preprocess")
     cmd = [cpp, "-E",
-           "-I", str(_REPO_ROOT),
+           "-I", str(_REPO_ROOT / "c"),
            "-I", str(FAKE_LIBC),
            "-include", str(FAKE_LIBC / "sbox_for_ast.h"),
            "-DQUARTET_NO_AVR",
-           str(_REPO_ROOT / "quartet_core.h")]
+           str(_REPO_ROOT / "c/quartet_core.h")]
     result = subprocess.run(cmd, capture_output=True, text=True, check=True)
     return result.stdout
 

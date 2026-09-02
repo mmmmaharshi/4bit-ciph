@@ -64,8 +64,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
-if str(_REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(_REPO_ROOT))
+if str(_REPO_ROOT / "python") not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT / "python"))
 
 # Lazy imports: tvla_counters, fixtures.leaky_cipher, cipher
 from tvla_counters import COUNTERS, snapshot, delta  # noqa: E402
@@ -209,9 +209,9 @@ def build_c_runner(src: Path, exe: Path) -> None:
     if exe.exists():
         exe.unlink()
     result = subprocess.run(
-        ["gcc", "-O2", "-std=c11", "-I", str(_REPO_ROOT),
+        ["gcc", "-O2", "-std=c11", "-I", str(_REPO_ROOT / "python"),
          "-o", str(exe), str(src)],
-        capture_output=True, text=True, cwd=str(_REPO_ROOT),
+        capture_output=True, text=True, cwd=str(_REPO_ROOT / "python"),
     )
     if result.returncode != 0:
         raise RuntimeError(f"gcc error building {src.name}: {result.stderr}")
@@ -237,7 +237,7 @@ class PersistentRunner:
             stderr=subprocess.PIPE,
             text=True,
             bufsize=0,  # unbuffered
-            cwd=str(_REPO_ROOT),
+            cwd=str(_REPO_ROOT / "python"),
         )
         return self
 
@@ -268,7 +268,7 @@ def run_c_batch(exe: Path, plaintexts: list[int], key: int) -> None:
     stdin = "\n".join(f"{key:016X} {pt:04X}" for pt in plaintexts) + "\n"
     result = subprocess.run(
         [str(exe)], input=stdin, capture_output=True, text=True,
-        timeout=600, cwd=str(_REPO_ROOT),
+        timeout=600, cwd=str(_REPO_ROOT / "python"),
     )
     if result.returncode != 0:
         raise RuntimeError(f"C runner {exe.name} failed: {result.stderr[:200]}")

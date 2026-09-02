@@ -15,12 +15,12 @@ import sys
 from pathlib import Path
 
 _REPO_ROOT = Path(__file__).resolve().parent
-if str(_REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(_REPO_ROOT))
+if str(_REPO_ROOT / "python") not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT / "python"))
 
 from cipher import quartet_decrypt, quartet_encrypt  # noqa: E402
 
-C_FILE = _REPO_ROOT / "quartetchiffre.c"
+C_FILE = _REPO_ROOT / "runners/quartetchiffre.c"
 EXE = _REPO_ROOT / "quartet_c.exe"
 
 # Spec keys from SPEC.md, Section 9.
@@ -36,9 +36,9 @@ def compile_reference() -> None:
     if EXE.exists():
         EXE.unlink()
     result = subprocess.run(
-        ["gcc", "-O3", "-std=c11", "-march=native",
-         "-I", str(_REPO_ROOT), "-o", str(EXE), str(C_FILE)],
-        capture_output=True, text=True, cwd=str(_REPO_ROOT),
+        ["gcc", "-O3", "-I", str(_REPO_ROOT / "c"), "-std=c11", "-I", str(_REPO_ROOT / "c"), "-I", str(_REPO_ROOT / "c"), "-march=native",
+         "-I", str(_REPO_ROOT / "python"), "-o", str(EXE), str(C_FILE)],
+        capture_output=True, text=True, cwd=str(_REPO_ROOT / "python"),
     )
     if result.returncode != 0:
         print(f"FAIL: gcc error: {result.stderr}")

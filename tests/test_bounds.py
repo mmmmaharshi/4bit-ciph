@@ -44,8 +44,8 @@ from pathlib import Path
 # Make the repo root importable when this file is run directly
 # (python tests/test_bounds.py) or as a module (python -m tests.test_bounds).
 _REPO_ROOT = Path(__file__).resolve().parent.parent
-if str(_REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(_REPO_ROOT))
+if str(_REPO_ROOT / "python") not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT / "python"))
 
 from cipher import (  # noqa: E402
     SBOX,

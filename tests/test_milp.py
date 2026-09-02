@@ -2,7 +2,7 @@
 from __future__ import annotations
 import sys, math
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "python"))
 from cipher import linear_layer, _pack, _unpack
 
 def best_diff_trail(rounds: int) -> float:

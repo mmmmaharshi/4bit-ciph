@@ -3,7 +3,7 @@ import sys, random
 from datetime import date
 from pathlib import Path
 _REPO_ROOT=Path(__file__).resolve().parent.parent
-if str(_REPO_ROOT) not in sys.path: sys.path.insert(0,str(_REPO_ROOT))
+if str(_REPO_ROOT / "python") not in sys.path: sys.path.insert(0,str(_REPO_ROOT / "python"))
 from cipher32 import quartet32_encrypt
 SPEC_KEYS=[0x0123456789ABCDEF0123456789ABCDEF,0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,0x0,0xFEDCBA9876543210FEDCBA9876543210]
 SPEC_VECTORS=[(0x0123456789ABCDEF0123456789ABCDEF,0x00000000),(0x0123456789ABCDEF0123456789ABCDEF,0x12345678),(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,0x00000000)]

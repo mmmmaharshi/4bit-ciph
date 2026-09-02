@@ -1,11 +1,15 @@
 """QUARTET-32 thin 20-vector sanity check (random Python vs C)."""
 import random, subprocess, sys, os
+from pathlib import Path as _P
+_REPO=_P(__file__).resolve().parent
+if str(_REPO / "python") not in sys.path:
+    sys.path.insert(0, str(_REPO / "python"))
 import cipher32
 
 EXE="quartet32_runner.exe"
 if not os.path.exists(EXE):
     import subprocess as sp
-    sp.run(["gcc","-O2","-o",EXE,"quartet32_runner.c"], check=True)
+    sp.run(["gcc","-O2","-I", str(_REPO / "c"), "-o",EXE,str(_REPO / "runners/quartet32_runner.c")], check=True)
 
 random.seed(12345)
 procs = subprocess.Popen([f"./{EXE}"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, bufsize=1)

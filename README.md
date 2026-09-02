@@ -113,12 +113,12 @@ uint32_t c32 = quartet32_encrypt(0x12345678, 0x0123456789ABCDEFULL, 0xFEDCBA9876
 ├── tests/ + tests/vectors/  # 6 checks + 262k / 20k KAT
 ├── formal/ + coq/           # prp_analysis.md + Coq 8.18 proofs
 ├── SPEC.md / QUARTET32.md   # authoritative spec + branch note
-└── (root shims)  # cipher.py, sbox.h etc. → forward to c/ and python/ so `import cipher` and `#include "sbox.h"` still work
+└── python/cipher.py is SOT — `import cipher` needs `PYTHONPATH=python` or `sys.path` `REPO/python`
 ```
 
 | Area | Files | Rule |
 |------|-------|------|
-| **Cipher** | `c/sbox.h`, `c/quartet_core.h`, `c/quartet.h` + `python/cipher.py` | One S-box, one round, one key schedule. Delete a duplicate and the build must break. Shims at root forward to `c/` and `python/`. |
+| **Cipher** | `c/sbox.h`, `c/quartet_core.h`, `c/quartet.h` + `python/cipher.py` | One S-box, one round, one key schedule. Delete a duplicate and the build must break. No root shims — use `PYTHONPATH=python` and `gcc -I c`. |
 | **Adapter** | `python/cipher32.py`, `c/quartet32.h` | `2×16` parallel, 128-bit key. Imports the cipher, adds no tables. |
 | **Spec** | `SPEC.md` (§1, §10–11), `QUARTET32.md` | Bounds and GE numbers live here once. |
 | **Proof** | `formal/prp_analysis.md`, `coq/quartet_correct.v`, `coq/prp_bound.v` | Machine-checked roundtrip + `q²/2³³` Feistel bound. |

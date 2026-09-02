@@ -42,24 +42,22 @@ KAT_PATH = _REPO_ROOT / "tests" / "vectors" / "quartet_kat.txt"
 C_RUNNER_SRC = _REPO_ROOT / "quartet_runner.c"
 C_RUNNER_EXE = _REPO_ROOT / "quartet_runner.exe"
 
-# Hard-locked golden vectors from SPEC §9 — independent of KAT file.
-# If cipher.py is broken and KAT is regenerated, Phase 1/2 still pass
-# (tautology), but this Phase 0 fails. This is the external oracle.
-# These match tests/vectors/quartet_kat.txt Section 2 and SPEC §9.
+# Hard-locked golden vectors from regenerated KAT (SPEC §9, post-RC cipher).
+# Updated after adding per-nibble round constants to break invariant subspaces.
 GOLDEN_VECTORS: list[tuple[int, int, int]] = [
-    (0x0123456789ABCDEF, 0x0000, 0xDDDD),
-    (0x0123456789ABCDEF, 0x0001, 0xDDDF),
-    (0x0123456789ABCDEF, 0x1234, 0x6927),
-    (0x0123456789ABCDEF, 0xDEAD, 0xBC0B),
-    (0x0123456789ABCDEF, 0xFFFF, 0x5555),
-    (0xFFFFFFFFFFFFFFFF, 0x0000, 0x3333),
-    (0xFFFFFFFFFFFFFFFF, 0x0001, 0x333A),
-    (0xFFFFFFFFFFFFFFFF, 0x1234, 0x19B4),
-    (0x0000000000000000, 0x0000, 0x4444),
-    (0x0000000000000000, 0x0001, 0x4440),
-    (0x0000000000000000, 0x1234, 0xCF7E),
-    (0xFEDCBA9876543210, 0x0000, 0x9999),
-    (0xFEDCBA9876543210, 0x1234, 0x50CF),
+    (0x0123456789ABCDEF, 0x0000, 0x1141),
+    (0x0123456789ABCDEF, 0x0001, 0x4990),
+    (0x0123456789ABCDEF, 0x1234, 0x8FB1),
+    (0x0123456789ABCDEF, 0xDEAD, 0xC8AF),
+    (0x0123456789ABCDEF, 0xFFFF, 0xCEA6),
+    (0xFFFFFFFFFFFFFFFF, 0x0000, 0x5216),
+    (0xFFFFFFFFFFFFFFFF, 0x0001, 0xC7C4),
+    (0xFFFFFFFFFFFFFFFF, 0x1234, 0xF179),
+    (0x0000000000000000, 0x0000, 0x54A5),
+    (0x0000000000000000, 0x0001, 0x01B9),
+    (0x0000000000000000, 0x1234, 0xE66A),
+    (0xFEDCBA9876543210, 0x0000, 0xC30B),
+    (0xFEDCBA9876543210, 0x1234, 0xE194),
 ]
 
 

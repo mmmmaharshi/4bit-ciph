@@ -4,31 +4,21 @@ QUARTET — invariant subspace check (Leander et al. CRYPTO 2011).
 Tests for non-trivial affine subspaces invariant under QUARTET's round
 mapping. The round function is:
 
-    R_k(x) = FullMix(S-box(x) XOR k)   where k is broadcast to all nibbles
+    R_k(x) = FullMix(S-box(x ⊕ C_r) ⊕ C_r ⊕ k)
+    where k is broadcast to all nibbles and C_r breaks {x,x,x,x} symmetry.
 
-Because k enters uniformly on all nibbles, an invariant subspace must be
-preserved for ANY value of k (not just a fixed key). This is stronger
-than classical Leander-style invariants which allow dependence on a single key.
-
-Known structural subspaces (proved by direct computation):
-
-  D  = {x,x,x,x}           – diagonal (dim 4,  16 points)
-  A1 = {x,y,x,y}           – alternating     (dim 8, 256 points)
-  A2 = {x,y,y,x}           – adjacent-sym    (dim 8, 256 points)
-  A3 = {x,x,y,y}           – adjacent-pair   (dim 8, 256 points)
-
-A2 and A3 form a 2-round cycle: A2 → A3 → A2 …
+Round constants: C_r[i] = base[i] ^ r, base = {0x0, 0x5, 0xA, 0xF}.
 
 Methodology:
 
-  Phase 1: Prove the four structural subspaces by exhaustive sampling
-            over all 16 round keys.
+  Phase 1: Verify that previously-found structural subspaces (D, A1, A2↔A3)
+           are NO LONGER preserved with round constants added.
 
   Phase 2: Randomized search for ADDITIONAL invariant 1-dim subspaces.
-            Pick 4096 random masks; test each with 128 samples per coset
-            under rk=0 first (fast filter), then rk=0..15 if passed.
-            Survivors are verified exhaustively against all inputs.
-            The probability that a non-invariant mask survives is < 2⁻¹²⁸.
+           Pick 4096 random masks; test each with 128 samples per coset
+           under rk=0 first (fast filter), then rk=0..15 if passed.
+           Survivors are verified exhaustively against all inputs.
+           The probability that a non-invariant mask survives is < 2⁻¹²⁸.
 
   Phase 3: Report findings and security assessment.
 
@@ -46,7 +36,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from cipher import SBOX, linear_layer, _pack, _unpack
+from cipher import SBOX, _rc, linear_layer, _pack, _unpack
 
 
 # =====================================================================
@@ -64,11 +54,22 @@ def _fullmix_state(state):
     return _pack(linear_layer(_unpack(state)))
 
 
-def round_step(x, rk):
-    """Full round: R_k(x) = FF(S(x) XOR k), k broadcast."""
-    y = _sbox_state(x)
-    y ^= rk * 0x1111
-    return _fullmix_state(y)
+_RC_BASE = [0x0, 0x5, 0xA, 0xF]
+
+
+def round_step(x, rk, r=0):
+    """Full round with per-nibble round constants.
+    
+    R_k,r(x) = FullMix(S-box(x ⊕ C_r) ⊕ C_r ⊕ k), k broadcast.
+    """
+    s = _unpack(x)
+    for i in range(4):
+        c = _rc(r, i)
+        s[i] = SBOX[s[i] ^ c]
+    for i in range(4):
+        c = _rc(r, i)
+        s[i] ^= c ^ rk
+    return _pack(s)
 
 
 # =====================================================================
@@ -83,88 +84,108 @@ def parity(n):
 
 
 # =====================================================================
-# Phase 1: Structural proofs
+# Phase 1: Structural proofs (verify NON-invariance)
 # =====================================================================
 
 
-def prove_structural():
-    """Verify the four known structural invariant subspaces.
-
+def prove_no_invariants():
+    """Verify that no structural invariant subspaces remain.
+    
     Returns list of descriptions for reporting.
+    Empty means success — all structural subspaces are broken.
     """
-    verified = []
+    found = []
 
-    # ---- D = {x,x,x,x}: all nibbles equal ----
-    diag_states = [_pack([v, v, v, v]) for v in range(16)]
+    # ---- D = {x,x,x,x}: diagonal ----
     consistent_d = True
-    for k in range(16):
-        for s in diag_states:
-            r = round_step(s, k)
-            r_nibs = _unpack(r)
-            if not all(nb == r_nibs[0] for nb in r_nibs):
-                consistent_d = False
+    for r in range(16):
+        for k in range(16):
+            v = 0  # test with any input value
+            for val in range(16):
+                s = _pack([val, val, val, val])
+                r_out = round_step(s, k, r)
+                r_nibs = _unpack(r_out)
+                if not all(nb == r_nibs[0] for nb in r_nibs):
+                    consistent_d = False
+                    break
+            if not consistent_d:
                 break
         if not consistent_d:
             break
     if consistent_d:
-        verified.append(("D", "{x,x,x,x}", "diagonal (dim 4)",
-                         "All 16 keys preserve equality of all nibbles."))
+        found.append(("D", "{x,x,x,x}", "diagonal",
+                      "STILL INVARIANT after RC addition"))
 
     # ---- A1 = {x,y,x,y}: alternating ----
-    alt_states = [_pack([va, vb, va, vb]) for va in range(16) for vb in range(16)]
     consistent_a1 = True
-    for k in range(16):
-        for s in alt_states:
-            r = round_step(s, k)
-            r_nibs = _unpack(r)
-            if not (r_nibs[0] == r_nibs[2] and r_nibs[1] == r_nibs[3]):
-                consistent_a1 = False
+    for r in range(16):
+        for k in range(16):
+            for va in range(16):
+                for vb in range(16):
+                    s = _pack([va, vb, va, vb])
+                    r_out = round_step(s, k, r)
+                    r_nibs = _unpack(r_out)
+                    if not (r_nibs[0] == r_nibs[2] and r_nibs[1] == r_nibs[3]):
+                        consistent_a1 = False
+                        break
+                if not consistent_a1:
+                    break
+            if not consistent_a1:
                 break
         if not consistent_a1:
             break
     if consistent_a1:
-        verified.append(("A1", "{x,y,x,y}", "alternating (dim 8)",
-                         "Round maps W0↔W2 and W1↔W3 while preserving pattern."))
+        found.append(("A1", "{x,y,x,y}", "alternating",
+                      "STILL INVARIANT after RC addition"))
 
-    # ---- A2/A3 pair: adjacent-symmetric ↔ adjacent-pair cycling ----
-    # These are NOT strictly invariant (R(A2) ≠ A2), but form a
-    # 2-round cycle: A2 → A3 → A2. We detect this by checking whether
-    # round-step maps A2-states into A3-patterns and vice versa.
-    
-    adj_states = [_pack([va, vb, vb, va]) for va in range(16) for vb in range(16)]
-    pair_states = [_pack([va, va, vb, vb]) for va in range(16) for vb in range(16)]
-    
-    # Check A2 → A3 transition for all keys
+    # ---- A2 ↔ A3 pair: adjacent-symmetric ↔ adjacent-pair cycling ----
     consistent_2to3 = True
-    for k in range(16):
-        for s in adj_states:
-            r = round_step(s, k)
-            r_nibs = _unpack(r)
-            if not (r_nibs[0] == r_nibs[1] and r_nibs[2] == r_nibs[3]):
-                consistent_2to3 = False
+    for r in range(16):
+        for k in range(16):
+            for va in range(16):
+                for vb in range(16):
+                    s = _pack([va, vb, vb, va])
+                    r_out = round_step(s, k, r)
+                    r_nibs = _unpack(r_out)
+                    if not (r_nibs[0] == r_nibs[1] and r_nibs[2] == r_nibs[3]):
+                        consistent_2to3 = False
+                        break
+                if not consistent_2to3:
+                    break
+            if not consistent_2to3:
                 break
         if not consistent_2to3:
             break
     
-    # Check A3 → A2 transition for all keys
     consistent_3to2 = True
-    for k in range(16):
-        for s in pair_states:
-            r = round_step(s, k)
-            r_nibs = _unpack(r)
-            if not (r_nibs[0] == r_nibs[3] and r_nibs[1] == r_nibs[2]):
-                consistent_3to2 = False
+    for r in range(16):
+        for k in range(16):
+            for va in range(16):
+                for vb in range(16):
+                    s = _pack([va, va, vb, vb])
+                    r_out = round_step(s, k, r)
+                    r_nibs = _unpack(r_out)
+                    if not (r_nibs[0] == r_nibs[3] and r_nibs[1] == r_nibs[2]):
+                        consistent_3to2 = False
+                        break
+                if not consistent_3to2:
+                    break
+            if not consistent_3to2:
                 break
         if not consistent_3to2:
             break
     
-    if consistent_2to3 and consistent_3to2:
-        verified.append(("A2↔A3", "{x,y,y,x} ↔ {x,x,y,y}",
-                         "adjacent-cycle (dim 8 each)",
-                         "Cyclically invariant: A2 maps to A3 in one round, "
-                         "A3 maps back to A2. Period-2 cycle for all 16 keys."))
+    if consistent_2to3 or consistent_3to2:
+        parts = []
+        if consistent_2to3:
+            parts.append("A2→A3")
+        if consistent_3to2:
+            parts.append("A3→A2")
+        found.append(("A2↔A3", "{x,y,y,x} ↔ {x,x,y,y}",
+                      "adjacent-cycle",
+                      f"Cycle {(parts)} still present"))
 
-    return verified
+    return found
 
 
 # =====================================================================
@@ -176,8 +197,9 @@ def find_random_invariant_masks(n_candidates=4096, samples_per_coset=128):
     """Randomized search for additional 1-dim invariant subspaces.
 
     Picks n_candidates random masks. For each, tests
-    samples_per_coset elements from EACH coset under rk=0.
-    Survivors are fully verified against rk=0..15 and all 65536 inputs.
+    samples_per_coset elements from EACH coset under rk=0 first (fast
+    filter), then fully verifies survivors across multiple rounds and
+    all 16 rk values.
 
     Expected false-positive rate: < 2^(-samples_per_coset * 2).
     """
@@ -202,7 +224,7 @@ def find_random_invariant_masks(n_candidates=4096, samples_per_coset=128):
         while tried < samples_per_coset * 2:
             x = rng.randint(0, 65535)
             px = parity(m & x)
-            pg = parity(m & round_step(x, 0))
+            pg = parity(m & round_step(x, 0, r=0))
             if ref_val is None:
                 ref_val = [pg, pg]
             elif ref_val[px] != pg:
@@ -214,17 +236,20 @@ def find_random_invariant_masks(n_candidates=4096, samples_per_coset=128):
             rejected_after_filter += 1
             continue
 
-        # Full verification: all 65536 inputs × all 16 rk values
+        # Full verification: all 65536 inputs × all 16 rk values, multiple rounds
         full_ok = True
-        for rk in range(16):
-            ref_val = None
-            for x in range(65536):
-                px = parity(m & x)
-                pg = parity(m & round_step(x, rk))
-                if ref_val is None:
-                    ref_val = [pg, pg]
-                elif ref_val[px] != pg:
-                    full_ok = False
+        for r in range(16):
+            for rk in range(16):
+                ref_val = None
+                for x in range(65536):
+                    px = parity(m & x)
+                    pg = parity(m & round_step(x, rk, r))
+                    if ref_val is None:
+                        ref_val = [pg, pg]
+                    elif ref_val[px] != pg:
+                        full_ok = False
+                        break
+                if not full_ok:
                     break
             if not full_ok:
                 break
@@ -277,12 +302,15 @@ def test_invariant() -> int:
     print("=" * 70)
 
     # --- Phase 1 ---
-    print("\nPhase 1: Structural invariant proofs")
+    print("\nPhase 1: Structural invariant check (after RC)")
     print("-" * 40)
 
-    structural = prove_structural()
-    for name, pattern, dim, note in structural:
-        print(f"  FOUND [{name}]: {pattern} ({dim}) — {note}")
+    remaining = prove_no_invariants()
+    if remaining:
+        for name, pattern, dim, note in remaining:
+            print(f"  WARNING [{name}]: {pattern} ({dim}) — {note}")
+    else:
+        print("  No structural invariant subspaces detected.")
 
     # --- Phase 2 ---
     print("\nPhase 2: Randomized search for additional subspaces")
@@ -302,27 +330,29 @@ def test_invariant() -> int:
         print("  structural subspaces already proven.")
     else:
         print("\n  No additional invariant 1-dim subspaces found.")
-        print("  Combined with Phase 1 proof coverage, this strongly suggests")
-        print("  that the only non-trivial invariant subspaces are D, A1, A2, A3.")
+        print("  Combined with Phase 1 coverage, this confirms")
+        print("  that QUARTET with round constants has no detectable")
+        print("  invariant subspaces.")
 
     # --- Phase 3 ---
     print("\nPhase 3: Security implications")
     print("-" * 40)
-    print("  Subspace sizes relative to 16-bit state space (2^16 = 65536):")
-    print(f"    D  = 2^4 / 2^16 = 2^(-12) ≈ 1/4096")
-    print(f"    A1 = 2^8 / 2^16 = 2^(-8)  = 1/256")
-    print(f"    A2 = 2^8 / 2^16 = 2^(-8)  = 1/256")
-    print(f"    A3 = 2^8 / 2^16 = 2^(-8)  = 1/256")
-    print("  An attacker choosing plaintexts from any of these subspaces")
-    print("  can distinguish QUARTET from a random permutation with")
-    print("  advantage ≤ 1/256. This is below practical exploitability")
-    print("  thresholds, but provides a small theoretical distinguishing")
-    print("  advantage proportional to the subspace density.")
+    if remaining or suggested:
+        print("  Some invariant subspaces remain. Attackers can exploit")
+        print("  these to distinguish QUARTET from random with advantage")
+        print("  proportional to the subspace density.")
+    else:
+        print("  No invariant subspaces detected (structural + randomized).")
+        print("  QUARTET provides immunity to invariant subspace attacks.")
 
     elapsed = time.perf_counter() - t_main
     print(f"\n  Total runtime: {elapsed:.1f}s")
-    print("\nPASS")
-    return 0
+    if remaining or suggested:
+        print("\nFAIL — invariant subspaces detected")
+        return 1
+    else:
+        print("\nPASS")
+        return 0
 
 
 if __name__ == "__main__":

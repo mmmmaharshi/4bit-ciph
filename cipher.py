@@ -6,6 +6,7 @@ cryptanalysis suite both import from here.
 
 Design: 16-bit block, 64-bit key, 16-round SPN.
         PRESENT S-box (DP=4/16), FullMix linear layer (branch#4, order 4, M^4=I).
+        Round constants per-nibble break invariant subspaces (Leander et al., FSE 2011).
 
 Mano H. | 2026
 """
@@ -24,6 +25,14 @@ INV_SBOX: list[int] = [0] * 16
 for i, v in enumerate(SBOX):
     INV_SBOX[v] = i
 assert all(INV_SBOX[SBOX[i]] == i for i in range(16))
+
+# Round constants: C_r[i] = base[i] ^ r, breaks {x,x,x,x} and other
+# structural invariant subspaces (Leander et al., FSE 2011).
+_RC_BASE: list[int] = [0x0, 0x5, 0xA, 0xF]
+
+
+def _rc(r: int, i: int) -> int:
+    return (_RC_BASE[i] ^ r) & 0xF
 
 
 def _unpack(v: int) -> list[int]:
@@ -105,16 +114,26 @@ def inv_sbox_bitsliced(state: int) -> int:
     return y0 | (y1 << 1) | (y2 << 2) | (y3 << 3)
 
 
-def _round_bitsliced(state: int, rk: int) -> int:
-    state = sbox_bitsliced(state)
-    state ^= rk * 0x1111  # apply rk to all 4 nibbles
+def _round_bitsliced(state: int, rk: int, r: int) -> int:
+    c = 0
+    for i in range(4):
+        c |= ((_RC_BASE[i] ^ r) & 0xF) << (12 - 4 * i)
+    state = sbox_bitsliced(state ^ c)
+    state ^= c
+    state ^= rk * 0x1111
     return linear_layer_bitsliced(state)
 
 
-def _inv_round_bitsliced(state: int, rk: int) -> int:
+def _inv_round_bitsliced(state: int, rk: int, r: int) -> int:
+    c = 0
+    for i in range(4):
+        c |= ((_RC_BASE[i] ^ r) & 0xF) << (12 - 4 * i)
     state = inv_linear_layer_bitsliced(state)
+    state ^= c
     state ^= rk * 0x1111
-    return inv_sbox_bitsliced(state)
+    state = inv_sbox_bitsliced(state)
+    state ^= c
+    return state
 
 
 def linear_layer_bitsliced(state: int) -> int:
@@ -134,8 +153,9 @@ def quartet_encrypt_bitsliced(plaintext: int, key: int, rounds: int = 16) -> int
     if not (0 <= key < (1 << 64)):
         raise ValueError("key must be 0..2^64-1")
     state = plaintext
-    for rk in _expand_key(key, rounds):
-        state = _round_bitsliced(state, rk)
+    rk_list = _expand_key(key, rounds)
+    for r in range(rounds):
+        state = _round_bitsliced(state, rk_list[r], r)
     return state
 
 
@@ -145,21 +165,26 @@ def quartet_decrypt_bitsliced(ciphertext: int, key: int, rounds: int = 16) -> in
     if not (0 <= key < (1 << 64)):
         raise ValueError("key must be 0..2^64-1")
     state = ciphertext
-    for rk in reversed(_expand_key(key, rounds)):
-        state = _inv_round_bitsliced(state, rk)
+    rk_list = _expand_key(key, rounds)
+    for r in range(rounds - 1, -1, -1):
+        state = _inv_round_bitsliced(state, rk_list[r], r)
     return state
 
 
-def _round(state: list[int], rk: int) -> list[int]:
-    state = [SBOX[w] for w in state]
-    state = [w ^ rk for w in state]
-    return linear_layer(state)
+def _round(state: list[int], rk: int, r: int) -> list[int]:
+    c0 = _rc(r, 0); c1 = _rc(r, 1); c2 = _rc(r, 2); c3 = _rc(r, 3)
+    s0 = SBOX[state[0] ^ c0]; s1 = SBOX[state[1] ^ c1]
+    s2 = SBOX[state[2] ^ c2]; s3 = SBOX[state[3] ^ c3]
+    return linear_layer([s0 ^ c0 ^ rk, s1 ^ c1 ^ rk,
+                         s2 ^ c2 ^ rk, s3 ^ c3 ^ rk])
 
 
-def _inv_round(state: list[int], rk: int) -> list[int]:
-    state = INV_LINEAR_LAYER(state)
-    state = [w ^ rk for w in state]
-    return [INV_SBOX[w] for w in state]
+def _inv_round(state: list[int], rk: int, r: int) -> list[int]:
+    c0 = _rc(r, 0); c1 = _rc(r, 1); c2 = _rc(r, 2); c3 = _rc(r, 3)
+    im = inv_linear_layer(state)
+    o0 = INV_SBOX[im[0] ^ c0 ^ rk]; o1 = INV_SBOX[im[1] ^ c1 ^ rk]
+    o2 = INV_SBOX[im[2] ^ c2 ^ rk]; o3 = INV_SBOX[im[3] ^ c3 ^ rk]
+    return [o0 ^ c0, o1 ^ c1, o2 ^ c2, o3 ^ c3]
 
 
 def inv_linear_layer_bitsliced(state: int) -> int:
@@ -188,8 +213,9 @@ def quartet_encrypt(plaintext: int, key: int, rounds: int = 16) -> int:
     if not (0 <= key < (1 << 64)):
         raise ValueError("key must be 0..2^64-1")
     state = _unpack(plaintext)
-    for rk in _expand_key(key, rounds):
-        state = _round(state, rk)
+    rk_list = _expand_key(key, rounds)
+    for r in range(rounds):
+        state = _round(state, rk_list[r], r)
     return _pack(state)
 
 
@@ -199,8 +225,9 @@ def quartet_decrypt(ciphertext: int, key: int, rounds: int = 16) -> int:
     if not (0 <= key < (1 << 64)):
         raise ValueError("key must be 0..2^64-1")
     state = _unpack(ciphertext)
-    for rk in reversed(_expand_key(key, rounds)):
-        state = _inv_round(state, rk)
+    rk_list = _expand_key(key, rounds)
+    for r in range(rounds - 1, -1, -1):
+        state = _inv_round(state, rk_list[r], r)
     return _pack(state)
 
 

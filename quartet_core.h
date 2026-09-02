@@ -15,6 +15,9 @@
  * test code with data-dependent control flow and is not part of the
  * cipher core.
  *
+ * Round constants break invariant subspaces (Leander et al., FSE 2011):
+ *   C_r[i] = base[i] ^ r where base = {0x0, 0x5, 0xA, 0xF}
+ *
  * The .c file that #includes this must first define SBOX_READ and
  * INV_SBOX_READ (see sbox.h for the values).
  *
@@ -49,6 +52,18 @@
 #error "Define SBOX_READ(i) and INV_SBOX_READ(i) before #include \"quartet_core.h\""
 #endif
 #endif
+
+/* Round constants: C_r[i] = base[i] ^ r, breaks {x,x,x,x} and other
+ * structural invariant subspaces (Leander et al., FSE 2011). */
+static inline uint8_t _rc(uint8_t nibble, uint8_t rnd)
+{
+    switch (nibble) {
+        case 0: return (uint8_t)((0U ^ rnd) & 0xF);
+        case 1: return (uint8_t)((5U ^ rnd) & 0xF);
+        case 2: return (uint8_t)((0xA ^ rnd) & 0xF);
+        default: return (uint8_t)((0xF ^ rnd) & 0xF);
+    }
+}
 
 /* FullMix: [[1,1,1,0],[0,1,1,1],[1,0,1,1],[1,1,0,1]] over GF(2).
  * Order 4: M^2 = swap halves, M^4 = I. So M^{-1} = M^3 = [[1,0,1,1],[1,1,0,1],[1,1,1,0],[0,1,1,1]] */
@@ -91,37 +106,41 @@ static inline uint8_t quartet_round_key(uint64_t key, uint8_t round)
     return rk;
 }
 
-static inline uint16_t quartet_round(uint16_t state, uint8_t rk)
+static inline uint16_t quartet_round(uint16_t state, uint8_t rk, uint8_t rnd)
 {
-    uint8_t w0 = SBOX_READ((state >> 12) & 0x0F);
-    uint8_t w1 = SBOX_READ((state >> 8)  & 0x0F);
-    uint8_t w2 = SBOX_READ((state >> 4)  & 0x0F);
-    uint8_t w3 = SBOX_READ(state & 0x0F);
-    w0 ^= rk; w1 ^= rk; w2 ^= rk; w3 ^= rk;
+    uint8_t rc0 = _rc(0, rnd);
+    uint8_t rc1 = _rc(1, rnd);
+    uint8_t rc2 = _rc(2, rnd);
+    uint8_t rc3 = _rc(3, rnd);
+    uint8_t w0 = SBOX_READ(((state >> 12) & 0x0F) ^ rc0);
+    uint8_t w1 = SBOX_READ(((state >> 8)  & 0x0F) ^ rc1);
+    uint8_t w2 = SBOX_READ(((state >> 4)  & 0x0F) ^ rc2);
+    uint8_t w3 = SBOX_READ((state & 0x0F)      ^ rc3);
+    w0 ^= rc0 ^ rk; w1 ^= rc1 ^ rk; w2 ^= rc2 ^ rk; w3 ^= rc3 ^ rk;
     return quartet_fullmix(((uint16_t)w0 << 12) | ((uint16_t)w1 << 8) |
                            ((uint16_t)w2 << 4)  | w3);
 }
 
-static inline uint16_t quartet_inv_round(uint16_t state, uint8_t rk)
+static inline uint16_t quartet_inv_round(uint16_t state, uint8_t rk, uint8_t rnd)
 {
+    uint8_t rc0 = _rc(0, rnd);
+    uint8_t rc1 = _rc(1, rnd);
+    uint8_t rc2 = _rc(2, rnd);
+    uint8_t rc3 = _rc(3, rnd);
     state = QUARTET_INV_FULLMIX(state);
-    uint8_t w0 = (uint8_t)((state >> 12) & 0x0F) ^ rk;
-    uint8_t w1 = (uint8_t)((state >> 8)  & 0x0F) ^ rk;
-    uint8_t w2 = (uint8_t)((state >> 4)  & 0x0F) ^ rk;
-    uint8_t w3 = (uint8_t)(state & 0x0F)        ^ rk;
-    w0 = INV_SBOX_READ(w0);
-    w1 = INV_SBOX_READ(w1);
-    w2 = INV_SBOX_READ(w2);
-    w3 = INV_SBOX_READ(w3);
-    return ((uint16_t)w0 << 12) | ((uint16_t)w1 << 8) |
-           ((uint16_t)w2 << 4)  | w3;
+    uint8_t w0 = INV_SBOX_READ((uint8_t)((state >> 12) & 0x0F) ^ rc0 ^ rk);
+    uint8_t w1 = INV_SBOX_READ((uint8_t)((state >> 8)  & 0x0F) ^ rc1 ^ rk);
+    uint8_t w2 = INV_SBOX_READ((uint8_t)((state >> 4)  & 0x0F) ^ rc2 ^ rk);
+    uint8_t w3 = INV_SBOX_READ((uint8_t)(state & 0x0F)       ^ rc3 ^ rk);
+    return ((uint16_t)(w0 ^ rc0) << 12) | ((uint16_t)(w1 ^ rc1) << 8) |
+           ((uint16_t)(w2 ^ rc2) << 4)  | (w3 ^ rc3);
 }
 
 static inline uint16_t quartet_encrypt(uint16_t plaintext, uint64_t key)
 {
     uint16_t state = plaintext;
     for (uint8_t r = 0; r < QUARTET_ROUNDS; r++) {
-        state = quartet_round(state, quartet_round_key(key, r));
+        state = quartet_round(state, quartet_round_key(key, r), r);
     }
     return state;
 }
@@ -130,14 +149,13 @@ static inline uint16_t quartet_decrypt(uint16_t ciphertext, uint64_t key)
 {
     uint16_t state = ciphertext;
     for (int r = QUARTET_ROUNDS - 1; r >= 0; r--) {
-        state = quartet_inv_round(state, quartet_round_key(key, (uint8_t)r));
+        state = quartet_inv_round(state, quartet_round_key(key, (uint8_t)r), (uint8_t)r);
     }
     return state;
 }
 
 #endif /* !QUARTET_BITSLICED */
 
-/* Bitsliced variants (require QUARTET_BITSLICED and sbox.h with bitsliced functions) */
 #ifdef QUARTET_BITSLICED
 
 /* Bitsliced round key: uses table-based S-box in key schedule (still constant-time) */
@@ -154,30 +172,37 @@ static inline uint8_t quartet_round_key_bitsliced(uint64_t key, uint8_t round)
 }
 
 /* Bitsliced round: applies S-box to all 4 nibbles in parallel via bitsliced circuit */
-static inline uint16_t quartet_round_bitsliced(uint16_t state, uint8_t rk)
+static inline uint16_t quartet_round_bitsliced(uint16_t state, uint8_t rk, uint8_t rnd)
 {
-    /* Bitsliced S-box on all 4 nibbles */
-    state = quartet_sbox_bitsliced(state);
-    /* Key XOR: apply rk to all 4 nibbles */
-    state ^= (uint16_t)rk * 0x1111;  /* rk at each nibble position */
-    /* FullMix */
+    uint16_t c = (uint16_t)_rc(0, rnd) |
+                 ((uint16_t)_rc(1, rnd) << 4) |
+                 ((uint16_t)_rc(2, rnd) << 8) |
+                 ((uint16_t)_rc(3, rnd) << 12);
+    state = quartet_sbox_bitsliced(state ^ c);
+    state ^= c;
+    state ^= (uint16_t)rk * 0x1111;
     return quartet_fullmix(state);
 }
 
-static inline uint16_t quartet_inv_round_bitsliced(uint16_t state, uint8_t rk)
+static inline uint16_t quartet_inv_round_bitsliced(uint16_t state, uint8_t rk, uint8_t rnd)
 {
+    uint16_t c = (uint16_t)_rc(0, rnd) |
+                 ((uint16_t)_rc(1, rnd) << 4) |
+                 ((uint16_t)_rc(2, rnd) << 8) |
+                 ((uint16_t)_rc(3, rnd) << 12);
     state = QUARTET_INV_FULLMIX(state);
-    /* Key XOR */
+    state ^= c;
     state ^= (uint16_t)rk * 0x1111;
-    /* Bitsliced inverse S-box */
-    return quartet_inv_sbox_bitsliced(state);
+    state = quartet_inv_sbox_bitsliced(state);
+    state ^= c;
+    return state;
 }
 
 static inline uint16_t quartet_encrypt_bitsliced(uint16_t plaintext, uint64_t key)
 {
     uint16_t state = plaintext;
     for (uint8_t r = 0; r < QUARTET_ROUNDS; r++) {
-        state = quartet_round_bitsliced(state, quartet_round_key_bitsliced(key, r));
+        state = quartet_round_bitsliced(state, quartet_round_key_bitsliced(key, r), r);
     }
     return state;
 }
@@ -186,7 +211,7 @@ static inline uint16_t quartet_decrypt_bitsliced(uint16_t ciphertext, uint64_t k
 {
     uint16_t state = ciphertext;
     for (int r = QUARTET_ROUNDS - 1; r >= 0; r--) {
-        state = quartet_inv_round_bitsliced(state, quartet_round_key_bitsliced(key, (uint8_t)r));
+        state = quartet_inv_round_bitsliced(state, quartet_round_key_bitsliced(key, (uint8_t)r), (uint8_t)r);
     }
     return state;
 }

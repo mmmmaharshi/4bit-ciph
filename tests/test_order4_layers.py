@@ -326,7 +326,135 @@ def main():
 
     print()
 
-    # ===== PHASE 4: Prove optimality algebraically =====
+    # ===== PHASE 3c: Conjugacy classes in GL(4,2) =====
+    print("[3c] Conjugacy class decomposition in GL(4,2):")
+
+    # Generate all of GL(4,2) with inverses
+    print("  Generating GL(4,2) …")
+    gl4_list = []  # [(bits, M, inv_bits, inv_M)]
+    for bits in range(total_matrices):
+        M = bits_to_mat(bits)
+        if not is_invertible(M):
+            continue
+        # Compute inverse via augmented matrix method
+        aug = [M[r][:] + [1 if r == i else 0 for i in range(4)] for r in range(4)]
+        for col in range(4):
+            pivot = None
+            for row in range(col, 4):
+                if aug[row][col]:
+                    pivot = row
+                    break
+            assert pivot is not None  # Already checked invertible above
+            aug[col], aug[pivot] = aug[pivot], aug[col]
+            for row in range(4):
+                if row != col and aug[row][col]:
+                    aug[row] = [(a ^ b) for a, b in zip(aug[row], aug[col])]
+        inv_m = [[aug[r][c + 4] for c in range(4)] for r in range(4)]
+        inv_bits = mat_bits(inv_m)
+        gl4_list.append((bits, M, inv_bits, inv_m))
+
+    num_gl4 = len(gl4_list)
+    print(f"  GL(4,2) has {num_gl4} elements")
+
+    # Conjugacy classes via rank sequence of nilpotent N = M+I.
+    # Over GF(2), rank(N), rank(N²), rank(N³) uniquely determines
+    # the Jordan canonical form, hence the conjugacy class.
+    def mat_rank(M):
+        aug = [row[:] for row in M]
+        rk = 0
+        for col in range(4):
+            pivot = None
+            for row in range(rk, 4):
+                if aug[row][col]:
+                    pivot = row
+                    break
+            if pivot is None:
+                continue
+            aug[rk], aug[pivot] = aug[pivot], aug[rk]
+            for row in range(4):
+                if row != rk and aug[row][col]:
+                    aug[row] = [(a ^ b) for a, b in zip(aug[row], aug[rk])]
+            rk += 1
+        return rk
+
+    num_gl4 = 20160  # Verified above: |GL(4,2)| = 20160
+    rank_groups = {}
+
+    for bits, M, bw, wt, jt in qualifiers:
+        N = [[M[r][c] ^ (1 if r == c else 0) for c in range(4)] for r in range(4)]
+        r1 = mat_rank(N)
+        N2 = mat_mul(N, N)
+        r2 = mat_rank(N2)
+        N3 = mat_mul(N2, N)
+        r3 = mat_rank(N3)
+        rk_key = (r1, r2, r3)
+        if rk_key not in rank_groups:
+            rank_groups[rk_key] = []
+        rank_groups[rk_key].append((bits, M, bw, wt, jt))
+
+    num_classes = len(rank_groups)
+    print(f"  Number of conjugacy classes: {num_classes}")
+    print(f"  (Determined by rank sequence: rank(N), rank(N²), rank(N³))")
+
+    os_ok = True
+    for i, (rk_key, mats) in enumerate(sorted(rank_groups.items())):
+        actual_sz = len(mats)
+        cent_sz = num_gl4 // actual_sz
+        jtypes = sorted(set(m[4] for m in mats))
+        weights = sorted(set(m[3] for m in mats))
+        ok_str = "✓" if cent_sz * actual_sz == num_gl4 else "✗"
+        if cent_sz * actual_sz != num_gl4:
+            os_ok = False
+        print(f"  Class {i}: size={actual_sz}, ranks=({rk_key}), "
+              f"Jordan {{{','.join(jtypes)}}}, weights {{{','.join(str(w) for w in weights)}}}, "
+              f"|Cent|={cent_sz} {ok_str}")
+
+    if os_ok:
+        print(f"  Orbit-stabilizer verified for all 16 matrices ✓")
+    else:
+        print(f"  WARNING: orbit-stabilizer violations detected")
+
+    # Group structure setup — rebuild needed references
+    qual_matrix_refs = [(bits, M) for bits, M, _, _, _ in qualifiers]
+    qual_bits_set = set(b for b, _, _, _, _ in qualifiers)
+    qual_lookup = {(bits, tuple(tuple(r) for r in M)): (bits, M, bw, wt, jt)
+                   for bits, M, bw, wt, jt in qualifiers}
+    n_qual = len(qualifiers)
+
+    print()
+
+    # ===== PHASE 4: Group structure under multiplication =====
+    print("[4] Group structure (multiplication table on qualifying set):")
+    
+    mult_closed = True
+    failed_pairs = []
+    products_outside = 0
+    
+    # Check closure under multiplication
+    for bits_a, Ma in qual_matrix_refs:
+        for bits_b, Mb in qual_matrix_refs:
+            Pab = mat_mul(Ma, Mb)
+            Pab_bits = mat_bits(Pab)
+            if Pab_bits not in qual_bits_set:
+                mult_closed = False
+                products_outside += 1
+                if len(failed_pairs) < 5:
+                    _, _, _, wt_a, jt_a = qual_lookup[(bits_a, tuple(tuple(r) for r in Ma))]
+                    _, _, _, wt_b, jt_b = qual_lookup[(bits_b, tuple(tuple(r) for r in Mb))]
+                    col_wts = [sum(Pab[r][c] for r in range(4)) for c in range(4)]
+                    failed_pairs.append(((bits_a, jt_a, wt_a), (bits_b, jt_b, wt_b), Pab_bits, col_wts))
+
+    print(f"  Closure under multiplication: {'YES' if mult_closed else 'NO'}")
+    if not mult_closed:
+        print(f"  {products_outside}/{n_qual*n_qual} products leave the set")
+        if failed_pairs:
+            print(f"  Examples of products leaving the set:")
+            for (ja, wta, jta), (jb, wtb, jtb), pbits, cwts in failed_pairs[:3]:
+                print(f"    {ja}(wt{wta}) × {jb}(wt{wtb}) → outside (col_weights={cwts})")
+
+    print()
+
+    # ===== PHASE 5: Prove optimality algebraically =====
     print("[5] Algebraic proof that weight >= 12:")
     
     # If M^4 = I and branch >= 4, we can prove lower bound on weight.

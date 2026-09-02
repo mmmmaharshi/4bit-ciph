@@ -102,11 +102,7 @@ Or setting $\epsilon = 2^{-16}$ (birthday-bound level for 64-bit block):
 
 $$\frac{g^2}{2^{33}} \leq 2^{-16} \implies g^2 \leq 2^{17} \implies g \leq 2^{8.5} \approx 362$$
 
-These values reflect the tight quadratic dependence. However, the SPEC (§10.4) cites the asymptotic form:
-
-$$g = O\left(\frac{2^n}{\log(2^n)}\right) = O\left(\frac{2^{32}}{32}\right) = O(2^{27})$$
-
-This asymptotic form arises from the condition $g^2/2^n \ll 1$, yielding $g \ll 2^{n/2} = 2^{16}$, and the refinement from Patarin's analysis gives tighter constants leading to approximately $2^{27}$ as a practical operating point before statistical advantages accumulate significantly across all query transcript patterns.
+These values reflect the tight quadratic dependence. The `O(2^{n}/\log 2^{n}) ≈2^{27}` figure is for PRF-PRF switching (`q \log q` term), not Feistel LR (`q^{2}/2^{n}`). For `n=32`, LR is `q \ll 2^{16}`; Patarin does not lift this to `2^{27}`. The `2^{27}` operating point is therefore **removed** — the binding thresholds are `2^{12.5}` at `Adv=2^{-8}` and `2^{16}` at `Adv=1/2` as above.
 
 ### 4.3 Complete Derivation (Patarin's Method)
 
@@ -172,20 +168,20 @@ $$\text{Adv}_{\text{Mode1}}(\mathcal{A}) \leq \underbrace{2^{-60}}_{\text{hybrid
 | $2^{10}$ | $2^{-60}$ | $2^{20}/2^{33} = 2^{-13}$ | $\approx 2^{-13}$ |
 | $2^{14}$ | $2^{-60}$ | $2^{28}/2^{33} = 2^{-5}$ | $\approx 2^{-5}$ |
 | $2^{16}$ | $2^{-60}$ | $2^{32}/2^{33} = 1/2$ | $\approx 1/2$ |
-| $2^{20}$ | $2^{-60}$ | $2^{40}/2^{33} = 2^{7}$ | Trivial bound |
-| $2^{27}$ | $2^{-60}$ | $2^{54}/2^{33} = 2^{21}$ | Trivial bound |
+| $2^{20}$ | $2^{-60}$ | $2^{40}/2^{33} = 2^{7}$ | Trivial bound ($>1$) |
+| $2^{27}$ | $2^{-60}$ | $2^{54}/2^{33} = 2^{21}$ | Trivial bound — **not secure** |
 
 The hybrid cost ($2^{-60}$) is completely dominated by the LR term for any $q > 2^3$. Thus the security is determined entirely by the Luby-Rackoff bound.
 
 ### 6.3 Binding Constraint
 
-Per SPEC §10.4, three constraints compete:
+Per SPEC §10.4 (corrected), three constraints compete:
 
 1. **Single-trail bound:** $2^{-64}$ per QUARTET call (negligible vs LR bound)
-2. **Luby-Rackoff bound:** $\approx 2^{27}$ queries (binding constraint)
-3. **Block collision bound:** $2^{32}$ queries (weaker than LR)
+2. **Luby-Rackoff bound:** `Adv ≤ q²/2^{33}` → `q ≤5792 (≈2^{12.5})` at `Adv=2^{-8}`, `q ≤2^{16}` at `Adv=1/2` (binding constraint — machine-checked `mode1_5792_secure`)
+3. **Block collision bound:** $2^{32}$ queries (vacuous vs LR)
 
-**Effective security:** $q \leq 2^{27}$ chosen-plaintext queries before the LR bound exceeds acceptable thresholds.
+**Effective security:** `q ≤5792` at `Adv=2^{-8}` / `q ≤2^{16}` at `Adv=1/2`. No `2^{27}` claim. `tests/test_feistel_security.py` is heuristic clustering only (conjecture).
 
 ---
 
@@ -205,7 +201,7 @@ For the Feistel construction specifically, the PRP advantage from the LR theorem
 | Per-Feistel-query QUARTET cost | Hybrid switch | $\leq 2^{-62}$ | 4 calls per query × $2^{-64}$ |
 | Total hybrid switching (4 transitions) | Sum | $\leq 2^{-60}$ | Negligible |
 | 4-round Feistel (ideal) | LR bound | $\leq g^2/2^{33}$ | Patarin's method, $n=32$ |
-| Effective security | Min of above | $q \leq 2^{27}$ | LR term binding for large $q$ |
+| Effective security | Min of above | `q≤5792 (2^{-8}) / 2^{16} (1/2)` | LR term binding — `coq/prp_bound.v` |
 
 ---
 
@@ -252,10 +248,10 @@ To translate this into a compilable Coq proof (`coq/prp_bound.v`), the following
 - [x] Hybrid switching cost computed ($2^{-62}$ per transition)
 - [x] Composite bound derived and numerically evaluated
 - [x] Three competing constraints identified and ranked
-- [x] Effective security claim ($2^{27}$ queries) justified
+- [x] Effective security claim (`5792 / 2^{16}`) justified — corrected from `2^{27}`
 - [x] Tightness discussion included
 - [x] Coq translation roadmap provided
-- [ ] Actual Coq proof compilation (requires running `coqc`)
+- [x] Actual Coq proof compilation (`quartet_correct.vo 3MB, prp_bound.vo` on coq:8.18)
 
 ---
 

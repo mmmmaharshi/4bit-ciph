@@ -1,0 +1,307 @@
+======================================================================
+QUARTET — integral / square distinguisher analysis
+======================================================================
+
+Tracking how Σ-integral sets propagate through individual rounds.
+Two metrics: balance (XOR-sum=0 per nibble) and diversity
+(number of distinct values per nibble).
+
+==================================================
+Single-nibble Σ-integral sets (16 plaintexts each)
+==================================================
+
+  Summary (sample: W0_start):
+  R   Bal/4   Diversity       Interpretation
+  --  ------  ---------------  --------------------------
+   1      4/4   16   1  16  16    three vary (partial collapse)
+   2      4/4    1   1  16   1    ONE varies (major collapse)
+   3      4/4   16  16  16   1    three vary (partial collapse)
+   4      4/4   16   1   1   1    ONE varies (major collapse)
+   5      4/4   16   1  16  16    three vary (partial collapse)
+   6      4/4    1   1  16   1    ONE varies (major collapse)
+   7      4/4   16  16  16   1    three vary (partial collapse)
+   8      4/4   16   1   1   1    ONE varies (major collapse)
+   9      4/4   16   1  16  16    three vary (partial collapse)
+  10      4/4    1   1  16   1    ONE varies (major collapse)
+  11      4/4   16  16  16   1    three vary (partial collapse)
+  12      4/4   16   1   1   1    ONE varies (major collapse)
+  13      4/4   16   1  16  16    three vary (partial collapse)
+  14      4/4    1   1  16   1    ONE varies (major collapse)
+  15      4/4   16  16  16   1    three vary (partial collapse)
+  16      4/4   16   1   1   1    ONE varies (major collapse)
+
+  Theory vs Actual:
+
+    W0_start:
+      R= 1 (1): bal=4/4, varying=3  [OK]
+      R= 2 (2): bal=4/4, varying=1  [OK]
+      R= 3 (3): bal=4/4, varying=3  [OK]
+      R= 4 (0): bal=4/4, varying=1  [OK]
+      R= 5 (1): bal=4/4, varying=3  [OK]
+      R= 6 (2): bal=4/4, varying=1  [OK]
+      R= 7 (3): bal=4/4, varying=3  [OK]
+      R= 8 (0): bal=4/4, varying=1  [OK]
+      R= 9 (1): bal=4/4, varying=3  [OK]
+      R=10 (2): bal=4/4, varying=1  [OK]
+      R=11 (3): bal=4/4, varying=3  [OK]
+      R=12 (0): bal=4/4, varying=1  [OK]
+      R=13 (1): bal=4/4, varying=3  [OK]
+      R=14 (2): bal=4/4, varying=1  [OK]
+      R=15 (3): bal=4/4, varying=3  [OK]
+      R=16 (0): bal=4/4, varying=1  [OK]
+
+    W1_start:
+      R= 1 (1): bal=4/4, varying=3  [OK]
+      R= 2 (2): bal=4/4, varying=1  [OK]
+      R= 3 (3): bal=4/4, varying=3  [OK]
+      R= 4 (0): bal=4/4, varying=1  [OK]
+      R= 5 (1): bal=4/4, varying=3  [OK]
+      R= 6 (2): bal=4/4, varying=1  [OK]
+      R= 7 (3): bal=4/4, varying=3  [OK]
+      R= 8 (0): bal=4/4, varying=1  [OK]
+      R= 9 (1): bal=4/4, varying=3  [OK]
+      R=10 (2): bal=4/4, varying=1  [OK]
+      R=11 (3): bal=4/4, varying=3  [OK]
+      R=12 (0): bal=4/4, varying=1  [OK]
+      R=13 (1): bal=4/4, varying=3  [OK]
+      R=14 (2): bal=4/4, varying=1  [OK]
+      R=15 (3): bal=4/4, varying=3  [OK]
+      R=16 (0): bal=4/4, varying=1  [OK]
+
+    W2_start:
+      R= 1 (1): bal=4/4, varying=3  [OK]
+      R= 2 (2): bal=4/4, varying=1  [OK]
+      R= 3 (3): bal=4/4, varying=3  [OK]
+      R= 4 (0): bal=4/4, varying=1  [OK]
+      R= 5 (1): bal=4/4, varying=3  [OK]
+      R= 6 (2): bal=4/4, varying=1  [OK]
+      R= 7 (3): bal=4/4, varying=3  [OK]
+      R= 8 (0): bal=4/4, varying=1  [OK]
+      R= 9 (1): bal=4/4, varying=3  [OK]
+      R=10 (2): bal=4/4, varying=1  [OK]
+      R=11 (3): bal=4/4, varying=3  [OK]
+      R=12 (0): bal=4/4, varying=1  [OK]
+      R=13 (1): bal=4/4, varying=3  [OK]
+      R=14 (2): bal=4/4, varying=1  [OK]
+      R=15 (3): bal=4/4, varying=3  [OK]
+      R=16 (0): bal=4/4, varying=1  [OK]
+
+    W3_start:
+      R= 1 (1): bal=4/4, varying=3  [OK]
+      R= 2 (2): bal=4/4, varying=1  [OK]
+      R= 3 (3): bal=4/4, varying=3  [OK]
+      R= 4 (0): bal=4/4, varying=1  [OK]
+      R= 5 (1): bal=4/4, varying=3  [OK]
+      R= 6 (2): bal=4/4, varying=1  [OK]
+      R= 7 (3): bal=4/4, varying=3  [OK]
+      R= 8 (0): bal=4/4, varying=1  [OK]
+      R= 9 (1): bal=4/4, varying=3  [OK]
+      R=10 (2): bal=4/4, varying=1  [OK]
+      R=11 (3): bal=4/4, varying=3  [OK]
+      R=12 (0): bal=4/4, varying=1  [OK]
+      R=13 (1): bal=4/4, varying=3  [OK]
+      R=14 (2): bal=4/4, varying=1  [OK]
+      R=15 (3): bal=4/4, varying=3  [OK]
+      R=16 (0): bal=4/4, varying=1  [OK]
+
+  No mismatches — theory matches experiment ✓
+
+==================================================
+Migration Paths
+==================================================
+
+  Migration paths (varying nibbles marked with 'V', constant with 'C'):
+    W0_start: VCVV CCVC VVVC VCCC VCVV CCVC VVVC VCCC VCVV CCVC VVVC VCCC VCVV CCVC VVVC VCCC
+    W1_start: VVCV CCCV CVVV CVCC VVCV CCCV CVVV CVCC VVCV CCCV CVVV CVCC VVCV CCCV CVVV CVCC
+    W2_start: VVVC VCCC VCVV CCVC VVVC VCCC VCVV CCVC VVVC VCCC VCVV CCVC VVVC VCCC VCVV CCVC
+    W3_start: CVVV CVCC VVCV CCCV CVVV CVCC VVCV CCCV CVVV CVCC VVCV CCCV CVVV CVCC VVCV CCCV
+
+==================================================
+Assertions
+==================================================
+  Assertion checks:
+    A1: All nibbles balanced at every round (bijective SPN) ✓
+    A2: Single-nibble variation at R=2,6,10,14 ✓
+    A3: Triple-nibble variation at R=1,5,9,13 ✓
+    A4: Pairs maintain high diversity through R=3 ✓
+    A5: Period-4 cycle confirmed ✓
+
+==================================================
+Summary
+==================================================
+
+  Key findings:
+
+  • QUARTET preserves XOR-balance in all nibbles through
+    all 16 rounds (trivially, because S-box is bijective).
+
+  • However, structural entropy CONCENTRATES predictably:
+    after every even round the variation shrinks to ONE
+    nibble. After R=2, only W2 carries information.
+
+  • Distinguisher: collect 16 encryptions of any
+    single-nibble balanced set. After 2 rounds, 12 of
+    16 ciphertext bits will be identical. Probability
+    under random permutation ≈ 2⁻¹².
+
+  • The cycle repeats with period 4. After R=4, the
+    structure returns to the R=0 pattern (different
+    concrete values, same abstract form).
+
+  • Implication for construction modes: QUARTET can be
+    used as a building block only if the construction
+    compensates for the R=2 collapse. Any mode relying
+    on integral survival beyond 2 rounds is weakened.
+
+  PASS
+======================================================================
+QUARTET — invariant subspace check
+======================================================================
+
+Phase 1: Structural invariant proofs
+----------------------------------------
+  FOUND [D]: {x,x,x,x} (diagonal (dim 4)) — All 16 keys preserve equality of all nibbles.
+  FOUND [A1]: {x,y,x,y} (alternating (dim 8)) — Round maps W0↔W2 and W1↔W3 while preserving pattern.
+  FOUND [A2↔A3]: {x,y,y,x} ↔ {x,x,y,y} (adjacent-cycle (dim 8 each)) — Cyclically invariant: A2 maps to A3 in one round, A3 maps back to A2. Period-2 cycle for all 16 keys.
+
+Phase 2: Randomized search for additional subspaces
+----------------------------------------
+  Testing 4096 random masks …
+  Done in 0.0s. Checked=4096, rejected_filter=4096, rejected_full=0, suggested=0.
+
+  No additional invariant 1-dim subspaces found.
+  Combined with Phase 1 proof coverage, this strongly suggests
+  that the only non-trivial invariant subspaces are D, A1, A2, A3.
+
+Phase 3: Security implications
+----------------------------------------
+  Subspace sizes relative to 16-bit state space (2^16 = 65536):
+    D  = 2^4 / 2^16 = 2^(-12) ≈ 1/4096
+    A1 = 2^8 / 2^16 = 2^(-8)  = 1/256
+    A2 = 2^8 / 2^16 = 2^(-8)  = 1/256
+    A3 = 2^8 / 2^16 = 2^(-8)  = 1/256
+  An attacker choosing plaintexts from any of these subspaces
+  can distinguish QUARTET from a random permutation with
+  advantage ≤ 1/256. This is below practical exploitability
+  thresholds, but provides a small theoretical distinguishing
+  advantage proportional to the subspace density.
+
+  Total runtime: 0.1s
+
+PASS
+"---"  
+======================================================================
+QUARTET - machine-checked wide-trail bound
+(differential + linear single-trail bounds, both verified)
+======================================================================
+
+S-box DU: 4/16 (max DP)
+S-box max |LAT|: 4 (max LP = (4/8)^2 = 0.2500)
+
+FullMix branch number (differential): 4
+FullMix branch number (linear, via M^T): 4
+
+Differential side — min total active S-boxes per R rounds:
+  R= 2: min active =   4, single-trail DP bound = 2^(-8)
+  R= 4: min active =   8, single-trail DP bound = 2^(-16)
+  R= 8: min active =  16, single-trail DP bound = 2^(-32)
+  R=16: min active =  32, single-trail DP bound = 2^(-64)
+
+Linear side — min total active S-boxes per R rounds:
+  R= 2: min active =   4, single-trail LP bound = 2^(-8)
+  R= 4: min active =   8, single-trail LP bound = 2^(-16)
+  R= 8: min active =  16, single-trail LP bound = 2^(-32)
+  R=16: min active =  32, single-trail LP bound = 2^(-64)
+
+======================================================================
+ALL SINGLE-TRAIL BOUND CLAIMS VERIFIED (differential AND linear)
+======================================================================
+======================================================================
+QUARTET — constant-time code inspection (AST-based)
+======================================================================
+
+This is a STATIC check, not a TVLA. It parses the preprocessed
+cipher core and walks the AST, looking for data-dependent control
+flow or memory access. A passing check is a NECESSARY condition
+for a constant-time implementation; it is not sufficient.
+
+  quartet_decrypt           findings: none
+  quartet_encrypt           findings: none
+  quartet_fullmix           findings: none
+  quartet_inv_round         findings: none
+  quartet_round             findings: none
+  quartet_round_key         findings: none
+
+======================================================================
+CONSTANT-TIME AST CHECK: PASS
+======================================================================
+
+  Caveat: this is a code-inspection claim, not a measurement.
+  A TVLA t-test is NOT included in this artifact set. To turn
+  this into a measurement, run the cipher on a target with
+  power/EM trace capture and compute Welch's t-statistic on
+  fixed-vs-random and fixed-vs-fixed-with-different-key trace
+  sets at the 95% confidence threshold (|t| < 4.5).
+======================================================================
+QUARTET — Known Answer Test (KAT) harness
+======================================================================
+
+  KAT: tests\vectors\quartet_kat.txt
+  262157 entries: 262144 full-space + 13 spec
+  Golden: 13 locked vectors (SPEC §9)
+
+  Phase 0: Golden vectors vs SPEC §9 (13 entries) ... OK
+  Phase 1: Python reference vs KAT ... OK
+
+  Phase 2: C runner already built ... OK
+  Phase 2: C reference vs KAT (262157 entries) ... OK
+
+======================================================================
+KAT: PASS (Python + C both match all entries)
+======================================================================
+Cross-validation: Python vs C, 20 random test vectors
+
+#   Key                PT     Py_CT  C_CT   Match
+------------------------------------------------------------
+0   0x6D2E9CB704E5F152 0xDA28 0x248B 0x248B OK
+1   0x9CB87FEFE4DD4346 0xEE21 0x11BD 0x11BD OK
+2   0x65138AAF54DED306 0xD0D8 0x585D 0x585D OK
+3   0xA9309903820D4637 0x8D72 0xC8AE 0xC8AE OK
+4   0x63FD0C3450AE1132 0xF9A5 0x82DC 0x82DC OK
+5   0x94CA7438EF91D8D4 0x4349 0xE6ED 0xE6ED OK
+6   0x85EC45F9ADC68837 0x4F82 0xD5E7 0xD5E7 OK
+7   0x4C72DFCBF051186C 0xB790 0x0D6C 0x0D6C OK
+8   0x7EE729D6B5E27424 0xE738 0x4E09 0x4E09 OK
+9   0xC9AE1A7F63380165 0x84A6 0x0E3D 0x0E3D OK
+10  0x8A6C15D3D2B5D225 0x2B56 0x129F 0x129F OK
+11  0xECF4842A758DCE08 0xFF99 0xCC55 0xCC55 OK
+12  0x310FBBD5E94435DC 0x19BF 0x418A 0x418A OK
+13  0x7A20F9E6BE7A72FF 0xEFB9 0xC4E9 0xC4E9 OK
+14  0x3D1B066C7128522F 0x9D0D 0x1BEB 0x1BEB OK
+15  0xF69F213F706336C9 0x5223 0xADDE 0xADDE OK
+16  0x0908A76B94E06C6C 0x5B21 0x4FA3 0x4FA3 OK
+17  0x6ADDF44AF94F7D8C 0x5D06 0x32BA 0x32BA OK
+18  0x1BF40996F816CDBD 0xBE60 0x0267 0x0267 OK
+19  0x2650262A5A8551A2 0xFADB 0x215D 0x215D OK
+
+SUCCESS: 20/20 cross-validated test vectors match
+Compiling C reference...
+  Compilation successful
+
+Running C self-test...
+PASS: Self-test
+PASS: Roundtrip test
+Speed: 5000000 enc/s (0.20 us/enc)
+
+Random-vector cross-check: see compare.py (uses quartet_runner.exe).
+
+Testing full 16-bit space (65536 PT) x 4 keys = 262144 ops...
+  All 262144 encrypt/decrypt operations PASS
+
+============================================================
+VERIFICATION COMPLETE
+============================================================
+SUCCESS: All tests pass
+  - C self-test: PASS
+  - Python full space test (4 keys x 65536): PASS
+"ALL TESTS COMPLETE" 

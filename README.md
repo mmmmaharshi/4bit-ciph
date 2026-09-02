@@ -104,20 +104,24 @@ uint32_t c32 = quartet32_encrypt(0x12345678, 0x0123456789ABCDEFULL, 0xFEDCBA9876
 
 ## Project structure
 
-| Path | Owns |
-|------|------|
-| `cipher.py` | Single Python source of truth for the cipher |
-| `cipher32.py` | Thin 32-bit adapter (`import cipher`, no S-box copy) |
-| `sbox.h` | PRESENT S-box and inverse initializers |
-| `quartet_core.h` / `quartet.h` | Header-only cipher core and self-test |
-| `quartet32.h` | Thin C adapter for 32-bit |
-| `SPEC.md` | Authoritative spec and security bounds |
-| `QUARTET32.md` | Branch note for the 32-bit adapter |
-| `tests/` | Bounds, KAT, cross-check, constant-time AST, TVLA |
-| `formal/` | `prp_analysis.md` and `coq/` proofs |
-| `synth/` | `quartet_sky130.v` and `run_sky130.sh` |
+```
+4bit-ciph/
+├── cipher.py / sbox.h / quartet*.h   # single source of truth (16-bit)
+├── cipher32.py / quartet32.h         # thin 32-bit adapter — import only, no copy
+├── SPEC.md / QUARTET32.md            # authoritative spec + branch note
+├── tests/ + tests/vectors/           # 6 checks + 262k / 20k KAT
+├── formal/ + coq/                    # prp_analysis.md + Coq 8.18 proofs
+└── synth/                            # quartet_sky130.v + run_sky130.sh + yosys_stat.log
+```
 
-One cipher, one S-box, one test-vector set per block size. No duplicated round logic.
+| Area | Files | Rule |
+|------|-------|------|
+| **Cipher** | `cipher.py`, `sbox.h`, `quartet_core.h`, `quartet.h` | One S-box, one round, one key schedule. Delete a duplicate and the build must break. |
+| **Adapter** | `cipher32.py`, `quartet32.h` | `2×16` parallel, 128-bit key. Imports the cipher, adds no tables. |
+| **Spec** | `SPEC.md` (§1, §10–11), `QUARTET32.md` | Bounds and GE numbers live here once. |
+| **Proof** | `formal/prp_analysis.md`, `coq/quartet_correct.v`, `coq/prp_bound.v` | Machine-checked roundtrip + `q²/2³³` Feistel bound. |
+| **Check** | `tests/test_bounds*.py`, `test_kats*.py`, `compare*.py`, `test_constant_time.py`, `tvla.py` | Six checks, each fails for a distinct real bug. |
+| **Hardware** | `synth/quartet_sky130.v`, `synth/yosys_stat.log` | 176 cells/round generic; 166 GE serial NanGate. |
 
 ## Verification
 

@@ -289,6 +289,43 @@ def main():
 
     print()
 
+    # ===== PHASE 3b: Structural closure properties =====
+    print("[3b] Structural closure under transpose and inverse:")
+    qual_set = set(b for b, _, _, _, _ in qualifiers)
+
+    transpose_ok = True
+    inverse_ok = True
+    fail_transpose = []
+    fail_inverse = []
+
+    for bits, M, bw, wt, jt in qualifiers:
+        # Transpose check
+        Mt = [[M[c][r] for c in range(4)] for r in range(4)]
+        Mt_bits = mat_bits(Mt)
+        if Mt_bits not in qual_set:
+            transpose_ok = False
+            if len(fail_transpose) < 5:
+                col_w = [sum(Mt[r][c] for r in range(4)) for c in range(4)]
+                fail_transpose.append((Mt_bits, col_w))
+
+        # Inverse check (M⁻¹ = M³ when M⁴=I)
+        Mi = mat_pow(M, 3)
+        Mi_bits = mat_bits(Mi)
+        if Mi_bits not in qual_set:
+            inverse_ok = False
+            if len(fail_inverse) < 5:
+                fail_inverse.append(Mi_bits)
+
+    print(f"  Transpose closure : {'YES' if transpose_ok else 'NO'}")
+    print(f"  Inverse closure   : {'YES' if inverse_ok else 'NO'}")
+    if fail_transpose:
+        print(f"  {len(fail_transpose)} matrices violate transpose closure;")
+        print(f"  examples: M bits have col_weights != [3,3,3,3]")
+    if fail_inverse:
+        print(f"  {len(fail_inverse)} matrices violate inverse closure")
+
+    print()
+
     # ===== PHASE 4: Prove optimality algebraically =====
     print("[5] Algebraic proof that weight >= 12:")
     

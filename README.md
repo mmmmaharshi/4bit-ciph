@@ -3,8 +3,8 @@
 [![KAT 262k](https://img.shields.io/badge/KAT-262157%20PASS-brightgreen)](tests/vectors/quartet_kat.txt)
 [![KAT32 20k](https://img.shields.io/badge/KAT32-20480%20PASS-brightgreen)](tests/vectors/quartet32_kat.txt)
 [![Coq 8.18](https://img.shields.io/badge/Coq-quartets_correct.vo%20%7C%20prp_bound.vo-blue)](formal/README.md)
-[![Yosys 0.68](https://img.shields.io/badge/Yosys-176%20cells%2Fround-lightgrey)](synth/quartet_sky130.v)
-[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue)](cipher.py)
+[![Yosys 0.68](https://img.shields.io/badge/Yosys-176%20cells%2Fround-lightgrey)](hw/quartet_sky130.v)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue)](python/cipher.py)
 
 > The smallest 4-bit SPN with an order-4 linear layer and a machine-checked wide-trail bound.
 
@@ -65,7 +65,7 @@ Do the steps that follow to run the quick check:
    ```
 4. Make sure that the generic synth stat holds.
    ```
-   yowasp-yosys -p "read_verilog synth/quartet_sky130.v; hierarchy -check -top quartet_round_logic; proc; opt; techmap; opt; stat"
+   yowasp-yosys -p "read_verilog hw/quartet_sky130.v; hierarchy -check -top quartet_round_logic; proc; opt; techmap; opt; stat"
    ```
 
 > [!TIP]
@@ -106,22 +106,24 @@ uint32_t c32 = quartet32_encrypt(0x12345678, 0x0123456789ABCDEFULL, 0xFEDCBA9876
 
 ```
 4bit-ciph/
-├── cipher.py / sbox.h / quartet*.h   # single source of truth (16-bit)
-├── cipher32.py / quartet32.h         # thin 32-bit adapter — import only, no copy
-├── SPEC.md / QUARTET32.md            # authoritative spec + branch note
-├── tests/ + tests/vectors/           # 6 checks + 262k / 20k KAT
-├── formal/ + coq/                    # prp_analysis.md + Coq 8.18 proofs
-└── synth/                            # quartet_sky130.v + run_sky130.sh + yosys_stat.log
+├── c/            # sbox.h, quartet_core.h, quartet.h, quartet32.h — C single source of truth
+├── python/       # cipher.py, cipher32.py, cryptanalysis.py, fpe.py — Python single source of truth
+├── runners/      # quartet_runner.c, quartet32_runner.c, quartetchiffre.c, bitsliced.c — thin I/O adapters
+├── hw/           # quartet.v, quartet_logic.v, quartet_sky130.v, quartet_round_asm.s — RTL/ASM
+├── tests/ + tests/vectors/  # 6 checks + 262k / 20k KAT
+├── formal/ + coq/           # prp_analysis.md + Coq 8.18 proofs
+├── SPEC.md / QUARTET32.md   # authoritative spec + branch note
+└── (root shims)  # cipher.py, sbox.h etc. → forward to c/ and python/ so `import cipher` and `#include "sbox.h"` still work
 ```
 
 | Area | Files | Rule |
 |------|-------|------|
-| **Cipher** | `cipher.py`, `sbox.h`, `quartet_core.h`, `quartet.h` | One S-box, one round, one key schedule. Delete a duplicate and the build must break. |
-| **Adapter** | `cipher32.py`, `quartet32.h` | `2×16` parallel, 128-bit key. Imports the cipher, adds no tables. |
+| **Cipher** | `c/sbox.h`, `c/quartet_core.h`, `c/quartet.h` + `python/cipher.py` | One S-box, one round, one key schedule. Delete a duplicate and the build must break. Shims at root forward to `c/` and `python/`. |
+| **Adapter** | `python/cipher32.py`, `c/quartet32.h` | `2×16` parallel, 128-bit key. Imports the cipher, adds no tables. |
 | **Spec** | `SPEC.md` (§1, §10–11), `QUARTET32.md` | Bounds and GE numbers live here once. |
 | **Proof** | `formal/prp_analysis.md`, `coq/quartet_correct.v`, `coq/prp_bound.v` | Machine-checked roundtrip + `q²/2³³` Feistel bound. |
 | **Check** | `tests/test_bounds*.py`, `test_kats*.py`, `compare*.py`, `test_constant_time.py`, `tvla.py` | Six checks, each fails for a distinct real bug. |
-| **Hardware** | `synth/quartet_sky130.v`, `synth/yosys_stat.log` | 176 cells/round generic; 166 GE serial NanGate. |
+| **Hardware** | `hw/quartet_sky130.v`, `hw/yosys_stat.log`, `hw/*.v` | 176 cells/round generic; 166 GE serial NanGate. See `hw/`. |
 
 ## Verification
 
@@ -163,10 +165,10 @@ QUARTET gives a single-trail bound, not a full hull measurement. The 16-bit code
 **Hardware (generic, library independent):**
 
 - 1 round `quartet_round_logic` = 132 `$_XOR_` + 36 `$_AND_` + 8 `$_NOT_` = 176 cells.
-- 16 rounds unrolled = 2816 cells (2112 XOR + 576 AND + 128 NOT). See `synth/yosys_stat.log`.
+- 16 rounds unrolled = 2816 cells (2112 XOR + 576 AND + 128 NOT). See `hw/yosys_stat.log` (or `synth/yosys_stat.log` shim).
 - NanGate 45nm serial estimate: ~166 GE enc-only, ~254 GE enc+dec. QUARTET-32 doubles the cells: 352 per round, ~332 GE serial.
 
-Run `synth/run_sky130.sh` to reproduce. Sky130 PDK stat needs `PDK_ROOT`.
+Run `hw/run_sky130.sh` (shim at `synth/run_sky130.sh` also works) to reproduce. Sky130 PDK stat needs `PDK_ROOT`.
 
 **Formal proofs:**
 

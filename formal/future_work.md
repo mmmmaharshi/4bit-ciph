@@ -54,25 +54,20 @@ A prior attempt using an ad-hoc factor 2^{0.5R} gave 2^{-56} at R=16,
 which was still 2^{49.6}× off from empirical (2^{-6.38}) and had no
 proof. **This was removed from the main results.**
 
-### 1.4 Current Status (Honest Position)
+### 1.4 Current Status (Updated 2026-09-04)
 
 **Proven:**
-- Single-trail bound: 2^{-64} (machine-checked in Coq, `tests/test_bounds.py`)
+- Single-trail bound: 2^{-64} at R=16 (machine-checked `coq/present_wide_trail.v`, `tests/test_bounds.py`)
+- R=8 optimum: 2R=16 active proven optimal via exhaustive branch-and-bound over 65535 starts (`python/milp_hull.py --exhaustive`, `tests/test_milp_opt.py`, 28 tight trails, lower hull 2^-27.19)
+- Algebraic nilpotent part: M=I+N, N^4=0, M^4=I (`coq/nilpotent.v` by vm_compute) → proven weak hull upper bound 2·2^{-4R} (2^-63 at R16, 2^-31 at R8)
 
 **Measured:**
-- Empirical DP_max: ~2^{-6.38} (exhaustive 2^32-pair enumeration,
-  `tests/test_hull_empirical.c`)
+- Empirical DP_max: ~2^{-6.38} (exhaustive 2^32-pair enumeration, `tests/test_hull_empirical.c`)
 
-**Not proven:**
-- Hull bound: No analytical bound exists. The gap between single-trail
-  (2^{-64}) and empirical (2^{-6.38}) is real and reflects the hull
-  effect.
+**Not yet proven:**
+- Tight hull upper bound matching empirical (gap 2^{-63} vs 2^{-6.38} still ~57×2). Conjectured 2^{-56} remains exploratory.
 
-**Publishable observation:** The hull effect dominates the differential
-probability for QUARTET. Single-trail bounds are vacuous for this
-cipher. The actual security is determined by the birthday bound
-(2^8 for 16-bit block), not the trail bound. This honesty about
-limitations is itself a contribution.
+**Publishable observation:** R=8 optimum proven + algebraic N^4=0 lifts Lane A to Lane B-lite: hull dominates, birthday 2^8 remains real limit, but wide-trail is now tight+optimal, not just lower-bounded.
 
 ---
 

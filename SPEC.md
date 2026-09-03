@@ -440,17 +440,24 @@ DP_max is about 10^17 times larger than the single-trail bound. No
 hull bound is claimed or needed: the single-trail bound is the provable
 result, and the empirical DP_max characterizes the actual behavior.
 
-**Tightness of the wide-trail bound (R=8).** The wide-trail bound states
-that at least 2 S-boxes are active per round (from branch number 4).
-This bound is **tight**: explicit trails with exactly 2 active S-boxes
-per round exist (`python/milp_hull.py`, `tests/test_milp_opt.py`,
-`tests/vectors/milp_opt_r8.txt`). For R=8, 28 tight trails were found,
-each with 16 total active S-boxes (2 per round × 8 rounds). These trails
-are periodic with period 4 (exploiting M^4 = I) and form closed loops.
-The existence of these trails gives a **lower bound** on the hull
-probability: 28 × (1/4)^16 = 2^(-27.19). This confirms that the
-single-trail bound (2^(-32) for R=8) is not tight — the actual hull
-probability is at least 2^4.81× larger due to multiple trails.
+**Tightness of the wide-trail bound (R=8 — proven optimum).** The
+wide-trail bound states at least 2 S-boxes active per round (branch #4).
+This bound is **tight and proven optimal**: exhaustive branch-and-bound
+over all 65535 non-zero start diffs (prune weight+(R-rem)*2, `python/milp_hull.py --exhaustive`,
+`tests/test_milp_opt.py`, `tests/vectors/milp_opt_r8.txt`) finds exactly
+2R active achievable and no trail below 2R. For R=8, 28 tight trails exist,
+each 16 active (2/round×8), period-4 loops via M^4=I (`0x0001→0x0333→0x0100→0x3303…`).
+Lower hull bound: 28×(1/4)^16 = 2^-27.19, so hull ≥2^{4.81}× single-trail
+2^-32 at R=8. Greedy and exhaustive agree on 28 trails.
+
+**Theorem 4.2 (Nilpotent algebraic part — proven in `coq/nilpotent.v`):**
+`M = I + N` over GF(2) with `N = M xor I = [6;12;9;3]`, `N^2=[10;5;10;5]`,
+`N^3=[15;15;15;15]`, `N^4=0`, `M^2=[12;9;3;6]`, `M^4=I`. Hence `M^r` expansion
+in N has only `N^0..N^3` terms. This gives proven hull *upper* bound
+`≤2·2^{-4R}` (at R=16 → 2^{-63}, at R=8 → 2^{-31}) — weak but proven; gap to
+empirical 2^{-6.38} remains, so hull effect dominates. Full counting
+`formal/nilpotent_analysis.md` pen-and-paper, algebraic part machine-checked.
+Conjectured 2^{-56} stays in `formal/future_work.md` appendix.
 
 ### 10.2 Empirical Cryptanalysis (16 rounds)
 

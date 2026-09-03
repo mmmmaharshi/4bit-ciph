@@ -669,6 +669,16 @@ provable bound and the bound from the construction's security theorem**;
 in the cases where the construction theorem gives a weaker bound, that
 weaker bound is the binding constraint.
 
+**Important note on provability:** Only **Mode 1** (4-call balanced Feistel)
+has a **machine-checked security proof** (Coq, `coq/prp_bound.v`). Modes 2–4
+have **trivial security bounds** (2^8 queries, limited by the 16-bit block
+birthday bound) that are **not publishable as security contributions**.
+Mode 5 is **heuristic only** — no proof exists, and the security bound is
+still 2^8 (limited by the underlying 16-bit block cipher). QUARTET's
+2^(-64) single-trail bound does **not** provide meaningful security in any
+wide-block mode because wide-block modes bound security by the **underlying**
+block cipher's birthday bound, not the wide block size.
+
 **Lightweight mode (R=4).** The R=4 mode is a *throughput* and
 *footprint* mode, **not a security tier**. The R=4 provable bound is
 (1/4)^(2·4) = 2^(-16), which is the same as the random-permutation
@@ -790,11 +800,11 @@ effective security is the **min of**:
 larger tag and a 64-bit or larger IV; the construction is for
 short-tag, low-value authentication (e.g. sensor data, RFIDs).
 
-**Mode 5 — Tweakable wide-block encryption (real 2^(-64) security).**
+**Mode 5 — Tweakable wide-block encryption (heuristic).**
 
-This mode achieves real 2^(-64) security by using QUARTET as a building block
-in a tweakable wide-block construction. The 16-bit block limitation is
-overcome by encrypting multiple blocks with a wide-block mode.
+This mode uses QUARTET as a building block in a 64-bit wide-block
+construction. **The security is heuristic — no proof exists for this
+construction when instantiated with a 16-bit block cipher.**
 
 **Construction: Mercy-style wide-block encryption (4 blocks = 64 bits).**
 
@@ -820,26 +830,27 @@ C_3' = QUARTET_{K_3}(C_3 XOR C_2')
 ciphertext = (C_0' || C_1' || C_2' || C_3')
 ```
 
-**Security bound (heuristic).** This is a heuristic wide-block construction
-(64-bit block, 64-bit key; key `K0` is reused for tweak derivation and the
-first block — a deployment may derive independent subkeys). The 2^32 figure is
-the 64-bit block birthday limit (not a proven wide-block PRP theorem); a
-proven variant is obtained by instantiating EME2/XCB (Halevi–Rogaway, TCHES
-2016) with QUARTET as the underlying block cipher. Under that substitution the
-bound is:
+**Security assessment (heuristic, unproven).** This Mercy-style
+construction provides **mixing** (single-bit input change affects all
+output bits) but **no proof of PRP security** when built from a 16-bit
+block cipher. The security bound is determined by the **underlying**
+block cipher's birthday bound, not the wide block size:
 
-- Birthday bound on 64-bit block: 2^32 queries
-- QUARTET's 2^(-64) single-trail bound is meaningful here (q << 2^32)
-- Effective security: **~2^32 queries at Adv=1/2** (birthday bound on block)
+- **Birthday bound: 2^8 queries** (limited by 16-bit block cipher, not 64-bit wide block)
+- QUARTET's 2^(-64) single-trail bound remains vacuous
+- The 2^32 figure sometimes quoted for wide-block modes applies only
+  when the underlying block cipher has a 64-bit block
 
-The 2^(-64) trail bound is NOT vacuous for this mode because the adversary
-cannot collect 2^32 plaintext-ciphertext pairs without hitting the birthday
-bound on the 64-bit block. This remains a heuristic for the Mercy-style
-chaining shown above; the proven EME2/XCB instantiation carries the theorem.
+**Why EME2/XCB does not help:**
+Wide-block modes like EME2 (Halevi-Rogaway, TCHES 2016) bound security
+as O(q²/2^n) where **n is the underlying block cipher's block size**.
+With n=16, this gives a 2^8 birthday bound — the wide-block mode cannot
+compensate for the small underlying block size. Additionally, XCBv2
+(IEEE 1619.2) was broken in 2024 (plaintext recovery in 2 queries).
 
-**Effective security: ~2^32 queries (birthday bound on 64-bit block).**
-This is the only mode where QUARTET's 2^(-64) trail bound provides meaningful
-security beyond the birthday bound.
+**Effective security: ~2^8 queries (birthday bound on underlying 16-bit block).**
+This mode provides mixing but no security improvement over raw QUARTET.
+It is suitable only for applications where 2^8 security is acceptable.
 
 **NIST LWC context.** The NIST Lightweight Cryptography Standardization
 Process (2017–2023) selected ASCON as the standard (NIST SP 800-232,
@@ -865,7 +876,7 @@ AEAD built on a 4-quadrant Feistel sponge.
 | 64-bit PRP | Mode 1 (4-call Feistel) | 2^{12.5} (Adv 2^{-8}) / 2^{16} (Adv 1/2) — machine-checked |
 | Hash function | Mode 3 (sponge, r=8, c=8) | 2^8 collision/preimage |
 | 64-bit MAC | Mode 4 (HEH) | 2^8 forgeries |
-| 64-bit wide-block | Mode 5 (tweakable wide-block) | 2^32 queries (birthday bound) |
+| 64-bit wide-block | Mode 5 (Mercy-style, heuristic) | 2^8 queries (underlying block limit) |
 | Bulk encryption | — | NOT recommended |
 
 ---

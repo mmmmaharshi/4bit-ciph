@@ -38,7 +38,7 @@ Definition sbox_nib (x : nib) : nib :=
           | 0 => 12 | 1 => 5 | 2 => 6 | 3 => 11 | 4 => 9 | 5 => 0
           | 6 => 10 | 7 => 13 | 8 => 3 | 9 => 14 | 10 => 15 | 11 => 8
           | 12 => 4 | 13 => 7 | 14 => 1 | _ => 2
-          end.
+          end).
 
 (* ======================================================================== *)
 (* DDT - All 256 entries verified                                            *)
@@ -560,353 +560,353 @@ Lemma ddt_le_15_15 : ddt_entry 15 15 <= 4. Proof. rewrite ddt_15_15. lia. Qed.
 Lemma ddt_bound_di1 : forall d0, d0 < 16 -> ddt_entry 1 d0 <= 4.
 Proof.
   intros d0 Hd0.
-  repeat (destruct d0 as [|d0']; first [
-    rewrite ddt_le_1_0 by lia |
-    rewrite ddt_le_1_1 by lia |
-    rewrite ddt_le_1_2 by lia |
-    rewrite ddt_le_1_3 by lia |
-    rewrite ddt_le_1_4 by lia |
-    rewrite ddt_le_1_5 by lia |
-    rewrite ddt_le_1_6 by lia |
-    rewrite ddt_le_1_7 by lia |
-    rewrite ddt_le_1_8 by lia |
-    rewrite ddt_le_1_9 by lia |
-    rewrite ddt_le_1_10 by lia |
-    rewrite ddt_le_1_11 by lia |
-    rewrite ddt_le_1_12 by lia |
-    rewrite ddt_le_1_13 by lia |
-    rewrite ddt_le_1_14 by lia |
-    rewrite ddt_le_1_15 by lia
-  ]; lia). Qed.
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  lia.
+Qed.
 
 Lemma ddt_bound_di2 : forall d0, d0 < 16 -> ddt_entry 2 d0 <= 4.
 Proof.
   intros d0 Hd0.
-  repeat (destruct d0 as [|d0']; first [
-    rewrite ddt_le_2_0 by lia |
-    rewrite ddt_le_2_1 by lia |
-    rewrite ddt_le_2_2 by lia |
-    rewrite ddt_le_2_3 by lia |
-    rewrite ddt_le_2_4 by lia |
-    rewrite ddt_le_2_5 by lia |
-    rewrite ddt_le_2_6 by lia |
-    rewrite ddt_le_2_7 by lia |
-    rewrite ddt_le_2_8 by lia |
-    rewrite ddt_le_2_9 by lia |
-    rewrite ddt_le_2_10 by lia |
-    rewrite ddt_le_2_11 by lia |
-    rewrite ddt_le_2_12 by lia |
-    rewrite ddt_le_2_13 by lia |
-    rewrite ddt_le_2_14 by lia |
-    rewrite ddt_le_2_15 by lia
-  ]; lia). Qed.
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  lia.
+Qed.
 
 Lemma ddt_bound_di3 : forall d0, d0 < 16 -> ddt_entry 3 d0 <= 4.
 Proof.
   intros d0 Hd0.
-  repeat (destruct d0 as [|d0']; first [
-    rewrite ddt_le_3_0 by lia |
-    rewrite ddt_le_3_1 by lia |
-    rewrite ddt_le_3_2 by lia |
-    rewrite ddt_le_3_3 by lia |
-    rewrite ddt_le_3_4 by lia |
-    rewrite ddt_le_3_5 by lia |
-    rewrite ddt_le_3_6 by lia |
-    rewrite ddt_le_3_7 by lia |
-    rewrite ddt_le_3_8 by lia |
-    rewrite ddt_le_3_9 by lia |
-    rewrite ddt_le_3_10 by lia |
-    rewrite ddt_le_3_11 by lia |
-    rewrite ddt_le_3_12 by lia |
-    rewrite ddt_le_3_13 by lia |
-    rewrite ddt_le_3_14 by lia |
-    rewrite ddt_le_3_15 by lia
-  ]; lia). Qed.
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  lia.
+Qed.
 
 Lemma ddt_bound_di4 : forall d0, d0 < 16 -> ddt_entry 4 d0 <= 4.
 Proof.
   intros d0 Hd0.
-  repeat (destruct d0 as [|d0']; first [
-    rewrite ddt_le_4_0 by lia |
-    rewrite ddt_le_4_1 by lia |
-    rewrite ddt_le_4_2 by lia |
-    rewrite ddt_le_4_3 by lia |
-    rewrite ddt_le_4_4 by lia |
-    rewrite ddt_le_4_5 by lia |
-    rewrite ddt_le_4_6 by lia |
-    rewrite ddt_le_4_7 by lia |
-    rewrite ddt_le_4_8 by lia |
-    rewrite ddt_le_4_9 by lia |
-    rewrite ddt_le_4_10 by lia |
-    rewrite ddt_le_4_11 by lia |
-    rewrite ddt_le_4_12 by lia |
-    rewrite ddt_le_4_13 by lia |
-    rewrite ddt_le_4_14 by lia |
-    rewrite ddt_le_4_15 by lia
-  ]; lia). Qed.
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  lia.
+Qed.
 
 Lemma ddt_bound_di5 : forall d0, d0 < 16 -> ddt_entry 5 d0 <= 4.
 Proof.
   intros d0 Hd0.
-  repeat (destruct d0 as [|d0']; first [
-    rewrite ddt_le_5_0 by lia |
-    rewrite ddt_le_5_1 by lia |
-    rewrite ddt_le_5_2 by lia |
-    rewrite ddt_le_5_3 by lia |
-    rewrite ddt_le_5_4 by lia |
-    rewrite ddt_le_5_5 by lia |
-    rewrite ddt_le_5_6 by lia |
-    rewrite ddt_le_5_7 by lia |
-    rewrite ddt_le_5_8 by lia |
-    rewrite ddt_le_5_9 by lia |
-    rewrite ddt_le_5_10 by lia |
-    rewrite ddt_le_5_11 by lia |
-    rewrite ddt_le_5_12 by lia |
-    rewrite ddt_le_5_13 by lia |
-    rewrite ddt_le_5_14 by lia |
-    rewrite ddt_le_5_15 by lia
-  ]; lia). Qed.
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  lia.
+Qed.
 
 Lemma ddt_bound_di6 : forall d0, d0 < 16 -> ddt_entry 6 d0 <= 4.
 Proof.
   intros d0 Hd0.
-  repeat (destruct d0 as [|d0']; first [
-    rewrite ddt_le_6_0 by lia |
-    rewrite ddt_le_6_1 by lia |
-    rewrite ddt_le_6_2 by lia |
-    rewrite ddt_le_6_3 by lia |
-    rewrite ddt_le_6_4 by lia |
-    rewrite ddt_le_6_5 by lia |
-    rewrite ddt_le_6_6 by lia |
-    rewrite ddt_le_6_7 by lia |
-    rewrite ddt_le_6_8 by lia |
-    rewrite ddt_le_6_9 by lia |
-    rewrite ddt_le_6_10 by lia |
-    rewrite ddt_le_6_11 by lia |
-    rewrite ddt_le_6_12 by lia |
-    rewrite ddt_le_6_13 by lia |
-    rewrite ddt_le_6_14 by lia |
-    rewrite ddt_le_6_15 by lia
-  ]; lia). Qed.
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  lia.
+Qed.
 
 Lemma ddt_bound_di7 : forall d0, d0 < 16 -> ddt_entry 7 d0 <= 4.
 Proof.
   intros d0 Hd0.
-  repeat (destruct d0 as [|d0']; first [
-    rewrite ddt_le_7_0 by lia |
-    rewrite ddt_le_7_1 by lia |
-    rewrite ddt_le_7_2 by lia |
-    rewrite ddt_le_7_3 by lia |
-    rewrite ddt_le_7_4 by lia |
-    rewrite ddt_le_7_5 by lia |
-    rewrite ddt_le_7_6 by lia |
-    rewrite ddt_le_7_7 by lia |
-    rewrite ddt_le_7_8 by lia |
-    rewrite ddt_le_7_9 by lia |
-    rewrite ddt_le_7_10 by lia |
-    rewrite ddt_le_7_11 by lia |
-    rewrite ddt_le_7_12 by lia |
-    rewrite ddt_le_7_13 by lia |
-    rewrite ddt_le_7_14 by lia |
-    rewrite ddt_le_7_15 by lia
-  ]; lia). Qed.
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  lia.
+Qed.
 
 Lemma ddt_bound_di8 : forall d0, d0 < 16 -> ddt_entry 8 d0 <= 4.
 Proof.
   intros d0 Hd0.
-  repeat (destruct d0 as [|d0']; first [
-    rewrite ddt_le_8_0 by lia |
-    rewrite ddt_le_8_1 by lia |
-    rewrite ddt_le_8_2 by lia |
-    rewrite ddt_le_8_3 by lia |
-    rewrite ddt_le_8_4 by lia |
-    rewrite ddt_le_8_5 by lia |
-    rewrite ddt_le_8_6 by lia |
-    rewrite ddt_le_8_7 by lia |
-    rewrite ddt_le_8_8 by lia |
-    rewrite ddt_le_8_9 by lia |
-    rewrite ddt_le_8_10 by lia |
-    rewrite ddt_le_8_11 by lia |
-    rewrite ddt_le_8_12 by lia |
-    rewrite ddt_le_8_13 by lia |
-    rewrite ddt_le_8_14 by lia |
-    rewrite ddt_le_8_15 by lia
-  ]; lia). Qed.
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  lia.
+Qed.
 
 Lemma ddt_bound_di9 : forall d0, d0 < 16 -> ddt_entry 9 d0 <= 4.
 Proof.
   intros d0 Hd0.
-  repeat (destruct d0 as [|d0']; first [
-    rewrite ddt_le_9_0 by lia |
-    rewrite ddt_le_9_1 by lia |
-    rewrite ddt_le_9_2 by lia |
-    rewrite ddt_le_9_3 by lia |
-    rewrite ddt_le_9_4 by lia |
-    rewrite ddt_le_9_5 by lia |
-    rewrite ddt_le_9_6 by lia |
-    rewrite ddt_le_9_7 by lia |
-    rewrite ddt_le_9_8 by lia |
-    rewrite ddt_le_9_9 by lia |
-    rewrite ddt_le_9_10 by lia |
-    rewrite ddt_le_9_11 by lia |
-    rewrite ddt_le_9_12 by lia |
-    rewrite ddt_le_9_13 by lia |
-    rewrite ddt_le_9_14 by lia |
-    rewrite ddt_le_9_15 by lia
-  ]; lia). Qed.
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  lia.
+Qed.
 
 Lemma ddt_bound_di10 : forall d0, d0 < 16 -> ddt_entry 10 d0 <= 4.
 Proof.
   intros d0 Hd0.
-  repeat (destruct d0 as [|d0']; first [
-    rewrite ddt_le_10_0 by lia |
-    rewrite ddt_le_10_1 by lia |
-    rewrite ddt_le_10_2 by lia |
-    rewrite ddt_le_10_3 by lia |
-    rewrite ddt_le_10_4 by lia |
-    rewrite ddt_le_10_5 by lia |
-    rewrite ddt_le_10_6 by lia |
-    rewrite ddt_le_10_7 by lia |
-    rewrite ddt_le_10_8 by lia |
-    rewrite ddt_le_10_9 by lia |
-    rewrite ddt_le_10_10 by lia |
-    rewrite ddt_le_10_11 by lia |
-    rewrite ddt_le_10_12 by lia |
-    rewrite ddt_le_10_13 by lia |
-    rewrite ddt_le_10_14 by lia |
-    rewrite ddt_le_10_15 by lia
-  ]; lia). Qed.
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  lia.
+Qed.
 
 Lemma ddt_bound_di11 : forall d0, d0 < 16 -> ddt_entry 11 d0 <= 4.
 Proof.
   intros d0 Hd0.
-  repeat (destruct d0 as [|d0']; first [
-    rewrite ddt_le_11_0 by lia |
-    rewrite ddt_le_11_1 by lia |
-    rewrite ddt_le_11_2 by lia |
-    rewrite ddt_le_11_3 by lia |
-    rewrite ddt_le_11_4 by lia |
-    rewrite ddt_le_11_5 by lia |
-    rewrite ddt_le_11_6 by lia |
-    rewrite ddt_le_11_7 by lia |
-    rewrite ddt_le_11_8 by lia |
-    rewrite ddt_le_11_9 by lia |
-    rewrite ddt_le_11_10 by lia |
-    rewrite ddt_le_11_11 by lia |
-    rewrite ddt_le_11_12 by lia |
-    rewrite ddt_le_11_13 by lia |
-    rewrite ddt_le_11_14 by lia |
-    rewrite ddt_le_11_15 by lia
-  ]; lia). Qed.
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  lia.
+Qed.
 
 Lemma ddt_bound_di12 : forall d0, d0 < 16 -> ddt_entry 12 d0 <= 4.
 Proof.
   intros d0 Hd0.
-  repeat (destruct d0 as [|d0']; first [
-    rewrite ddt_le_12_0 by lia |
-    rewrite ddt_le_12_1 by lia |
-    rewrite ddt_le_12_2 by lia |
-    rewrite ddt_le_12_3 by lia |
-    rewrite ddt_le_12_4 by lia |
-    rewrite ddt_le_12_5 by lia |
-    rewrite ddt_le_12_6 by lia |
-    rewrite ddt_le_12_7 by lia |
-    rewrite ddt_le_12_8 by lia |
-    rewrite ddt_le_12_9 by lia |
-    rewrite ddt_le_12_10 by lia |
-    rewrite ddt_le_12_11 by lia |
-    rewrite ddt_le_12_12 by lia |
-    rewrite ddt_le_12_13 by lia |
-    rewrite ddt_le_12_14 by lia |
-    rewrite ddt_le_12_15 by lia
-  ]; lia). Qed.
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  lia.
+Qed.
 
 Lemma ddt_bound_di13 : forall d0, d0 < 16 -> ddt_entry 13 d0 <= 4.
 Proof.
   intros d0 Hd0.
-  repeat (destruct d0 as [|d0']; first [
-    rewrite ddt_le_13_0 by lia |
-    rewrite ddt_le_13_1 by lia |
-    rewrite ddt_le_13_2 by lia |
-    rewrite ddt_le_13_3 by lia |
-    rewrite ddt_le_13_4 by lia |
-    rewrite ddt_le_13_5 by lia |
-    rewrite ddt_le_13_6 by lia |
-    rewrite ddt_le_13_7 by lia |
-    rewrite ddt_le_13_8 by lia |
-    rewrite ddt_le_13_9 by lia |
-    rewrite ddt_le_13_10 by lia |
-    rewrite ddt_le_13_11 by lia |
-    rewrite ddt_le_13_12 by lia |
-    rewrite ddt_le_13_13 by lia |
-    rewrite ddt_le_13_14 by lia |
-    rewrite ddt_le_13_15 by lia
-  ]; lia). Qed.
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  lia.
+Qed.
 
 Lemma ddt_bound_di14 : forall d0, d0 < 16 -> ddt_entry 14 d0 <= 4.
 Proof.
   intros d0 Hd0.
-  repeat (destruct d0 as [|d0']; first [
-    rewrite ddt_le_14_0 by lia |
-    rewrite ddt_le_14_1 by lia |
-    rewrite ddt_le_14_2 by lia |
-    rewrite ddt_le_14_3 by lia |
-    rewrite ddt_le_14_4 by lia |
-    rewrite ddt_le_14_5 by lia |
-    rewrite ddt_le_14_6 by lia |
-    rewrite ddt_le_14_7 by lia |
-    rewrite ddt_le_14_8 by lia |
-    rewrite ddt_le_14_9 by lia |
-    rewrite ddt_le_14_10 by lia |
-    rewrite ddt_le_14_11 by lia |
-    rewrite ddt_le_14_12 by lia |
-    rewrite ddt_le_14_13 by lia |
-    rewrite ddt_le_14_14 by lia |
-    rewrite ddt_le_14_15 by lia
-  ]; lia). Qed.
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  lia.
+Qed.
 
 Lemma ddt_bound_di15 : forall d0, d0 < 16 -> ddt_entry 15 d0 <= 4.
 Proof.
   intros d0 Hd0.
-  repeat (destruct d0 as [|d0']; first [
-    rewrite ddt_le_15_0 by lia |
-    rewrite ddt_le_15_1 by lia |
-    rewrite ddt_le_15_2 by lia |
-    rewrite ddt_le_15_3 by lia |
-    rewrite ddt_le_15_4 by lia |
-    rewrite ddt_le_15_5 by lia |
-    rewrite ddt_le_15_6 by lia |
-    rewrite ddt_le_15_7 by lia |
-    rewrite ddt_le_15_8 by lia |
-    rewrite ddt_le_15_9 by lia |
-    rewrite ddt_le_15_10 by lia |
-    rewrite ddt_le_15_11 by lia |
-    rewrite ddt_le_15_12 by lia |
-    rewrite ddt_le_15_13 by lia |
-    rewrite ddt_le_15_14 by lia |
-    rewrite ddt_le_15_15 by lia
-  ]; lia). Qed.
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  destruct d0 as [|d0]; [vm_compute; lia|].
+  lia.
+Qed.
 
 Theorem ddt_uniformity_bound :
   forall (di d0 : nat), di > 0 -> di < 16 -> d0 < 16 -> ddt_entry di d0 <= 4.
 Proof.
-  intros. destruct di. lia.
-
-  - destruct di. apply ddt_bound_di1. lia.
-  - destruct di. apply ddt_bound_di2. lia.
-  - destruct di. apply ddt_bound_di3. lia.
-  - destruct di. apply ddt_bound_di4. lia.
-  - destruct di. apply ddt_bound_di5. lia.
-  - destruct di. apply ddt_bound_di6. lia.
-  - destruct di. apply ddt_bound_di7. lia.
-  - destruct di. apply ddt_bound_di8. lia.
-  - destruct di. apply ddt_bound_di9. lia.
-  - destruct di. apply ddt_bound_di10. lia.
-  - destruct di. apply ddt_bound_di11. lia.
-  - destruct di. apply ddt_bound_di12. lia.
-  - destruct di. apply ddt_bound_di13. lia.
-  - destruct di. apply ddt_bound_di14. lia.
-  - destruct di. apply ddt_bound_di15. lia.
+  intros di d0 Hdi Hd0 Hd1.
+  destruct di as [|di]; [apply ddt_bound_di1; lia|].
+  destruct di as [|di]; [apply ddt_bound_di2; lia|].
+  destruct di as [|di]; [apply ddt_bound_di3; lia|].
+  destruct di as [|di]; [apply ddt_bound_di4; lia|].
+  destruct di as [|di]; [apply ddt_bound_di5; lia|].
+  destruct di as [|di]; [apply ddt_bound_di6; lia|].
+  destruct di as [|di]; [apply ddt_bound_di7; lia|].
+  destruct di as [|di]; [apply ddt_bound_di8; lia|].
+  destruct di as [|di]; [apply ddt_bound_di9; lia|].
+  destruct di as [|di]; [apply ddt_bound_di10; lia|].
+  destruct di as [|di]; [apply ddt_bound_di11; lia|].
+  destruct di as [|di]; [apply ddt_bound_di12; lia|].
+  destruct di as [|di]; [apply ddt_bound_di13; lia|].
+  destruct di as [|di]; [apply ddt_bound_di14; lia|].
+  destruct di as [|di]; [apply ddt_bound_di15; lia|].
+  lia.
 Qed.
 
 (* ======================================================================== *)
@@ -1380,310 +1380,355 @@ Lemma lat_le_15_14 : (lat_entry 15 14 <= 12) /\ (lat_entry 15 14 >= 4). Proof. r
 Lemma lat_le_15_15 : (lat_entry 15 15 <= 12) /\ (lat_entry 15 15 >= 4). Proof. rewrite lat_15_15. lia. Qed.
 
 Lemma lat_bound_a1 : forall b, b > 0 -> b < 16 -> (lat_entry 1 b <= 12) /\ (lat_entry 1 b >= 4).
-Proof. intros.
-  destruct b. lia. destruct b. rewrite lat_le_1_1. lia.
-  destruct b. lia. destruct b. rewrite lat_le_1_2. lia.
-  destruct b. lia. destruct b. rewrite lat_le_1_3. lia.
-  destruct b. lia. destruct b. rewrite lat_le_1_4. lia.
-  destruct b. lia. destruct b. rewrite lat_le_1_5. lia.
-  destruct b. lia. destruct b. rewrite lat_le_1_6. lia.
-  destruct b. lia. destruct b. rewrite lat_le_1_7. lia.
-  destruct b. lia. destruct b. rewrite lat_le_1_8. lia.
-  destruct b. lia. destruct b. rewrite lat_le_1_9. lia.
-  destruct b. lia. destruct b. rewrite lat_le_1_10. lia.
-  destruct b. lia. destruct b. rewrite lat_le_1_11. lia.
-  destruct b. lia. destruct b. rewrite lat_le_1_12. lia.
-  destruct b. lia. destruct b. rewrite lat_le_1_13. lia.
-  destruct b. lia. destruct b. rewrite lat_le_1_14. lia.
-  destruct b. lia. destruct b. rewrite lat_le_1_15. lia.
+Proof.
+  intros b Hb Hb16.
+  destruct b as [|b]; [lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  lia.
 Qed.
 
 Lemma lat_bound_a2 : forall b, b > 0 -> b < 16 -> (lat_entry 2 b <= 12) /\ (lat_entry 2 b >= 4).
-Proof. intros.
-  destruct b. lia. destruct b. rewrite lat_le_2_1. lia.
-  destruct b. lia. destruct b. rewrite lat_le_2_2. lia.
-  destruct b. lia. destruct b. rewrite lat_le_2_3. lia.
-  destruct b. lia. destruct b. rewrite lat_le_2_4. lia.
-  destruct b. lia. destruct b. rewrite lat_le_2_5. lia.
-  destruct b. lia. destruct b. rewrite lat_le_2_6. lia.
-  destruct b. lia. destruct b. rewrite lat_le_2_7. lia.
-  destruct b. lia. destruct b. rewrite lat_le_2_8. lia.
-  destruct b. lia. destruct b. rewrite lat_le_2_9. lia.
-  destruct b. lia. destruct b. rewrite lat_le_2_10. lia.
-  destruct b. lia. destruct b. rewrite lat_le_2_11. lia.
-  destruct b. lia. destruct b. rewrite lat_le_2_12. lia.
-  destruct b. lia. destruct b. rewrite lat_le_2_13. lia.
-  destruct b. lia. destruct b. rewrite lat_le_2_14. lia.
-  destruct b. lia. destruct b. rewrite lat_le_2_15. lia.
+Proof.
+  intros b Hb Hb16.
+  destruct b as [|b]; [lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  lia.
 Qed.
 
 Lemma lat_bound_a3 : forall b, b > 0 -> b < 16 -> (lat_entry 3 b <= 12) /\ (lat_entry 3 b >= 4).
-Proof. intros.
-  destruct b. lia. destruct b. rewrite lat_le_3_1. lia.
-  destruct b. lia. destruct b. rewrite lat_le_3_2. lia.
-  destruct b. lia. destruct b. rewrite lat_le_3_3. lia.
-  destruct b. lia. destruct b. rewrite lat_le_3_4. lia.
-  destruct b. lia. destruct b. rewrite lat_le_3_5. lia.
-  destruct b. lia. destruct b. rewrite lat_le_3_6. lia.
-  destruct b. lia. destruct b. rewrite lat_le_3_7. lia.
-  destruct b. lia. destruct b. rewrite lat_le_3_8. lia.
-  destruct b. lia. destruct b. rewrite lat_le_3_9. lia.
-  destruct b. lia. destruct b. rewrite lat_le_3_10. lia.
-  destruct b. lia. destruct b. rewrite lat_le_3_11. lia.
-  destruct b. lia. destruct b. rewrite lat_le_3_12. lia.
-  destruct b. lia. destruct b. rewrite lat_le_3_13. lia.
-  destruct b. lia. destruct b. rewrite lat_le_3_14. lia.
-  destruct b. lia. destruct b. rewrite lat_le_3_15. lia.
+Proof.
+  intros b Hb Hb16.
+  destruct b as [|b]; [lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  lia.
 Qed.
 
 Lemma lat_bound_a4 : forall b, b > 0 -> b < 16 -> (lat_entry 4 b <= 12) /\ (lat_entry 4 b >= 4).
-Proof. intros.
-  destruct b. lia. destruct b. rewrite lat_le_4_1. lia.
-  destruct b. lia. destruct b. rewrite lat_le_4_2. lia.
-  destruct b. lia. destruct b. rewrite lat_le_4_3. lia.
-  destruct b. lia. destruct b. rewrite lat_le_4_4. lia.
-  destruct b. lia. destruct b. rewrite lat_le_4_5. lia.
-  destruct b. lia. destruct b. rewrite lat_le_4_6. lia.
-  destruct b. lia. destruct b. rewrite lat_le_4_7. lia.
-  destruct b. lia. destruct b. rewrite lat_le_4_8. lia.
-  destruct b. lia. destruct b. rewrite lat_le_4_9. lia.
-  destruct b. lia. destruct b. rewrite lat_le_4_10. lia.
-  destruct b. lia. destruct b. rewrite lat_le_4_11. lia.
-  destruct b. lia. destruct b. rewrite lat_le_4_12. lia.
-  destruct b. lia. destruct b. rewrite lat_le_4_13. lia.
-  destruct b. lia. destruct b. rewrite lat_le_4_14. lia.
-  destruct b. lia. destruct b. rewrite lat_le_4_15. lia.
+Proof.
+  intros b Hb Hb16.
+  destruct b as [|b]; [lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  lia.
 Qed.
 
 Lemma lat_bound_a5 : forall b, b > 0 -> b < 16 -> (lat_entry 5 b <= 12) /\ (lat_entry 5 b >= 4).
-Proof. intros.
-  destruct b. lia. destruct b. rewrite lat_le_5_1. lia.
-  destruct b. lia. destruct b. rewrite lat_le_5_2. lia.
-  destruct b. lia. destruct b. rewrite lat_le_5_3. lia.
-  destruct b. lia. destruct b. rewrite lat_le_5_4. lia.
-  destruct b. lia. destruct b. rewrite lat_le_5_5. lia.
-  destruct b. lia. destruct b. rewrite lat_le_5_6. lia.
-  destruct b. lia. destruct b. rewrite lat_le_5_7. lia.
-  destruct b. lia. destruct b. rewrite lat_le_5_8. lia.
-  destruct b. lia. destruct b. rewrite lat_le_5_9. lia.
-  destruct b. lia. destruct b. rewrite lat_le_5_10. lia.
-  destruct b. lia. destruct b. rewrite lat_le_5_11. lia.
-  destruct b. lia. destruct b. rewrite lat_le_5_12. lia.
-  destruct b. lia. destruct b. rewrite lat_le_5_13. lia.
-  destruct b. lia. destruct b. rewrite lat_le_5_14. lia.
-  destruct b. lia. destruct b. rewrite lat_le_5_15. lia.
+Proof.
+  intros b Hb Hb16.
+  destruct b as [|b]; [lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  lia.
 Qed.
 
 Lemma lat_bound_a6 : forall b, b > 0 -> b < 16 -> (lat_entry 6 b <= 12) /\ (lat_entry 6 b >= 4).
-Proof. intros.
-  destruct b. lia. destruct b. rewrite lat_le_6_1. lia.
-  destruct b. lia. destruct b. rewrite lat_le_6_2. lia.
-  destruct b. lia. destruct b. rewrite lat_le_6_3. lia.
-  destruct b. lia. destruct b. rewrite lat_le_6_4. lia.
-  destruct b. lia. destruct b. rewrite lat_le_6_5. lia.
-  destruct b. lia. destruct b. rewrite lat_le_6_6. lia.
-  destruct b. lia. destruct b. rewrite lat_le_6_7. lia.
-  destruct b. lia. destruct b. rewrite lat_le_6_8. lia.
-  destruct b. lia. destruct b. rewrite lat_le_6_9. lia.
-  destruct b. lia. destruct b. rewrite lat_le_6_10. lia.
-  destruct b. lia. destruct b. rewrite lat_le_6_11. lia.
-  destruct b. lia. destruct b. rewrite lat_le_6_12. lia.
-  destruct b. lia. destruct b. rewrite lat_le_6_13. lia.
-  destruct b. lia. destruct b. rewrite lat_le_6_14. lia.
-  destruct b. lia. destruct b. rewrite lat_le_6_15. lia.
+Proof.
+  intros b Hb Hb16.
+  destruct b as [|b]; [lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  lia.
 Qed.
 
 Lemma lat_bound_a7 : forall b, b > 0 -> b < 16 -> (lat_entry 7 b <= 12) /\ (lat_entry 7 b >= 4).
-Proof. intros.
-  destruct b. lia. destruct b. rewrite lat_le_7_1. lia.
-  destruct b. lia. destruct b. rewrite lat_le_7_2. lia.
-  destruct b. lia. destruct b. rewrite lat_le_7_3. lia.
-  destruct b. lia. destruct b. rewrite lat_le_7_4. lia.
-  destruct b. lia. destruct b. rewrite lat_le_7_5. lia.
-  destruct b. lia. destruct b. rewrite lat_le_7_6. lia.
-  destruct b. lia. destruct b. rewrite lat_le_7_7. lia.
-  destruct b. lia. destruct b. rewrite lat_le_7_8. lia.
-  destruct b. lia. destruct b. rewrite lat_le_7_9. lia.
-  destruct b. lia. destruct b. rewrite lat_le_7_10. lia.
-  destruct b. lia. destruct b. rewrite lat_le_7_11. lia.
-  destruct b. lia. destruct b. rewrite lat_le_7_12. lia.
-  destruct b. lia. destruct b. rewrite lat_le_7_13. lia.
-  destruct b. lia. destruct b. rewrite lat_le_7_14. lia.
-  destruct b. lia. destruct b. rewrite lat_le_7_15. lia.
+Proof.
+  intros b Hb Hb16.
+  destruct b as [|b]; [lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  lia.
 Qed.
 
 Lemma lat_bound_a8 : forall b, b > 0 -> b < 16 -> (lat_entry 8 b <= 12) /\ (lat_entry 8 b >= 4).
-Proof. intros.
-  destruct b. lia. destruct b. rewrite lat_le_8_1. lia.
-  destruct b. lia. destruct b. rewrite lat_le_8_2. lia.
-  destruct b. lia. destruct b. rewrite lat_le_8_3. lia.
-  destruct b. lia. destruct b. rewrite lat_le_8_4. lia.
-  destruct b. lia. destruct b. rewrite lat_le_8_5. lia.
-  destruct b. lia. destruct b. rewrite lat_le_8_6. lia.
-  destruct b. lia. destruct b. rewrite lat_le_8_7. lia.
-  destruct b. lia. destruct b. rewrite lat_le_8_8. lia.
-  destruct b. lia. destruct b. rewrite lat_le_8_9. lia.
-  destruct b. lia. destruct b. rewrite lat_le_8_10. lia.
-  destruct b. lia. destruct b. rewrite lat_le_8_11. lia.
-  destruct b. lia. destruct b. rewrite lat_le_8_12. lia.
-  destruct b. lia. destruct b. rewrite lat_le_8_13. lia.
-  destruct b. lia. destruct b. rewrite lat_le_8_14. lia.
-  destruct b. lia. destruct b. rewrite lat_le_8_15. lia.
+Proof.
+  intros b Hb Hb16.
+  destruct b as [|b]; [lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  lia.
 Qed.
 
 Lemma lat_bound_a9 : forall b, b > 0 -> b < 16 -> (lat_entry 9 b <= 12) /\ (lat_entry 9 b >= 4).
-Proof. intros.
-  destruct b. lia. destruct b. rewrite lat_le_9_1. lia.
-  destruct b. lia. destruct b. rewrite lat_le_9_2. lia.
-  destruct b. lia. destruct b. rewrite lat_le_9_3. lia.
-  destruct b. lia. destruct b. rewrite lat_le_9_4. lia.
-  destruct b. lia. destruct b. rewrite lat_le_9_5. lia.
-  destruct b. lia. destruct b. rewrite lat_le_9_6. lia.
-  destruct b. lia. destruct b. rewrite lat_le_9_7. lia.
-  destruct b. lia. destruct b. rewrite lat_le_9_8. lia.
-  destruct b. lia. destruct b. rewrite lat_le_9_9. lia.
-  destruct b. lia. destruct b. rewrite lat_le_9_10. lia.
-  destruct b. lia. destruct b. rewrite lat_le_9_11. lia.
-  destruct b. lia. destruct b. rewrite lat_le_9_12. lia.
-  destruct b. lia. destruct b. rewrite lat_le_9_13. lia.
-  destruct b. lia. destruct b. rewrite lat_le_9_14. lia.
-  destruct b. lia. destruct b. rewrite lat_le_9_15. lia.
+Proof.
+  intros b Hb Hb16.
+  destruct b as [|b]; [lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  lia.
 Qed.
 
 Lemma lat_bound_a10 : forall b, b > 0 -> b < 16 -> (lat_entry 10 b <= 12) /\ (lat_entry 10 b >= 4).
-Proof. intros.
-  destruct b. lia. destruct b. rewrite lat_le_10_1. lia.
-  destruct b. lia. destruct b. rewrite lat_le_10_2. lia.
-  destruct b. lia. destruct b. rewrite lat_le_10_3. lia.
-  destruct b. lia. destruct b. rewrite lat_le_10_4. lia.
-  destruct b. lia. destruct b. rewrite lat_le_10_5. lia.
-  destruct b. lia. destruct b. rewrite lat_le_10_6. lia.
-  destruct b. lia. destruct b. rewrite lat_le_10_7. lia.
-  destruct b. lia. destruct b. rewrite lat_le_10_8. lia.
-  destruct b. lia. destruct b. rewrite lat_le_10_9. lia.
-  destruct b. lia. destruct b. rewrite lat_le_10_10. lia.
-  destruct b. lia. destruct b. rewrite lat_le_10_11. lia.
-  destruct b. lia. destruct b. rewrite lat_le_10_12. lia.
-  destruct b. lia. destruct b. rewrite lat_le_10_13. lia.
-  destruct b. lia. destruct b. rewrite lat_le_10_14. lia.
-  destruct b. lia. destruct b. rewrite lat_le_10_15. lia.
+Proof.
+  intros b Hb Hb16.
+  destruct b as [|b]; [lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  lia.
 Qed.
 
 Lemma lat_bound_a11 : forall b, b > 0 -> b < 16 -> (lat_entry 11 b <= 12) /\ (lat_entry 11 b >= 4).
-Proof. intros.
-  destruct b. lia. destruct b. rewrite lat_le_11_1. lia.
-  destruct b. lia. destruct b. rewrite lat_le_11_2. lia.
-  destruct b. lia. destruct b. rewrite lat_le_11_3. lia.
-  destruct b. lia. destruct b. rewrite lat_le_11_4. lia.
-  destruct b. lia. destruct b. rewrite lat_le_11_5. lia.
-  destruct b. lia. destruct b. rewrite lat_le_11_6. lia.
-  destruct b. lia. destruct b. rewrite lat_le_11_7. lia.
-  destruct b. lia. destruct b. rewrite lat_le_11_8. lia.
-  destruct b. lia. destruct b. rewrite lat_le_11_9. lia.
-  destruct b. lia. destruct b. rewrite lat_le_11_10. lia.
-  destruct b. lia. destruct b. rewrite lat_le_11_11. lia.
-  destruct b. lia. destruct b. rewrite lat_le_11_12. lia.
-  destruct b. lia. destruct b. rewrite lat_le_11_13. lia.
-  destruct b. lia. destruct b. rewrite lat_le_11_14. lia.
-  destruct b. lia. destruct b. rewrite lat_le_11_15. lia.
+Proof.
+  intros b Hb Hb16.
+  destruct b as [|b]; [lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  lia.
 Qed.
 
 Lemma lat_bound_a12 : forall b, b > 0 -> b < 16 -> (lat_entry 12 b <= 12) /\ (lat_entry 12 b >= 4).
-Proof. intros.
-  destruct b. lia. destruct b. rewrite lat_le_12_1. lia.
-  destruct b. lia. destruct b. rewrite lat_le_12_2. lia.
-  destruct b. lia. destruct b. rewrite lat_le_12_3. lia.
-  destruct b. lia. destruct b. rewrite lat_le_12_4. lia.
-  destruct b. lia. destruct b. rewrite lat_le_12_5. lia.
-  destruct b. lia. destruct b. rewrite lat_le_12_6. lia.
-  destruct b. lia. destruct b. rewrite lat_le_12_7. lia.
-  destruct b. lia. destruct b. rewrite lat_le_12_8. lia.
-  destruct b. lia. destruct b. rewrite lat_le_12_9. lia.
-  destruct b. lia. destruct b. rewrite lat_le_12_10. lia.
-  destruct b. lia. destruct b. rewrite lat_le_12_11. lia.
-  destruct b. lia. destruct b. rewrite lat_le_12_12. lia.
-  destruct b. lia. destruct b. rewrite lat_le_12_13. lia.
-  destruct b. lia. destruct b. rewrite lat_le_12_14. lia.
-  destruct b. lia. destruct b. rewrite lat_le_12_15. lia.
+Proof.
+  intros b Hb Hb16.
+  destruct b as [|b]; [lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  lia.
 Qed.
 
 Lemma lat_bound_a13 : forall b, b > 0 -> b < 16 -> (lat_entry 13 b <= 12) /\ (lat_entry 13 b >= 4).
-Proof. intros.
-  destruct b. lia. destruct b. rewrite lat_le_13_1. lia.
-  destruct b. lia. destruct b. rewrite lat_le_13_2. lia.
-  destruct b. lia. destruct b. rewrite lat_le_13_3. lia.
-  destruct b. lia. destruct b. rewrite lat_le_13_4. lia.
-  destruct b. lia. destruct b. rewrite lat_le_13_5. lia.
-  destruct b. lia. destruct b. rewrite lat_le_13_6. lia.
-  destruct b. lia. destruct b. rewrite lat_le_13_7. lia.
-  destruct b. lia. destruct b. rewrite lat_le_13_8. lia.
-  destruct b. lia. destruct b. rewrite lat_le_13_9. lia.
-  destruct b. lia. destruct b. rewrite lat_le_13_10. lia.
-  destruct b. lia. destruct b. rewrite lat_le_13_11. lia.
-  destruct b. lia. destruct b. rewrite lat_le_13_12. lia.
-  destruct b. lia. destruct b. rewrite lat_le_13_13. lia.
-  destruct b. lia. destruct b. rewrite lat_le_13_14. lia.
-  destruct b. lia. destruct b. rewrite lat_le_13_15. lia.
+Proof.
+  intros b Hb Hb16.
+  destruct b as [|b]; [lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  lia.
 Qed.
 
 Lemma lat_bound_a14 : forall b, b > 0 -> b < 16 -> (lat_entry 14 b <= 12) /\ (lat_entry 14 b >= 4).
-Proof. intros.
-  destruct b. lia. destruct b. rewrite lat_le_14_1. lia.
-  destruct b. lia. destruct b. rewrite lat_le_14_2. lia.
-  destruct b. lia. destruct b. rewrite lat_le_14_3. lia.
-  destruct b. lia. destruct b. rewrite lat_le_14_4. lia.
-  destruct b. lia. destruct b. rewrite lat_le_14_5. lia.
-  destruct b. lia. destruct b. rewrite lat_le_14_6. lia.
-  destruct b. lia. destruct b. rewrite lat_le_14_7. lia.
-  destruct b. lia. destruct b. rewrite lat_le_14_8. lia.
-  destruct b. lia. destruct b. rewrite lat_le_14_9. lia.
-  destruct b. lia. destruct b. rewrite lat_le_14_10. lia.
-  destruct b. lia. destruct b. rewrite lat_le_14_11. lia.
-  destruct b. lia. destruct b. rewrite lat_le_14_12. lia.
-  destruct b. lia. destruct b. rewrite lat_le_14_13. lia.
-  destruct b. lia. destruct b. rewrite lat_le_14_14. lia.
-  destruct b. lia. destruct b. rewrite lat_le_14_15. lia.
+Proof.
+  intros b Hb Hb16.
+  destruct b as [|b]; [lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  lia.
 Qed.
 
 Lemma lat_bound_a15 : forall b, b > 0 -> b < 16 -> (lat_entry 15 b <= 12) /\ (lat_entry 15 b >= 4).
-Proof. intros.
-  destruct b. lia. destruct b. rewrite lat_le_15_1. lia.
-  destruct b. lia. destruct b. rewrite lat_le_15_2. lia.
-  destruct b. lia. destruct b. rewrite lat_le_15_3. lia.
-  destruct b. lia. destruct b. rewrite lat_le_15_4. lia.
-  destruct b. lia. destruct b. rewrite lat_le_15_5. lia.
-  destruct b. lia. destruct b. rewrite lat_le_15_6. lia.
-  destruct b. lia. destruct b. rewrite lat_le_15_7. lia.
-  destruct b. lia. destruct b. rewrite lat_le_15_8. lia.
-  destruct b. lia. destruct b. rewrite lat_le_15_9. lia.
-  destruct b. lia. destruct b. rewrite lat_le_15_10. lia.
-  destruct b. lia. destruct b. rewrite lat_le_15_11. lia.
-  destruct b. lia. destruct b. rewrite lat_le_15_12. lia.
-  destruct b. lia. destruct b. rewrite lat_le_15_13. lia.
-  destruct b. lia. destruct b. rewrite lat_le_15_14. lia.
-  destruct b. lia. destruct b. rewrite lat_le_15_15. lia.
+Proof.
+  intros b Hb Hb16.
+  destruct b as [|b]; [lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  destruct b as [|b]; [vm_compute; lia|].
+  lia.
 Qed.
 
 Theorem lat_max_bias_bound :
   forall (a b : nat), a > 0 -> a < 16 -> b > 0 -> b < 16 -> (lat_entry a b <= 12) /\ (lat_entry a b >= 4).
 Proof.
-  intros. destruct a. lia.
-
-  - destruct a. apply lat_bound_a1. lia.
-  - destruct a. apply lat_bound_a2. lia.
-  - destruct a. apply lat_bound_a3. lia.
-  - destruct a. apply lat_bound_a4. lia.
-  - destruct a. apply lat_bound_a5. lia.
-  - destruct a. apply lat_bound_a6. lia.
-  - destruct a. apply lat_bound_a7. lia.
-  - destruct a. apply lat_bound_a8. lia.
-  - destruct a. apply lat_bound_a9. lia.
-  - destruct a. apply lat_bound_a10. lia.
-  - destruct a. apply lat_bound_a11. lia.
-  - destruct a. apply lat_bound_a12. lia.
-  - destruct a. apply lat_bound_a13. lia.
-  - destruct a. apply lat_bound_a14. lia.
-  - destruct a. apply lat_bound_a15. lia.
+  intros a b Ha1 Ha2 Hb1 Hb2.
+  destruct a as [|a]; [apply lat_bound_a1; lia|].
+  destruct a as [|a]; [apply lat_bound_a2; lia|].
+  destruct a as [|a]; [apply lat_bound_a3; lia|].
+  destruct a as [|a]; [apply lat_bound_a4; lia|].
+  destruct a as [|a]; [apply lat_bound_a5; lia|].
+  destruct a as [|a]; [apply lat_bound_a6; lia|].
+  destruct a as [|a]; [apply lat_bound_a7; lia|].
+  destruct a as [|a]; [apply lat_bound_a8; lia|].
+  destruct a as [|a]; [apply lat_bound_a9; lia|].
+  destruct a as [|a]; [apply lat_bound_a10; lia|].
+  destruct a as [|a]; [apply lat_bound_a11; lia|].
+  destruct a as [|a]; [apply lat_bound_a12; lia|].
+  destruct a as [|a]; [apply lat_bound_a13; lia|].
+  destruct a as [|a]; [apply lat_bound_a14; lia|].
+  destruct a as [|a]; [apply lat_bound_a15; lia|].
+  lia.
 Qed.
 
 (* ======================================================================== *)

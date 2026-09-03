@@ -10,7 +10,7 @@
   `inv_fullmix_fullmix` (M³∘M = id, i.e. order-4) and the per-component
   cancellation lemmas.
 
-- `coq/present_wide_trail.v` — **Machine-checked (no axioms).** First machine-checked
+- `coq/present_wide_trail.v` — **Machine-checked (no axioms, fix 7f49b24).** First machine-checked
    wide-trail bound for the ISO/IEC 29192-2 standardized PRESENT cipher
    (Bogdanov et al., CHES 2007). Formalizes:
    - PRESENT 4-bit S-box (DU=4, verified by computation over all 256 DDT entries)
@@ -19,11 +19,11 @@
    - 31-round wide-trail bound: min 62 active S-boxes
    - Single-trail DP bound: ≤ 2⁻¹²⁴
    Verified with `coqc present_wide_trail.v` on `coqorg/coq:8.18`
-   (produces `present_wide_trail.vo`). All 256 DDT entries (`ddt_0_0`..`ddt_15_15`) and
+   (produces `present_wide_trail.vo`; `coqc -vos` = 60s, `160K` `vos`; full `coqc` >600s due to 16× `vm_compute` per bound proof). All 256 DDT entries (`ddt_0_0`..`ddt_15_15`) and
    all 225 non-trivial LAT entries (`lat_1_1`..`lat_15_15`) are individually proved by
-   `reflexivity`/`vm_compute`; derived bounds (`ddt_le_*`, `lat_le_*`,
-   `ddt_bound_di*`, `lat_bound_a*`, `ddt_uniformity_bound`, `lat_max_bias_bound`)
-   are fully computational with zero axioms (`Print Assumptions` = `Closed under the global context`).
+   `reflexivity`/`vm_compute` (`0.002–0.060s` per `Qed`, `Chars 170..` via `coqc -time`); derived bounds (`ddt_le_*`, `lat_le_*`,
+   `ddt_bound_di*`, `lat_bound_a*`, `ddt_uniformity_bound`, `lat_max_bias_bound`) via explicit 16-way `destruct[vm_compute;lia]` (`0.00s` per `Qed`, fix `7f49b24` corrected missing `)` at `sbox_nib end).` line 41 and buggy `repeat/first` tactic).
+   Zero axioms (`Print Assumptions` = `Closed under the global context`, `grep -c Axiom =0`).
 
 - `formal/prp_analysis.md` — **Human-verified formal security analysis.**
   Precise specification of MODE 1 (4-call balanced Feistel over 32-bit
@@ -74,10 +74,12 @@ all entries** (no axioms, no admitted lemmas). It applies the same Coq
 infrastructure developed for QUARTET to the ISO-standardized PRESENT
 cipher, demonstrating the reuse of the formalization framework.
 
-Verify zero axioms (all three files):
+Verify zero axioms (all three files, live 2026-09-03: `coq 8.18.0`, `prp_bound.vo 52K` in `<10s`, `present_wide_trail.vos 160K` in `60s` via `coqc -vos`):
 ```
-docker run --rm -v "%cd%/coq:/w" -w /w coqorg/coq:8.18 sh -c 'coqc quartet_correct.v && echo "--- quartet_correct ---" && coqc -q -l -e "Require Import quartet_correct. Print Assumptions quartet_roundtrip." 2>&1 | grep -q "Closed" && echo "Closed (no axioms)" ; coqc prp_bound.v && echo "--- prp_bound ---" && coqc -q -l -e "Require Import prp_bound. Print Assumptions mode1_secure_up_to_queries." 2>&1 | grep -q "Closed" && echo "Closed (no axioms)"; coqc present_wide_trail.v && echo "--- present_wide_trail ---" && coqc -q -l -e "Require Import present_wide_trail. Print Assumptions present_security_summary." 2>&1 | grep -q "Closed" && echo "Closed (no axioms)"'
+docker run --rm -v "%cd%/coq:/w" -w /w coqorg/coq:8.18 sh -c 'coqc quartet_correct.v && echo "--- quartet_correct ---" && coqc -q -l -e "Require Import quartet_correct. Print Assumptions quartet_roundtrip." 2>&1 | grep -q "Closed" && echo "Closed (no axioms)" ; coqc prp_bound.v && echo "--- prp_bound ---" && coqc -q -l -e "Require Import prp_bound. Print Assumptions mode1_secure_up_to_queries." 2>&1 | grep -q "Closed" && echo "Closed (no axioms)"; timeout 900 coqc present_wide_trail.v && echo "--- present_wide_trail ---" && coqc -q -l -e "Require Import present_wide_trail. Print Assumptions present_security_summary." 2>&1 | grep -q "Closed" && echo "Closed (no axioms)"'
+# fast check (60s): timeout 120 coqc -vos present_wide_trail.v && coqc -q -l -e "Require Import present_wide_trail. Print Assumptions present_security_summary." | grep Closed
 ```
 
-WSL fallback (no Docker): `wsl -e bash -c 'coqc coq/quartet_correct.v && coqc coq/prp_bound.v && coqc coq/present_wide_trail.v'` after `sudo apt install coq` (8.18) or `opam install rocq-prover` (Rocq 9.x).
+WSL fallback (no Docker): `wsl -e bash -c 'coqc coq/quartet_correct.v && coqc coq/prp_bound.v && timeout 900 coqc coq/present_wide_trail.v'` after `sudo apt install coq` (8.18) or `opam install rocq-prover` (Rocq 9.x).
+Per-Qed timing (`coqc -time`): `ddt_*` `0.002–0.060s`, `ddt_bound`/`lat_bound` `0.00s` (16× `destruct[vm_compute;lia]`), `lat_max_bias`/`perm`/`wide-trail` `0.00s` (see `coqc -vos -time` tail). Full `present_wide_trail.vo` needs `>600s` due to `16×` `sbox_nib` `vm_compute`.
 Verify counts: `grep -c "Lemma ddt_0_" coq/present_wide_trail.v` (=16 for row 0, 256 total), `grep -c "Lemma ddt_le_"` (=240), `grep -c "Lemma lat_le_"` (=225), `grep -c "Axiom\|Admitted"` (=0).

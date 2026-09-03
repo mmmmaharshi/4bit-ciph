@@ -909,13 +909,18 @@ simulator (`simulavr`).
 Gate-equivalent counts use the NanGate 45 nm cell library calibrated in
 `HARDWARE_ESTIMATE.md` (NAND2_X1 = 1 GE; XOR2 = 2.0; DFF_X1 = 5.67;
 PRESENT S-box = 22 GE, Poschmann CHES 2009). NanGate figures are manual
-library mapping; yosys generic synth `synth/quartet_sky130.v` on
-`yowasp-yosys 0.68` gives a library-independent check: **1 round
-`quartet_round_logic` = 132× `$_XOR_` + 36× `$_AND_` + 8× `$_NOT_` (176
-cells; full `sbox4_logic` 32 cells each) and unrolled 16-round =
-2816 cells (576 AND, 128 NOT, 2112 XOR)** — consistent with the
+library mapping; yosys generic synth `hw/quartet_sky130.v` (mirrored to
+`synth/quartet_sky130.v`) on `yowasp-yosys 0.68` gives a library-independent
+check: **1 round `quartet_round_logic` = 132× `$_XOR_` + 36× `$_AND_` +
+8× `$_NOT_` (176 cells; full `sbox4_logic` 32 cells each) and unrolled
+16-round = 2816 cells (576 AND, 128 NOT, 2112 XOR)** — consistent with the
 NanGate `~166 GE` serial estimate once mapped (`XOR≈2 GE, AND≈1.3 GE`).
-Run `synth/run_sky130.sh` to reproduce; Sky130 PDK `stat` requires `PDK_ROOT`.
+Reproduced 2026-09-03: generic in `synth/yosys_generic_stat.log` (176 cells);
+Sky130 `tt_025C_1v80` liberty mapped (`334 cells, 94 skipped`) in
+`synth/yosys_sky130_liberty.log` via `volare enable sky130A bdc9412` +
+`yowasp-yosys 0.68`; full OpenLane GDS area `920.88 µm² = 245 GE/round`
+in `HARDWARE_ESTIMATE.md:115` (docker `sky130A` flow). Run
+`synth/run_sky130.sh` to reproduce full GDS.
 
 **Encryption-only, serial architecture** (1× S-box reused over 4 nibble
 cycles ≈ 4 cycles/round):

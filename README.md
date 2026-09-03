@@ -44,7 +44,7 @@ The S-box has `DU = 4` and max LAT bias 4. The differential branch number is 4 a
 * 8 rounds: 16 active, `DP <= 2^-32`
 * 16 rounds: 32 active, `DP <= 2^-64`
 
-The linear side matches. `tests/test_bounds.py` enumerates the `2^16` states. `coq/present_wide_trail.v` proves the same branch numbers and active counts. The result is a single-trail bound. The hull can be larger.
+The linear side matches. `tests/test_bounds.py` enumerates the `2^16` states. `coq/present_wide_trail.v` proves the same branch numbers and active counts. The result is a single-trail bound. The hull can be larger: `tests/test_hull_empirical.c` measures DP_max ~2^-6.38 (vs 2^-64 single-trail). `python/hull_enum.py` provides the wide-trail bound framework; `python/hull_bound.py` implements the conjectured nilpotent hull bound.
 
 Two extra facts matter. First, the 16-bit PRP bound is limited by the birthday attack. Second, the round constants break the period-4 structure of raw `M`. The raw linear layer alone collapses integral sets at even rounds, but the real cipher with constants keeps four varying nibbles after round 2.
 
@@ -90,7 +90,7 @@ Additional evidence:
 
 * `python tests/test_integral.py` shows the simplified model collapse versus the real cipher with constants.
 * `python tests/test_key_schedule.py` shows diffusion: each round key bit depends on 23 to 63 master bits.
-* `python tests/tvla.py` is a Level 1 software Welch t-test with a leaky negative control. The primary counter is wall clock.
+* `python tests/tvla.py` is a Level 1 software Welch t-test with PDH hardware counters (processor time, C-states, interrupts) and a leaky negative control. Level 2 (power/EM traces) requires hardware.
 * `coq/quartet_correct.v` proves `decrypt(encrypt(p,k),k) = p` for all `p` and `k`.
 * `coq/prp_bound.v` proves Feistel invertibility and the numeric bound `Adv <= q^2/2^33 + 2^-60`. The hybrid game step is pen-and-paper in `formal/prp_analysis.md`.
 
@@ -112,7 +112,7 @@ AVR ATmega328P at 8 MHz needs about 43 cycles per round. A 16-round encryption i
 * Mode 2 (Even-Mansour on 16 bits): `q <= 2^8` queries.
 * Mode 3 (sponge, rate 8, capacity 8): collision at `2^8`.
 * Mode 4 (HEH MAC, 64-bit): forgery at `2^8`.
-* Mode 5 (64-bit tweakable wide block): birthday at `2^32`. This is the only mode where `2^-64` is not vacuous. The conservative proof uses EME2 or XCB.
+* Mode 5 (64-bit Mercy-style wide block): heuristic only, birthday at `2^8` (limited by underlying 16-bit block). No proof exists; `2^-64` remains vacuous. EME2/XCB cannot compensate for the small underlying block size.
 
 `M` has period 4. At most one state in 256 falls into a small invariant subspace on the raw permutation. Blocks must avoid those subspaces.
 

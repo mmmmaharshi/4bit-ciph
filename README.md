@@ -44,7 +44,7 @@ The S-box has `DU = 4` and max LAT bias 4. The differential branch number is 4 a
 * 8 rounds: 16 active, `DP <= 2^-32`
 * 16 rounds: 32 active, `DP <= 2^-64`
 
-The linear side matches. `tests/test_bounds.py` enumerates the `2^16` states. `coq/present_wide_trail.v` proves the same branch numbers and active counts. The result is a single-trail bound. The hull can be larger: `tests/test_hull_empirical.c` measures DP_max ~2^-6.38 (vs 2^-64 single-trail). `python/hull_enum.py` provides the wide-trail bound framework; `python/hull_bound.py` implements the conjectured nilpotent hull bound.
+The linear side matches. `tests/test_bounds.py` enumerates the `2^16` states. `coq/present_wide_trail.v` proves the same branch numbers and active counts. The result is a single-trail bound. The hull can be larger: `tests/test_hull_empirical.c` measures DP_max ~2^-6.38 (vs 2^-64 single-trail), showing the hull effect dominates. No proven hull bound exists; `python/hull_enum.py` provides the wide-trail bound framework only.
 
 Two extra facts matter. First, the 16-bit PRP bound is limited by the birthday attack. Second, the round constants break the period-4 structure of raw `M`. The raw linear layer alone collapses integral sets at even rounds, but the real cipher with constants keeps four varying nibbles after round 2.
 

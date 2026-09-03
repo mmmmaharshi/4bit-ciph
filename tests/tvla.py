@@ -40,13 +40,13 @@ trace capture is required. The counter set is intentionally small
 (5 counters: psutil.cpu_stats x 4 + wall clock) but the statistical
 machinery is the same.
 
-Trace counts (default; configurable via env vars QUARTET_TVLA_TRACES
-and QUARTET_TVLA_BATCH):
+Trace counts (default; configurable via env vars QUARTET_TVLA_PYTHON_TRACES,
+QUARTET_TVLA_C_TRACES, QUARTET_TVLA_BATCH):
 
-  PYTHON_TRACES = 10_000    (per group; 20K total per test)
-  C_TRACES      = 1_000_000 (per group; 2M total per test; full Goodwill)
-  BATCH         = 100       (encryptions per trace; amplifies psutil
-                             deltas, which are 0-1 per single call)
+  PYTHON_TRACES = 50_000    (per group; 100K total per test, wall-clock primary)
+  C_TRACES      = 50_000    (per group; 100K total per test, wall-clock primary)
+  BATCH         = 1         (single encryption per trace; batch>1 only for
+                             psutil amplification — wall clock dominates)
 
 Welch's t-statistic, two-sided p-value, and the Holm-Bonferroni
 corrected significance threshold are all reported per counter.
@@ -92,8 +92,11 @@ KEY_B = 0xFEDCBA9876543210
 
 C_RUNNER_REAL = _REPO_ROOT / "quartet_runner.exe"
 C_RUNNER_LEAKY = _REPO_ROOT / "tests" / "fixtures" / "leaky_runner.exe"
-C_RUNNER_REAL_SRC = _REPO_ROOT / "quartet_runner.c"
+C_RUNNER_REAL_SRC = _REPO_ROOT / "runners" / "quartet_runner.c"
 C_RUNNER_LEAKY_SRC = _REPO_ROOT / "tests" / "fixtures" / "leaky_runner.c"
+# header search paths for C runners (sbox.h, quartet.h live in c/)
+_C_INCLUDE = _REPO_ROOT / "c"
+_RUNNER_INCLUDE = _REPO_ROOT / "runners"
 
 
 # ---------------------------------------------------------------------------
@@ -208,10 +211,12 @@ def run_python_leaky(plaintexts: list[int], key: int) -> None:
 def build_c_runner(src: Path, exe: Path) -> None:
     if exe.exists():
         exe.unlink()
+    # c/ holds sbox.h/quartet.h; runners/ holds quartet_runner.c include path
     result = subprocess.run(
-        ["gcc", "-O2", "-std=c11", "-I", str(_REPO_ROOT / "python"),
-         "-o", str(exe), str(src)],
-        capture_output=True, text=True, cwd=str(_REPO_ROOT / "python"),
+        ["gcc", "-O2", "-std=c11",
+          "-I", str(_C_INCLUDE), "-I", str(_RUNNER_INCLUDE),
+          "-o", str(exe), str(src)],
+        capture_output=True, text=True, cwd=str(_REPO_ROOT),
     )
     if result.returncode != 0:
         raise RuntimeError(f"gcc error building {src.name}: {result.stderr}")
@@ -237,7 +242,7 @@ class PersistentRunner:
             stderr=subprocess.PIPE,
             text=True,
             bufsize=0,  # unbuffered
-            cwd=str(_REPO_ROOT / "python"),
+            cwd=str(_REPO_ROOT),
         )
         return self
 
@@ -268,7 +273,7 @@ def run_c_batch(exe: Path, plaintexts: list[int], key: int) -> None:
     stdin = "\n".join(f"{key:016X} {pt:04X}" for pt in plaintexts) + "\n"
     result = subprocess.run(
         [str(exe)], input=stdin, capture_output=True, text=True,
-        timeout=600, cwd=str(_REPO_ROOT / "python"),
+        timeout=600, cwd=str(_REPO_ROOT),
     )
     if result.returncode != 0:
         raise RuntimeError(f"C runner {exe.name} failed: {result.stderr[:200]}")

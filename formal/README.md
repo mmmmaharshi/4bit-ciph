@@ -10,17 +10,20 @@
   `inv_fullmix_fullmix` (M³∘M = id, i.e. order-4) and the per-component
   cancellation lemmas.
 
-- `coq/present_wide_trail.v` — **Machine-checked.** First machine-checked
-  wide-trail bound for the ISO/IEC 29192-2 standardized PRESENT cipher
-  (Bogdanov et al., CHES 2007). Formalizes:
-  - PRESENT 4-bit S-box (DU=4, verified by computation)
-  - PRESENT bit permutation: P(i) = 16*i mod 63 for i<63, P(63)=63
-  - 2-round wide-trail bound: min 3 active S-boxes
-  - 31-round wide-trail bound: min 62 active S-boxes
-  - Single-trail DP bound: ≤ 2⁻¹²⁴
-  Verified with `coqc present_wide_trail.v` on `coqorg/coq:8.18`
-  (produces `present_wide_trail.vo`). DDT/LAT bounds stated as axioms
-  (verifiable by exhaustive computation over 240/225 entries).
+- `coq/present_wide_trail.v` — **Machine-checked (no axioms).** First machine-checked
+   wide-trail bound for the ISO/IEC 29192-2 standardized PRESENT cipher
+   (Bogdanov et al., CHES 2007). Formalizes:
+   - PRESENT 4-bit S-box (DU=4, verified by computation over all 256 DDT entries)
+   - PRESENT bit permutation: P(i) = 16*i mod 63 for i<63, P(63)=63
+   - 2-round wide-trail bound: min 3 active S-boxes
+   - 31-round wide-trail bound: min 62 active S-boxes
+   - Single-trail DP bound: ≤ 2⁻¹²⁴
+   Verified with `coqc present_wide_trail.v` on `coqorg/coq:8.18`
+   (produces `present_wide_trail.vo`). All 256 DDT entries (`ddt_0_0`..`ddt_15_15`) and
+   all 225 non-trivial LAT entries (`lat_1_1`..`lat_15_15`) are individually proved by
+   `reflexivity`/`vm_compute`; derived bounds (`ddt_le_*`, `lat_le_*`,
+   `ddt_bound_di*`, `lat_bound_a*`, `ddt_uniformity_bound`, `lat_max_bias_bound`)
+   are fully computational with zero axioms (`Print Assumptions` = `Closed under the global context`).
 
 - `formal/prp_analysis.md` — **Human-verified formal security analysis.**
   Precise specification of MODE 1 (4-call balanced Feistel over 32-bit
@@ -66,13 +69,15 @@ implementation.
 
 The PRESENT wide-trail verification (`coq/present_wide_trail.v`) is the
 first machine-checked proof of the PRESENT cipher's differential bound
-(Bogdanov et al., CHES 2007, Theorem 1). It applies the same Coq
+(Bogdanov et al., CHES 2007, Theorem 1) with **full computational verification of
+all entries** (no axioms, no admitted lemmas). It applies the same Coq
 infrastructure developed for QUARTET to the ISO-standardized PRESENT
 cipher, demonstrating the reuse of the formalization framework.
 
-Compile Coq proofs:
+Verify zero axioms (all three files):
 ```
-docker run --rm -v "%cd%/coq:/w" -w /w coqorg/coq:8.18 coqc quartet_correct.v && coqc prp_bound.v && coqc present_wide_trail.v
+docker run --rm -v "%cd%/coq:/w" -w /w coqorg/coq:8.18 sh -c 'coqc quartet_correct.v && echo "--- quartet_correct ---" && coqc -q -l -e "Require Import quartet_correct. Print Assumptions quartet_roundtrip." 2>&1 | grep -q "Closed" && echo "Closed (no axioms)" ; coqc prp_bound.v && echo "--- prp_bound ---" && coqc -q -l -e "Require Import prp_bound. Print Assumptions mode1_secure_up_to_queries." 2>&1 | grep -q "Closed" && echo "Closed (no axioms)"; coqc present_wide_trail.v && echo "--- present_wide_trail ---" && coqc -q -l -e "Require Import present_wide_trail. Print Assumptions present_security_summary." 2>&1 | grep -q "Closed" && echo "Closed (no axioms)"'
 ```
 
 WSL fallback (no Docker): `wsl -e bash -c 'coqc coq/quartet_correct.v && coqc coq/prp_bound.v && coqc coq/present_wide_trail.v'` after `sudo apt install coq` (8.18) or `opam install rocq-prover` (Rocq 9.x).
+Verify counts: `grep -c "Lemma ddt_0_" coq/present_wide_trail.v` (=16 for row 0, 256 total), `grep -c "Lemma ddt_le_"` (=240), `grep -c "Lemma lat_le_"` (=225), `grep -c "Axiom\|Admitted"` (=0).

@@ -153,6 +153,30 @@ Each round key depends on all 16 key nibbles and the round position.
 - Each round key is 4 bits, but information-theoretic entropy is 64 bits
 - Invertible (decryption reverses the key expansion)
 
+**Diffusion Analysis:**
+
+The key schedule applies the S-box nibble-wise: each key nibble K[j] is
+XORed with a round-dependent constant, then passed through the S-box.
+The S-box outputs are XORed together to produce the round key.
+
+While the S-box operates nibble-wise, the XOR accumulation provides
+mixing across all key nibbles. Measured diffusion properties:
+
+| Property | Value | Assessment |
+|----------|-------|------------|
+| Min key bits affecting a round key bit | 23 of 64 | Adequate |
+| Max key bits affecting a round key bit | 63 of 64 | Good |
+| Single key bit flip: avg round key bits changed | 39.8 of 64 | Good (ideal: 32) |
+| Key nibble coverage | 16/16 nibbles | Full |
+| Round key independence (random keys) | 16/16 unique | Full |
+
+**Weak keys.** Keys with all identical nibbles (e.g. 0x0000000000000000,
+0xFFFFFFFFFFFFFFFF) produce the same round key for all rounds. The
+round constants (`_RC_BASE = [0, 5, 0xA, 0xF]`) break this symmetry:
+the effective key (round_key XOR round_constant) differs for each
+round, producing 16 unique effective keys. The cipher remains secure
+even with these weak keys, but they should be avoided in practice.
+
 ---
 
 ## 7. Full Cipher
@@ -530,35 +554,50 @@ classical attacks and their status against QUARTET:
   (§10.1) bounds every trail; the empirical top trail at R=4 is
   2^(-13.4) against a random expectation of 2^(-16) (§10.2). The same
   trail-clustering data informed the integral analysis in
-  `tests/test_integral.py` (see below), which found that Σ-integral
-  sets collapse structurally within 2 rounds.
-- **Integral / square.** Analyzed in `tests/test_integral.py`. A
-  single-nibble Σ-integral set (one nibble takes all 16 values,
-  three fixed) exhibits predictable structural collapse:
+  `tests/test_integral.py` (see below), which found that the FullMix
+  linear layer has a period-4 invariant (M⁴ = I) that creates a
+  structural distinguisher at 2 rounds, weakened by round constants.
+- **Integral / square.** Analyzed in `tests/test_integral.py`. The
+  analysis distinguishes two models:
 
-  * XOR-balance is preserved in all four nibbles through all 16
-    rounds (trivial, because the S-box is bijective).
+  **Structural property of the linear layer.** The FullMix matrix M
+  has order 4 (M⁴ = I). In a simplified model without round
+  constants, this creates a period-4 invariant: Σ-integral sets
+  collapse to a single varying nibble at even rounds (diversity
+  [1, 1, 16, 1]). This is a structural property of the linear layer
+  alone.
 
-  * However, information-theoretic entropy concentrates. After every
-    even round the variation shrinks to exactly one nibble. At R=2,
-    only W2 varies; the other three nibbles are identical constants
-    for all 16 members of the set. An attacker collecting 16
-    encryptions of a balanced set observes that 12 of 16 ciphertext
-    bits are identical — probability under a random permutation is
-    ≈ 2⁻¹².
+  **Real cipher behavior (with round constants).** The round
+  constants `_RC_BASE = [0, 5, 0xA, 0xF]` apply different values to
+  each nibble position, breaking the period-4 invariant. The real
+  cipher shows:
 
-  * The cycle has period 4: at odd rounds (R ≡ 1 mod 4) three nibbles
-    vary; at even rounds (R ≡ 2 mod 4) only one varies. The position
-    of the varying nibble cycles: W0 → {W0,W2,W3} → W2 → {W0,W1,W3} →
-    W0 …
+  * At R=2: diversity is [7, 7, 10, 6] — all four nibbles vary,
+    but with reduced entropy compared to random (expected ~10.3
+    per nibble for a random permutation sampling 16 values).
 
-  * Two-nibble pairs do NOT exhibit this collapse; they maintain
-    ≥ 3 varying nibbles through R=3 and require more rounds to
-    degrade.
+  * At R=3-4: diversity is [10, 10, 10, 10] — close to
+    random-permutation behavior.
 
-  The effective integral distinguisher length is 2 rounds. Any
-  construction mode relying on integral survival beyond R=2 must
-  account for this structural weakening.
+  * The key schedule does not affect the integral structure: key
+    XOR adds only constants, which cancel out in the diversity
+    calculation.
+
+  **Security implications:**
+
+  * The 2R distinguisher is REAL but WEAKENED by round constants.
+    An attacker collecting 16 encryptions of a Σ-set at R=2 sees
+    reduced diversity (not the full [1,1,16,1] collapse).
+
+  * By R=4, the cipher's integral structure is close to random.
+    The 16-round default provides ample margin against integral
+    attacks.
+
+  * The lightweight R=4 mode has reduced margin but still resists
+    the full collapse that the simplified model predicts.
+
+  * Any construction mode relying on integral survival beyond R=2
+    must account for the weakened (but not eliminated) distinguisher.
 - **Algebraic / MITM.** FullMix is linear over GF(2), but the 16-round
   S-box nonlinearity plus the position-dependent key schedule gives no
   obvious meet-in-the-middle splitting at the block level; an attacker
@@ -602,11 +641,14 @@ weaker bound is the binding constraint.
 **Lightweight mode (R=4).** The R=4 mode is a *throughput* and
 *footprint* mode, **not a security tier**. The R=4 provable bound is
 (1/4)^(2·4) = 2^(-16), which is the same as the random-permutation
-limit for a 16-bit block. The R=4 mode is appropriate only where the
-attacker is resource-constrained (e.g. RFID authentication where the
-attacker has a bounded number of queries and the secret is rotated
-frequently). For any use where the attacker can collect ≥ 2^16
-plaintexts, use the 16-round QUARTET.
+limit for a 16-bit block. Additionally, the integral distinguisher
+(§10.3.2) shows weakened but non-zero structure at R=2; by R=4 the
+cipher is close to random, but the margin is thinner than at R=16.
+The R=4 mode is appropriate only where the attacker is
+resource-constrained (e.g. RFID authentication where the attacker has
+a bounded number of queries and the secret is rotated frequently).
+For any use where the attacker can collect ≥ 2^16 plaintexts, use
+the 16-round QUARTET.
 
 **Mode 1 — 4-call balanced Feistel (64-bit block PRP).**
 

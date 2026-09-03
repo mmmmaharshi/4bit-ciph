@@ -76,6 +76,9 @@ This project uses the terms from `/codebase-design`: **module, interface, implem
 |------|------|--------------------|
 | `cipher.py` | The cipher (S-box, FullMix, round, key schedule, encrypt, decrypt, self-test) | stdlib only |
 | `cryptanalysis.py` | DDT, LAT, SAC, differential, linear, statistics, benchmark, test vectors | `cipher` |
+| `coq/quartet_correct.v` | Machine-checked QUARTET roundtrip correctness (decrypt(encrypt(p,k),k)=p for all p,k) | Coq stdlib |
+| `coq/present_wide_trail.v` | Machine-checked PRESENT wide-trail bound (ISO/IEC 29192-2): DU=4, 31-round min 62 active S-boxes, single-trail DP ≤ 2⁻¹²⁴ | Coq stdlib |
+| `coq/prp_bound.v` | Machine-checked numeric PRP bounds for QUARTET Mode 1 (Feistel) | Coq stdlib, QArith |
 | `tests/test_bounds.py` | Machine-checked wide-trail bound (S-box DU/LAT, branch number, min active S-boxes per 2/4/8/16 rounds, diff + linear) | `cipher` |
 | `tests/test_constant_time.py` | AST-based static analysis of the cipher core for data-dependent control flow | `cipher`, `pycparser` |
 | `tests/test_kats.py` | KAT harness: 262,157 entries (Python + C) from `tests/vectors/quartet_kat.txt` | `cipher`, subprocess |

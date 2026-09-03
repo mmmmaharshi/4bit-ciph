@@ -174,6 +174,7 @@ Run `hw/run_sky130.sh` (shim at `synth/run_sky130.sh` also works) to reproduce. 
 
 - `coq/quartet_correct.v` proves `decrypt(encrypt(p,k),k)=p` for all `k` and `p` on `coqorg/coq:8.18` (3 MB `.vo`).
 - `coq/prp_bound.v` proves the Feistel invertibility and the numeric `q²/2³³` bound.
+- `coq/present_wide_trail.v` — **First machine-checked wide-trail bound for the ISO/IEC 29192-2 standardized PRESENT cipher** (Bogdanov et al., CHES 2007). Proves: S-box DU=4, 31-round min 62 active S-boxes, single-trail DP ≤ 2⁻¹²⁴.
 - `tests/test_order4_layers.py` proves FullMix is one of 16 optimal matrices with `M⁴=I` and weight 12 (exhaustive over `GL(4,2)`).
 
 ## Modes

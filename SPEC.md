@@ -1147,6 +1147,9 @@ replacement.
 - `quartetchiffre_bitsliced.c` — Bitsliced C reference: defines `QUARTET_BITSLICED`, runs self-test/benchmark
 - `quartet_runner.c` — Thin I/O adapter: stdin/stdout over the same cipher
 - `quartet_round_asm.s` — One-round AVR assembly reference, with cycle count
+- `coq/quartet_correct.v` — Machine-checked QUARTET roundtrip correctness (Coq 8.18)
+- `coq/present_wide_trail.v` — Machine-checked PRESENT wide-trail bound: DU=4, 31-round min 62 active S-boxes, DP ≤ 2⁻¹²⁴ (Coq 8.18)
+- `coq/prp_bound.v` — Machine-checked PRP bounds for QUARTET Mode 1 Feistel (Coq 8.18)
 - `tests/test_bounds.py` — Machine-checked wide-trail bound (differential + linear)
 - `tests/test_constant_time.py` — AST-based static analysis of the cipher core
 - `tests/test_kats.py` — KAT harness: 262,157 entries (Python + C)

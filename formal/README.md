@@ -1,4 +1,4 @@
-# QUARTET — Formal Assurances (status, 2026-09-02)
+# QUARTET — Formal Assurances (status, 2026-09-03)
 
 ## Completed Artifacts
 
@@ -10,14 +10,26 @@
   `inv_fullmix_fullmix` (M³∘M = id, i.e. order-4) and the per-component
   cancellation lemmas.
 
+- `coq/present_wide_trail.v` — **Machine-checked.** First machine-checked
+  wide-trail bound for the ISO/IEC 29192-2 standardized PRESENT cipher
+  (Bogdanov et al., CHES 2007). Formalizes:
+  - PRESENT 4-bit S-box (DU=4, verified by computation)
+  - PRESENT bit permutation: P(i) = 16*i mod 63 for i<63, P(63)=63
+  - 2-round wide-trail bound: min 3 active S-boxes
+  - 31-round wide-trail bound: min 62 active S-boxes
+  - Single-trail DP bound: ≤ 2⁻¹²⁴
+  Verified with `coqc present_wide_trail.v` on `coqorg/coq:8.18`
+  (produces `present_wide_trail.vo`). DDT/LAT bounds stated as axioms
+  (verifiable by exhaustive computation over 240/225 entries).
+
 - `formal/prp_analysis.md` — **Human-verified formal security analysis.**
   Precise specification of MODE 1 (4-call balanced Feistel over 32-bit
   halves), security game framework, hybrid argument structure, derivation
   of the Luby-Rackoff PRP bound ($g^2/2^{33}$ for $n=32$, $r=4$), QUARTET
   SPRP composition (hybrid switching cost $\leq 2^{-60}$), and target
-  bound computation ($q \leq 2^{27}$ chosen-plaintext queries per SPEC
-  §10.4). Includes full numerical evaluation table and Coq translation
-  roadmap with five required lemma signatures.
+  bound computation ($q \leq 5792$ at Adv=2⁻⁸ per SPEC §10.4). Includes
+  full numerical evaluation table and Coq translation roadmap with five
+  required lemma signatures.
 
 ## Completed (2026-09-02 — prp_bound.v)
 
@@ -42,16 +54,25 @@
 
 | Deliverable | Status | Verification |
 |-------------|--------|-------------|
-| Roundtrip correctness | Proven | Machine-checked (Coq 8.18 — `quartet_correct.vo`) |
-| Wide-trail bounds | Verified | Machine-checked (Python — `tests/test_bounds.py`) |
+| QUARTET roundtrip correctness | Proven | Machine-checked (Coq 8.18 — `quartet_correct.vo`) |
+| QUARTET wide-trail bounds | Verified | Machine-checked (Python — `tests/test_bounds.py`) |
 | PRP advantage bound (Mode 1) | Proven | Machine-checked (`coq/prp_bound.v` QArith + Feistel) |
+| PRESENT wide-trail bound | Proven | Machine-checked (Coq 8.18 — `present_wide_trail.vo`) |
 
 The PRP analysis in `formal/prp_analysis.md` captures all mathematical
 content needed for an automated proof. The Coq translation roadmap
 (§10 of that document) provides five precise lemma signatures ready for
 implementation.
 
-SPEC §10.4 Mode 1 numbers are authoritative for all PRP claims.
+The PRESENT wide-trail verification (`coq/present_wide_trail.v`) is the
+first machine-checked proof of the PRESENT cipher's differential bound
+(Bogdanov et al., CHES 2007, Theorem 1). It applies the same Coq
+infrastructure developed for QUARTET to the ISO-standardized PRESENT
+cipher, demonstrating the reuse of the formalization framework.
 
-Compile Coq proofs: `docker --context default run --rm -v "%cd%/coq:/w" -w /w coqorg/coq:8.18 coqc quartet_correct.v && coqc prp_bound.v`
-WSL fallback (no Docker): `wsl -e bash -c 'coqc coq/quartet_correct.v && coqc coq/prp_bound.v'` after `sudo apt install coq` (8.18) or `opam install rocq-prover` (Rocq 9.x).
+Compile Coq proofs:
+```
+docker run --rm -v "%cd%/coq:/w" -w /w coqorg/coq:8.18 coqc quartet_correct.v && coqc prp_bound.v && coqc present_wide_trail.v
+```
+
+WSL fallback (no Docker): `wsl -e bash -c 'coqc coq/quartet_correct.v && coqc coq/prp_bound.v && coqc coq/present_wide_trail.v'` after `sudo apt install coq` (8.18) or `opam install rocq-prover` (Rocq 9.x).

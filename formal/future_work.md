@@ -31,49 +31,48 @@ GF(2), this gives a nilpotent decomposition:
 This nilpotent structure creates periodic trail patterns (period 4)
 that could potentially be analytically counted.
 
-### 1.3 Prior Attempt (Superseded)
+### 1.3 Why a Hull Bound is Hard
 
-A prior attempt at a nilpotent hull bound used an ad-hoc trail
-count factor of 2^{0.5R}, giving a conjectured bound of 2^{-3.5R}
-(2^{-56} at R=16). **This was found to be insufficient:**
+Computational attempts to bound the hull probability ran into
+fundamental obstacles:
 
-- Still 2^{49.6}× off from empirical (2^{-56} vs 2^{-6.38})
-- The factor 2^{0.5R} has no spectral-radius proof
-- A reviewer would correctly identify this as an ad-hoc factor, not a bound
+1. **State space explosion**: The transition operator T is 65536×65536.
+   After several rounds, probability mass spreads across too many
+   states for exact computation.
 
-The code for this exploratory attempt has been removed from the main
-results. See git history for `python/hull_bound.py` and
-`formal/hull_bound_analysis.md` if needed for reference.
+2. **Pruning loses accuracy**: Aggressive pruning (keeping only top-K
+   states) loses the true maximum because probability concentrates
+   in ways that are hard to predict.
 
-### 1.4 What Would Be Needed
+3. **Spectral radius is 1**: T is stochastic (rows sum to 1), so
+   ρ(T) = 1, which gives no useful bound on ||T^R||.
 
-A rigorous hull bound would require one of:
+4. **No clean combinatorial structure**: The interaction between the
+   PRESENT DDT and FullMix does not factor nicely.
 
-1. **Spectral analysis**: Bound the spectral radius of the transition
-   operator T where T[Δin][Δout] = sum of probabilities of all
-   single-round transitions. The hull probability is related to
-   trace(T^R).
+A prior attempt using an ad-hoc factor 2^{0.5R} gave 2^{-56} at R=16,
+which was still 2^{49.6}× off from empirical (2^{-6.38}) and had no
+proof. **This was removed from the main results.**
 
-2. **Combinatorial counting**: Exploit the M^4 = I periodicity to
-   count trails by "nilpotent signature" and prove bounds on the
-   number of trails in each weight class.
+### 1.4 Current Status (Honest Position)
 
-3. **DDT-weighted wide-trail**: Account for the specific structure
-   of PRESENT's DDT (entries are 0, 2, or 4, not uniform) to get
-   tighter bounds than the generic (1/4) per active S-box.
+**Proven:**
+- Single-trail bound: 2^{-64} (machine-checked in Coq, `tests/test_bounds.py`)
 
-### 1.5 Current Status
+**Measured:**
+- Empirical DP_max: ~2^{-6.38} (exhaustive 2^32-pair enumeration,
+  `tests/test_hull_empirical.c`)
 
-**The honest position is:**
-- Single-trail bound: 2^{-64} (proven, machine-checked in Coq)
-- Empirical DP_max: ~2^{-6.38} (measured via exhaustive enumeration)
-- Hull bound: **No proven bound exists**
+**Not proven:**
+- Hull bound: No analytical bound exists. The gap between single-trail
+  (2^{-64}) and empirical (2^{-6.38}) is real and reflects the hull
+  effect.
 
-The empirical measurement shows that the hull effect dominates the
-differential probability. This is itself a publishable observation:
-it demonstrates that single-trail bounds are vacuous for this cipher
-and that the actual security is determined by the birthday bound
-(2^8 for 16-bit block), not the trail bound.
+**Publishable observation:** The hull effect dominates the differential
+probability for QUARTET. Single-trail bounds are vacuous for this
+cipher. The actual security is determined by the birthday bound
+(2^8 for 16-bit block), not the trail bound. This honesty about
+limitations is itself a contribution.
 
 ---
 

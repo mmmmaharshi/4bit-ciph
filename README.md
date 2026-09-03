@@ -1,187 +1,177 @@
-# QUARTET — 4-bit Native Block Cipher
+# Quartet: a 4-bit native block cipher
 
-[![KAT 262k](https://img.shields.io/badge/KAT-262157%20PASS-brightgreen)](tests/vectors/quartet_kat.txt)
-[![KAT32 20k](https://img.shields.io/badge/KAT32-20480%20PASS-brightgreen)](tests/vectors/quartet32_kat.txt)
-[![Coq 8.18](https://img.shields.io/badge/Coq-quartets_correct.vo%20%7C%20prp_bound.vo-blue)](formal/README.md)
-[![Yosys 0.68](https://img.shields.io/badge/Yosys-176%20cells%2Fround-lightgrey)](hw/quartet_sky130.v)
-[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue)](python/cipher.py)
+The smallest 4-bit SPN with an order-4 linear layer and a machine-checked wide-trail bound.
 
-> The smallest 4-bit SPN with an order-4 linear layer and a machine-checked wide-trail bound.
+Quartet-16 is a 16-bit block, 64-bit key SPN for hardware less than 200 GE. Quartet-32 is a thin 32-bit adapter that reuses the same S-box and FullMix. This document is a short paper that summarizes the design, the bound, and the evidence. The full specification is in `SPEC.md`.
 
-`QUARTET-16` is a 16-bit block, 64-bit key SPN for <200 GE hardware. `QUARTET-32` is a thin 32-bit adapter that reuses the same S-box and FullMix. Both share one source of truth.
+## Abstract
 
-> [!NOTE]
-> This is a construction block for constrained modes, not a drop-in for AES bulk encryption. See `SPEC.md` §1 and §10.4.
+Quartet uses only 4-bit operations in the round function. The S-box is the PRESENT S-box. The linear layer is a 4x4 matrix over GF(2) with `M^4 = I` and branch number 4. The matrix has weight 12 and is one of 16 optimal matrices in `GL(4,2)`.
 
-## Table of contents
+The wide-trail bound is 32 active S-boxes at 16 rounds. With `DU = 4` this gives a single-trail `DP <= 2^-64` and `LP <= 2^-64`. Python enumerates the bound and Coq proves it. The bound is vacuous for the 16-bit codebook. The meaningful limit is `q << 2^8`.
 
-- [Features](#features)
-- [Prerequisites](#prerequisites)
-- [Quick start](#quick-start)
-- [Usage](#usage)
-- [Project structure](#project-structure)
-- [Verification](#verification)
-- [Security at a glance](#security-at-a-glance)
-- [Hardware and formal proofs](#hardware-and-formal-proofs)
-- [Modes](#modes)
+The hardware cost is 176 generic cells per round. The serial NanGate estimate is about 166 GE. The 32-bit adapter costs about 332 GE.
 
-## Features
+## Problem
 
-- 4-bit native round: PRESENT S-box, FullMix 4×4 over GF(2) with `M⁴=I` and branch number 4.
-- Provable wide-trail bound: 32 active S-boxes at 16 rounds gives `DP/LP ≤ 2⁻⁶⁴`.
-- Exhaustive optimality proof: 16 matrices meet `M⁴=I` and `B=4` with weight 12. FullMix is optimal.
-- Two tracks from one code base: `QUARTET-16` artifact and `QUARTET-32` adapter (`2×16`, `332 GE` serial).
-- Reproducible checks: 262157-vector KAT, 20-vector Py↔C cross-check, yosys stat, Coq 3 MB proof.
+Many constrained devices use 4-bit datapaths. Standard ciphers use wider operations in the linear layer. That adds cost in 4-bit hardware. A cipher that uses only 4-bit primitives reduces area and power.
 
-## Prerequisites
+A 16-bit block is tiny. A single-trail bound of `2^-64` does not give `2^-64` security against a full-codebook adversary. The birthday bound is `2^8` queries and the codebook is `2^16`. We state this vacuity directly and give modes that make the bound useful.
 
-Make sure that you have the tools that follow:
+## Construction
 
-- Python 3.10 or later (stdlib only, no extra packages).
-- GCC with C11 support for the C reference.
-- `coqorg/coq:8.18` for the Coq proofs (Docker or WSL).
-- `yowasp-yosys 0.68` for the generic synth check.
+The state has four 4-bit words `w0..w3`. One round does four S-box lookups, four key XORs, and FullMix. FullMix is:
 
-## Quick start
+```
+w0' = w0 ^ w1 ^ w2
+w1' = w1 ^ w2 ^ w3
+w2' = w2 ^ w3 ^ w0
+w3' = w3 ^ w0 ^ w1
+```
 
-Do the steps that follow to run the quick check:
+The matrix satisfies `M^4 = I` and has branch number 4. The branch number is the minimum of `weight(in) + weight(M(in))` over non-zero inputs.
 
-1. Clone the repo and enter the directory.
-   ```
-   git clone https://github.com/mmmmaharshi/4bit-ciph.git
-   cd 4bit-ciph
-   ```
-2. Make sure that the wide-trail bounds hold.
-   ```
-   python tests/test_bounds.py
-   python tests/test_bounds32.py
-   ```
-3. Make sure that the KAT and the Py↔C cross-check hold.
-   ```
-   python tests/test_kats.py
-   python tests/test_kats32.py
-   python compare.py
-   python compare32.py
-   ```
-4. Make sure that the generic synth stat holds.
-   ```
-   yowasp-yosys -p "read_verilog hw/quartet_sky130.v; hierarchy -check -top quartet_round_logic; proc; opt; techmap; opt; stat"
-   ```
+Round keys come from the 64-bit master key. The key schedule applies a round constant and the S-box nibble-wise and accumulates with XOR. Each round key bit depends on at least 23 master key bits. Round constants are `0, 5, 0xA, 0xF` and break symmetry of weak keys.
 
-> [!TIP]
-> Each step takes less than 30 seconds on a laptop. The full KAT32 run takes about 1 minute.
+Quartet-16 uses 16 rounds. Quartet-32 encrypts two 16-bit lanes in parallel and costs two S-box blocks per round. No new table is added.
 
-## Usage
+## Security bound
 
-QUARTET-16 encrypts a 16-bit block with a 64-bit key. QUARTET-32 encrypts a 32-bit block with a 128-bit key.
+The S-box has `DU = 4` and max LAT bias 4. The differential branch number is 4 and the linear branch number is 4. The minimum active counts are:
+
+* 2 rounds: 4 active, `DP <= 2^-8`
+* 4 rounds: 8 active, `DP <= 2^-16`
+* 8 rounds: 16 active, `DP <= 2^-32`
+* 16 rounds: 32 active, `DP <= 2^-64`
+
+The linear side matches. `tests/test_bounds.py` enumerates the `2^16` states. `coq/present_wide_trail.v` proves the same branch numbers and active counts. The result is a single-trail bound. The hull can be larger.
+
+Two extra facts matter. First, the 16-bit PRP bound is limited by the birthday attack. Second, the round constants break the period-4 structure of raw `M`. The raw linear layer alone collapses integral sets at even rounds, but the real cipher with constants keeps four varying nibbles after round 2.
+
+## Implementation
+
+Python is the reference. Import the cipher and call one function:
 
 ```python
-import cipher, cipher32
+import sys
+sys.path.insert(0, "python")
+from cipher import quartet_encrypt, quartet_decrypt
 
-ct = cipher.quartet_encrypt(0x1234, 0x0123456789ABCDEF)
-pt = cipher.quartet_decrypt(ct, 0x0123456789ABCDEF)
-
-ct32 = cipher32.quartet32_encrypt(0x12345678, 0x0123456789ABCDEF0123456789ABCDEF)
-pt32 = cipher32.quartet32_decrypt(ct32, 0x0123456789ABCDEF0123456789ABCDEF)
+ct = quartet_encrypt(0x1234, 0x0123456789ABCDEF)
+pt = quartet_decrypt(ct, 0x0123456789ABCDEF)
 ```
 
-C reference uses the same header contract:
+C uses the same contract. Include the S-box once and set the table macros, then include the core:
 
 ```c
-#define SBOX_READ(i) sbox[i]
-#define INV_SBOX_READ(i) inv_sbox[i]
-#include "sbox.h"
+#include "c/sbox.h"
 static const uint8_t sbox[16] = QUARTET_SBOX_INIT;
 static const uint8_t inv_sbox[16] = QUARTET_INV_SBOX_INIT;
-#include "quartet.h"    // QUARTET-16
-#include "quartet32.h"  // QUARTET-32 = 2×16
+#define SBOX_READ(i) sbox[i]
+#define INV_SBOX_READ(i) inv_sbox[i]
+#include "c/quartet.h"
 uint16_t c = quartet_encrypt(0x1234, 0x0123456789ABCDEFULL);
-uint32_t c32 = quartet32_encrypt(0x12345678, 0x0123456789ABCDEFULL, 0xFEDCBA9876543210ULL);
 ```
 
-> [!CAUTION]
-> Do not use the table S-box for cache-sensitive code on a cached CPU. Use `QUARTET_BITSLICED` from `sbox.h`.
-
-## Project structure
-
-```
-4bit-ciph/
-├── c/            # sbox.h, quartet_core.h, quartet.h, quartet32.h — C single source of truth
-├── python/       # cipher.py, cipher32.py, cryptanalysis.py, fpe.py — Python single source of truth
-├── runners/      # quartet_runner.c, quartet32_runner.c, quartetchiffre.c, bitsliced.c — thin I/O adapters
-├── hw/           # quartet.v, quartet_logic.v, quartet_sky130.v, quartet_round_asm.s — RTL/ASM
-├── tests/ + tests/vectors/  # 6 checks + 262k / 20k KAT
-├── formal/ + coq/           # prp_analysis.md + Coq 8.18 proofs
-├── SPEC.md / QUARTET32.md   # authoritative spec + branch note
-└── python/cipher.py is SOT — `import cipher` needs `PYTHONPATH=python` or `sys.path` `REPO/python`
-```
-
-| Area | Files | Rule |
-|------|-------|------|
-| **Cipher** | `c/sbox.h`, `c/quartet_core.h`, `c/quartet.h` + `python/cipher.py` | One S-box, one round, one key schedule. Delete a duplicate and the build must break. No root shims — use `PYTHONPATH=python` and `gcc -I c`. |
-| **Adapter** | `python/cipher32.py`, `c/quartet32.h` | `2×16` parallel, 128-bit key. Imports the cipher, adds no tables. |
-| **Spec** | `SPEC.md` (§1, §10–11), `QUARTET32.md` | Bounds and GE numbers live here once. |
-| **Proof** | `formal/prp_analysis.md`, `coq/quartet_correct.v`, `coq/prp_bound.v` | Machine-checked roundtrip + `q²/2³³` Feistel bound. |
-| **Check** | `tests/test_bounds*.py`, `test_kats*.py`, `compare*.py`, `test_constant_time.py`, `tvla.py` | Six checks, each fails for a distinct real bug. |
-| **Hardware** | `hw/quartet_sky130.v`, `hw/yosys_stat.log`, `hw/*.v` | 176 cells/round generic; 166 GE serial NanGate. See `hw/`. |
+The bitsliced variant `QUARTET_BITSLICED` in `c/sbox.h` computes the S-box with AND and XOR only. Use it on cached CPUs to remove table lookups.
 
 ## Verification
 
-This project uses six independent checks. Each check fails for a distinct, real reason when the code is wrong.
+Six checks fail for distinct real bugs:
 
-| Check | Command | What it proves |
-|-------|---------|----------------|
-| Wide-trail 16-bit | `python tests/test_bounds.py` | 32 active at 16 rounds gives `2⁻⁶⁴` |
-| Wide-trail 32-bit | `python tests/test_bounds32.py` | 64 active at 16 rounds gives `2⁻¹²⁸` (reuse, no MILP) |
-| KAT 16-bit | `python tests/test_kats.py` | 262157 vectors: Python and C match |
-| KAT 32-bit | `python tests/test_kats32.py` | 20480 vectors: Python and C match |
-| Cross-check | `python compare.py` / `compare32.py` | 20 random vectors Python↔C |
-| Constant-time AST | `python tests/test_constant_time.py` | No data-dependent control in `quartet_core.h` |
+* `python tests/test_bounds.py` proves the wide-trail numbers above. Cross-checks Coq constants.
+* `python tests/test_bounds32.py` proves the 32-bit adapter bound `64 active => 2^-128` for the both-halves case.
+* `python tests/test_kats.py` verifies 262,157 vectors against Python and C.
+* `python tests/test_kats32.py` verifies 20,480 vectors for the 32-bit adapter.
+* `python compare.py` cross-checks 20 random vectors Python to C.
+* `python tests/test_constant_time.py` walks the AST of `c/quartet_core.h` and finds no data-dependent control flow. A passing AST check is necessary but not sufficient.
 
-> [!NOTE]
-> A passing AST check is necessary but not sufficient for constant-time. The TVLA harness in `tests/tvla.py` is Level 1 software Welch t-test with a leaky negative control.
+Additional evidence:
 
-To run the KAT generator again:
+* `python tests/test_integral.py` shows the simplified model collapse versus the real cipher with constants.
+* `python tests/test_key_schedule.py` shows diffusion: each round key bit depends on 23 to 63 master bits.
+* `python tests/tvla.py` is a Level 1 software Welch t-test with a leaky negative control. The primary counter is wall clock.
+* `coq/quartet_correct.v` proves `decrypt(encrypt(p,k),k) = p` for all `p` and `k`.
+* `coq/prp_bound.v` proves Feistel invertibility and the numeric bound `Adv <= q^2/2^33 + 2^-60`. The hybrid game step is pen-and-paper in `formal/prp_analysis.md`.
+
+## Hardware
+
+Yosys 0.68 with `hw/quartet_sky130.v` gives a library-independent area. One round uses `132 XOR + 36 AND + 8 NOT = 176` cells. The unrolled 16-round design uses 2816 cells. The log is `synth/yosys_generic_stat.log`.
+
+The liberty-mapped run uses Sky130 `tt_025C_1v80`. Volare provides `sky130A bdc9412`. Yosys reads 334 cells from the liberty. The log is `synth/yosys_sky130_liberty.log`. The PDK enable command is `volare enable --pdk sky130 bdc9412`.
+
+NanGate 45 nm estimates are `~166 GE` serial enc-only, `~255 GE` parallel enc-only, and `~254 GE` enc plus dec serial. Quartet-32 is about `332 GE` serial.
+
+AVR ATmega328P at 8 MHz needs about 43 cycles per round. A 16-round encryption is about 688 cycles and 86 microseconds.
+
+## Modes and limits
+
+`SPEC.md` section 10.4 defines five blocks and their limits:
+
+* Mode 1 (64-bit PRP, 4-call balanced Feistel, `n=32`): `Adv <= q^2/2^33 + 2^-60`. This gives `q <= 5792` at `Adv 2^-8` and `q <= 2^16` at `Adv 1/2`.
+* Mode 2 (Even-Mansour on 16 bits): `q <= 2^8` queries.
+* Mode 3 (sponge, rate 8, capacity 8): collision at `2^8`.
+* Mode 4 (HEH MAC, 64-bit): forgery at `2^8`.
+* Mode 5 (64-bit tweakable wide block): birthday at `2^32`. This is the only mode where `2^-64` is not vacuous. The conservative proof uses EME2 or XCB.
+
+`M` has period 4. At most one state in 256 falls into a small invariant subspace on the raw permutation. Blocks must avoid those subspaces.
+
+Do not use Quartet for bulk encryption. Use a standard AEAD such as Ascon where you can. Quartet fits where 4-bit hardware, hardware less than 200 GE, and a provable single-trail bound matter.
+
+## Reproduce
+
+You need Python 3.10 or later, GCC, and optionally Docker with `coqorg/coq:8.18` for Coq.
+
+If you want to check the bounds, run the commands that follow:
 
 ```
-python tests/generate_kat.py     # 262157 entries -> tests/vectors/quartet_kat.txt
-python tests/generate_kat32.py   # 20480 entries  -> tests/vectors/quartet32_kat.txt
+python tests/test_bounds.py
+python tests/test_bounds32.py
 ```
 
-## Security at a glance
+If you want to check the KAT and the Python to C match, run the commands that follow:
 
-QUARTET gives a single-trail bound, not a full hull measurement. The 16-bit codebook is trivial (65536 texts).
+```
+python tests/test_kats.py
+python compare.py
+```
 
-- 16-round single-trail `DP/LP ≤ 2⁻⁶⁴` (32 active, `DU=4` gives `1/4` per S-box).
-- 32-bit adapter gives `64` active and `2⁻¹²⁸` for the both-halves case (thin reuse, `tests/test_bounds32.py` PASS).
-- Feistel Mode 1 (64-bit PRP, 4-call balanced, `n=32`) has `Adv ≤ q²/2³³ + 2⁻⁶⁰`. Machine-checked `q ≤ 5792` at `Adv 2⁻⁸` and `q ≤ 2¹⁶` at `Adv 1/2`. See `coq/prp_bound.v`.
-- Birthday and codebook for 16-bit: `2⁸` and `2¹⁶`. For 32-bit the limits move to `2¹⁶` and `2³²`.
+If you want to check the AST constant-time property, run the command that follows:
 
-> [!NOTE]
-> `SPEC.md` §10.3 lists four invariant subspaces on the raw permutation (≤ 1/256 of the state). Construction blocks must avoid those subspaces.
+```
+python tests/test_constant_time.py
+```
 
-## Hardware and formal proofs
+If you want to check the generic synthesis area, run the command that follows:
 
-**Hardware (generic, library independent):**
+```
+yowasp-yosys -p "read_verilog hw/quartet_sky130.v; hierarchy -check -top quartet_round_logic; proc; opt; techmap; opt; stat"
+```
 
-- 1 round `quartet_round_logic` = 132 `$_XOR_` + 36 `$_AND_` + 8 `$_NOT_` = 176 cells.
-- 16 rounds unrolled = 2816 cells (2112 XOR + 576 AND + 128 NOT). See `hw/yosys_stat.log` (or `synth/yosys_stat.log` shim).
-- NanGate 45nm serial estimate: ~166 GE enc-only, ~254 GE enc+dec. QUARTET-32 doubles the cells: 352 per round, ~332 GE serial.
+If you want to check the leakage harness, run the command that follows:
 
-Run `hw/run_sky130.sh` (shim at `synth/run_sky130.sh` also works) to reproduce. Sky130 PDK stat needs `PDK_ROOT`.
+```
+python tests/tvla.py
+```
 
-**Formal proofs:**
+If you want to rebuild the KAT file, run the command that follows:
 
-- `coq/quartet_correct.v` proves `decrypt(encrypt(p,k),k)=p` for all `k` and `p` on `coqorg/coq:8.18` (3 MB `.vo`).
-- `coq/prp_bound.v` proves the Feistel invertibility and the numeric `q²/2³³` bound.
-- `coq/present_wide_trail.v` — **First machine-checked wide-trail bound for the ISO/IEC 29192-2 standardized PRESENT cipher** (Bogdanov et al., CHES 2007). Proves: S-box DU=4, 31-round min 62 active S-boxes, single-trail DP ≤ 2⁻¹²⁴.
-- `tests/test_order4_layers.py` proves FullMix is one of 16 optimal matrices with `M⁴=I` and weight 12 (exhaustive over `GL(4,2)`).
+```
+python tests/generate_kat.py
+```
 
-## Modes
+If a command fails, read the log that the tool writes to standard output.
 
-The spec in `SPEC.md` §10.4 defines five construction blocks with explicit bounds. The binding limit for 64-bit Feistel Mode 1 is the Luby-Rackoff `q²/2³³` term, not the `2⁻⁶⁴` trail. Mode 2 (Even-Mansour, 16-bit) is `2⁸` queries. The sponge and HEH modes are `2⁸` limited by the 8-bit capacity. Mode 5 (FPE) is `≤ 2¹⁶` and not for sensitive data.
+## Files
 
-We recommend QUARTET for 4-bit hardware, <200 GE, and a provable single-trail bound. Use a standard AEAD such as ASCON for bulk encryption.
+* `python/cipher.py` and `c/quartet_core.h` are the two sources of truth for the cipher. Do not duplicate the S-box or the round function.
+* `python/cipher32.py` and `c/quartet32.h` are the thin adapters for the 32-bit block.
+* `c/sbox.h` holds the S-box tables and the bitsliced S-box.
+* `runners/` holds thin I/O adapters over `quartet.h`.
+* `hw/` holds RTL. `formal/` holds the proof analysis. `coq/` holds Coq proofs. `tests/` holds checks and vectors. `SPEC.md` is the authoritative specification.
 
-> [!TIP]
-> Start with `SPEC.md` §1 and §10.4, then run the quick start. That path shows the cipher, the proof, and the hardware in one read.
+## References
+
+Bogdanov et al., PRESENT, CHES 2007. Daemen, Rijmen, The Design of Rijndael, 2002. Luby, Rackoff, SIAM J. Computing, 1988. Goodwill et al., TVLA, 2011. Schneider, Moradi, 2015.
+
+Start with `SPEC.md` section 1 and section 10.4. Then do the reproduce steps.

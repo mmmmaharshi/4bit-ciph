@@ -428,13 +428,17 @@ For QUARTET used directly as a 16-bit block cipher:
 (max single-trail EDP/LP ≤ 2^(-64) is a necessary condition for a small
 differential/linear probability, but it does not by itself establish
 2^(64) chosen-plaintext security — see §10.2, which shows the empirical
-max trail at R=4 is only ~2^2.6 over the random expectation). The actual
-maximum DP/LP over 16 rounds is unknown without an exhaustive
-2^32-pair search; the random-permutation limit for a 16-bit block is
-~2^(-16), so the achievable bound is somewhere in the range
-2^(-64) ≤ DP_max ≤ ~2^(-16). The empirical cryptanalysis in §10.2 is
-consistent with the cipher being much closer to the random-permutation
-limit than to the provable lower bound.
+max trail at R=4 is only ~2^2.6 over the random expectation). The
+**actual maximum DP/LP over 16 rounds** was determined empirically via
+exhaustive 2^32-pair enumeration (`tests/test_hull_empirical.c`):
+**DP_max ≈ 2^(-6.38)** (count 788/65536 for the best differential).
+This is much higher than the random-permutation limit of ~2^(-16),
+confirming that the **hull effect** (sum over all trails for a given
+input/output difference pair) dominates the differential probability.
+The range is therefore **2^(-64) ≤ DP_max ≈ 2^(-6.38)** — the actual
+DP_max is about 10^17 times larger than the single-trail bound. No
+hull bound is claimed or needed: the single-trail bound is the provable
+result, and the empirical DP_max characterizes the actual behavior.
 
 ### 10.2 Empirical Cryptanalysis (16 rounds)
 
@@ -705,7 +709,11 @@ as `ε_round = 2^{-60}` (hybrid over 4 calls) and does **not** lift the
 quadratic term. `tests/test_feistel_security.py` is a heuristic
 clustering estimate (hull mass `≈0.13` crude, `≈2^{-60}` under symmetry
 assumption, `C(64,32)·2^{-64}≈0.099` overcounts) — stated as
-**conjecture**, not a theorem; no asymptotic gain over LR.
+**conjecture**, not a theorem; no asymptotic gain over LR. The actual
+differential probability is determined empirically: `tests/test_hull_empirical.c`
+computes the full DDT (2^32 pairs) and finds **DP_max ≈ 2^{-6.38}** for R=16,
+about 10^17 times larger than the single-trail bound of 2^{-64}. No hull
+bound is claimed or needed — the single-trail bound is the provable result.
 
 **Effective security: `2^{12.5}` queries at `Adv=2^{-8}` / `2^{16}` at
 `Adv=1/2` (machine-checked). No `≥2^{28}` claim.** The `2^{32}`

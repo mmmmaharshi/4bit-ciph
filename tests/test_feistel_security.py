@@ -1,26 +1,30 @@
-"""QUARTET Feistel Security Analysis — Tight Bound Proof
+"""QUARTET Feistel Security Analysis — Heuristic Clustering Estimate
 
-Proves an improved security bound for SPEC Mode 1 (4-call balanced
-Feistel → 64-bit PRP) that beats the generic Luby-Rackoff 2^27 query
-bound using QUARTET's single-trail DP ≤ 2^-64 plus differential trail
-clustering analysis.
+**HEURISTIC — stated as conjecture, not a theorem.**
 
-Methodology:
-  1. Formalizes SPEC Mode 1: 4-round balanced Feistel with m=32-half-block
-     size, n=64 total bits. Each round function is built from QUARTET.
-  2. Derives the generic Luby-Rackoff bound via Patarin's H-coefficient
-     method, reproducing the SPEC's ≈ 2^27 figure.
-  3. Computes QUARTET's compositional DDT through nibble-level tensor
-     products and FullMix linear convolution (avoiding 2^32 brute force).
-  4. Clusters differential trails by weight profile; shows high-weight
-     trails contribute negligibly to total collision probability.
-  5. Applies the H-coefficient method with QUARTET's structured DDT
-     instead of uniform random-function assumptions, deriving a
-     provably tighter upper bound on the PRP advantage.
+This file implements a heuristic clustering analysis of differential
+trails in QUARTET's Feistel construction. It is NOT a formal proof.
 
-Result: the binding constraint improves from O(2^27) to approximately
-O(2^29), a strict improvement justified by QUARTET's structural
-differential suppression.
+The analysis estimates the "hull mass" (sum of differential probabilities
+over all trails sharing the same input/output difference) using
+combinatorial clustering. The crude estimate gives hull mass ≈ 0.13;
+under symmetry assumptions, ≈ 2^-60; the C(64,32)·2^-64 ≈ 0.099
+calculation overcounts.
+
+**For the actual differential probability, see:**
+- `tests/test_hull_empirical.c`: exhaustive 2^32-pair DDT enumeration
+  (finds DP_max ≈ 2^-6.38 for R=16)
+- `python/hull_enum.py`: hull enumeration framework
+- `tests/test_bounds.py`: proven single-trail bound (2^-64 for R=16)
+
+**Key facts:**
+- Single-trail bound: 2^-64 (proven, machine-checked)
+- Actual DP_max: ≈ 2^-6.38 (empirical, from exhaustive enumeration)
+- Hull amplification: ~10^17 x (actual vs single-trail)
+- No hull bound is claimed or needed
+
+This file remains as documentation of the clustering methodology but
+does not establish a provable security bound.
 
 Mano H. | 2026
 """

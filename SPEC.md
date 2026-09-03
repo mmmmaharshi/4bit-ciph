@@ -690,8 +690,10 @@ ciphertext = (L_4 || R_4)
 
 **Security bound.** Luby-Rackoff / Patarin (FSE 2004): for a 4-round
 balanced Feistel with half `n=32`, `Adv ≤ q²/2^{n+1} + ε_round` where
-`ε_round` is the round-function PRF advantage. Machine-checked in
-`coq/prp_bound.v`: `mode1_advantage q ≤ 2^{-60} + q²/2^{33}`.
+`ε_round` is the round-function PRF advantage. Numeric bound verified in
+`coq/prp_bound.v` (`mode1_advantage q = 2^{-60} + q²/2^{33}` via QArith);
+Feistel invertibility is proven, the Luby-Rackoff hybrid hop is pen-and-paper
+in `formal/prp_analysis.md` and axiomatized in `easycrypt/prp.ec`.
 
 - `Adv ≤ 2^{-8}` → `q ≤ 5792` (`≈2^{12.5}`) — proved as `mode1_5792_secure`
 - `Adv ≤ 1/2`   → `q ≤ 2^{16}` (generic LR threshold)
@@ -810,8 +812,13 @@ C_3' = QUARTET_{K_3}(C_3 XOR C_2')
 ciphertext = (C_0' || C_1' || C_2' || C_3')
 ```
 
-**Security bound.** This is a wide-block construction with 64-bit block and
-64-bit key. The security bound is:
+**Security bound (heuristic).** This is a heuristic wide-block construction
+(64-bit block, 64-bit key; key `K0` is reused for tweak derivation and the
+first block — a deployment may derive independent subkeys). The 2^32 figure is
+the 64-bit block birthday limit (not a proven wide-block PRP theorem); a
+proven variant is obtained by instantiating EME2/XCB (Halevi–Rogaway, TCHES
+2016) with QUARTET as the underlying block cipher. Under that substitution the
+bound is:
 
 - Birthday bound on 64-bit block: 2^32 queries
 - QUARTET's 2^(-64) single-trail bound is meaningful here (q << 2^32)
@@ -819,7 +826,8 @@ ciphertext = (C_0' || C_1' || C_2' || C_3')
 
 The 2^(-64) trail bound is NOT vacuous for this mode because the adversary
 cannot collect 2^32 plaintext-ciphertext pairs without hitting the birthday
-bound on the 64-bit block.
+bound on the 64-bit block. This remains a heuristic for the Mercy-style
+chaining shown above; the proven EME2/XCB instantiation carries the theorem.
 
 **Effective security: ~2^32 queries (birthday bound on 64-bit block).**
 This is the only mode where QUARTET's 2^(-64) trail bound provides meaningful

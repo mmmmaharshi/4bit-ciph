@@ -58,8 +58,8 @@
 | Deliverable | Status | Verification |
 |-------------|--------|-------------|
 | QUARTET roundtrip correctness | Proven | Machine-checked (Coq 8.18 — `quartet_correct.vo`) |
-| QUARTET wide-trail bounds | Verified | Machine-checked (Python — `tests/test_bounds.py`) |
-| PRP advantage bound (Mode 1) | Proven | Machine-checked (`coq/prp_bound.v` QArith + Feistel) |
+| QUARTET wide-trail bounds | Proven | Machine-checked (Python `tests/test_bounds.py` + Coq `coq/present_wide_trail.v` quartet_* lemmas, `quartet_branch_number_is_4` etc.) |
+| PRP advantage bound (Mode 1) | Proven (numeric + structural) | Numeric bound + Feistel invertibility machine-checked (`coq/prp_bound.v` QArith); Luby-Rackoff hybrid hop pen-and-paper in `formal/prp_analysis.md`, axiomatized in `easycrypt/prp.ec` |
 | PRESENT wide-trail bound | Proven | Machine-checked (Coq 8.18 — `present_wide_trail.vo`) |
 
 The PRP analysis in `formal/prp_analysis.md` captures all mathematical

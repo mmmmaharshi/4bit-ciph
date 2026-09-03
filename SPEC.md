@@ -1100,17 +1100,17 @@ is uninformative.
 
 | SUT        | max \|t\| | max-t counter   | verdict  |
 |------------|-----------|-----------------|----------|
-| real-py    | 14.3      | Syscalls        | micro-arch |
-| leaky-py   | 225.6     | Wall Clock      | **FAIL** (correctly) |
-| real-c     | 25.4      | Interrupts      | micro-arch |
-| leaky-c    | 186.5     | Wall Clock      | **FAIL** (correctly) |
+| real-py    | 40.97     | Interrupts      | micro-arch |
+| leaky-py   | 92.88     | Wall Clock      | **FAIL** (correctly) |
+| real-c     | 23.63     | Interrupts      | micro-arch |
+| leaky-c   | 87.48     | Wall Clock      | **FAIL** (correctly) |
 
 The methodology correctly flags the negative controls with
-|t| > 180 on wall-clock (Cohen's d > 8). The real cipher's signal
-on the psutil counters (|t| ~ 14-25) is consistent with micro-
+|t| > 80 on wall-clock (Cohen's d > 3). The real cipher's signal
+on the psutil counters (|t| ~ 24-41) is consistent with micro-
 architectural variation, not algorithmic leakage. The effect
-size is small (Cohen's d ~ 0.02-0.20) and the wall-clock |t| on
-the real cipher is 5-15, which is well below the algorithmic
+size is small (Cohen's d ~ 0.03-0.26) and the wall-clock |t| on
+the real cipher is 5-7, which is well below the algorithmic
 leak detection floor (a real 1us branch in a 30us trace produces
 Cohen's d = 0.03 and |t| = 0.5 at 1000 traces, which the test
 catches as |t| > 4.5 at ~20K traces).
@@ -1124,11 +1124,23 @@ security finding: it confirms the test is operating in a regime
 where large algorithmic leaks would be detected, while small
 micro-architectural effects are visible but not gated.
 
-A **Level 2 (PMU/ETW)** test on a real target with power or EM
-trace capture is the standard methodology for published TVLA
-results; the methodology, counter set, and negative control
-structure in `tests/tvla.py` are designed to be ported to a
-hardware measurement setup without code changes.
+**Q1 SCA requirement: Level 2 (hardware traces) is mandatory for a
+publishable side-channel analysis contribution.** Level 1 software
+counters (psutil, wall clock) cannot measure actual leakage — they
+measure OS-level micro-architectural noise. For Q1 SCA, the following
+hardware setup is required:
+
+| Requirement | Status | Needed For |
+|-------------|--------|------------|
+| Power trace capture (oscilloscope + shunt resistor) | **NOT available** | DPA/CPA analysis |
+| EM trace capture (EM probe + amplifier) | **NOT available** | EM side-channel |
+| PMU hardware counters (ETW/perf) | **NOT available** | Cache/branch timing |
+| Software counters (psutil, wall clock) | Available | L1 only (insufficient) |
+
+The methodology, counter set, and negative control structure in
+`tests/tvla.py` are designed to be ported to a hardware measurement
+setup without code changes. **This artifact provides the L1
+methodology; Q1 SCA requires acquiring L2 hardware traces.**
 
 #### 12.4.2 What the software reference does *not* protect against
 

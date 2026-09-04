@@ -37,14 +37,26 @@ Quartet-16 uses 16 rounds. Quartet-32 encrypts two 16-bit lanes in parallel and 
 
 ## Security bound
 
-The S-box has `DU = 4` and max LAT bias 4. The differential branch number is 4 and the linear branch number is 4. The minimum active counts are:
+**Block size = 16 bits → birthday bound = 2^8 queries.** This is a hard
+ceiling no analysis can overcome. No Q1 venue publishes a 16-bit bulk
+cipher. QUARTET is a **4-bit-native construction block**, not a bulk cipher.
+
+**Provable single-trail bounds (Coq machine-checked):**
 
 * 2 rounds: 4 active, `DP <= 2^-8`
 * 4 rounds: 8 active, `DP <= 2^-16`
 * 8 rounds: 16 active, `DP <= 2^-32`
 * 16 rounds: 32 active, `DP <= 2^-64`
 
-The linear side matches. `tests/test_bounds.py` enumerates the `2^16` states. `coq/present_wide_trail.v` proves the same branch numbers and active counts. The result is a single-trail bound. The hull can be larger: `tests/test_hull_empirical.c` measures DP_max ~2^-6.38 (vs 2^-64 single-trail), showing the hull effect dominates. Tightness is proven optimal at R=8 via exhaustive branch-and-bound (65k starts, `python/milp_hull.py --exhaustive`, 28 trails 2^-27.19 vs 2^-32); `coq/nilpotent.v` proves `M=I+N, N^4=0 → M^4=I` and weak hull `≤2·2^{-4R}` (Thm 4.2, SPEC 10.1).
+**Reality check:**
+
+* Empirical DP_max ≈ 2^-6.38 (`tests/test_hull_empirical.c`)
+* Single-trail bound: 2^-64
+* Gap: 10^17× (hull effect dominates)
+* Effective security: **2^8 queries** (birthday bound)
+
+Tightness verified at R=8 via branch-and-bound (`python/milp_hull.py`,
+28 tight trails, 2^-27.19 lower bound vs 2^-32 single-trail).
 
 Two extra facts matter. First, the 16-bit PRP bound is limited by the birthday attack. Second, the round constants break the period-4 structure of raw `M`. The raw linear layer alone collapses integral sets at even rounds, but the real cipher with constants keeps four varying nibbles after round 2.
 

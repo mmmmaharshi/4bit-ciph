@@ -28,30 +28,39 @@ wide-trail strategy still yields a single-trail 2^(-64) bound.
   (encryption-only hardware; ~254 GE with decryption — see §11.4)
 - 8-bit AVR software: under 700 cycles per block @ 16 rounds
 
-**Limitation Acknowledged:**
-A 16-bit block cannot achieve full information-theoretic security — 2^16
-plaintext space is trivially enumerable. QUARTET provides the strongest
-achievable security for this class: a **strong pseudorandom permutation
-(SPRP)** with provable single-trail differential/linear upper bounds
-(DP/LP ≤ 2^(-64) at 16 rounds), complete differential diffusion, and maximum
-immunity to known attacks for a 4-bit SPN (owner survey in §10.3.2;
-no independent third-party analysis exists as of 2026). The 2^(-64) figure is a **lower
-bound on the security** (a bound on individual trails, not a measurement
-of the cipher's true differential probability); the actual maximum DP/LP
-may be much higher
-(approaching the random-permutation limit of ~2^(-16) for a 16-bit block).
+**Fundamental Limitation — Block Size:**
+QUARTET has a **16-bit block (2^6 = 65536 plaintexts)**. This is a
+hard ceiling that no analysis can overcome:
 
-**Recommended Use:**
-QUARTET is a construction block, not a stand-alone bulk cipher. The
-recommended uses are developed with concrete constructions in §10.4:
-- Building block in a wide-block PRP via 4-call balanced Feistel (64-bit
-  block; security bound 2^(-8) — see §10.4)
-- Building block in Even-Mansour / FX-construction (variable block;
-  security bound 2^(-64) — see §10.4)
-- Hash function via sponge (rate/capacity choice in §10.4)
-- Authentication tag via Hash-Encrypt-Hash (security bound 2^(-64))
-- Format-preserving encryption on small alphabets
-- White-box table-based implementations (state fits in a 128 KB lookup)
+| Property | Value | Implication |
+|----------|-------|-------------|
+| Codebook size | 2^16 = 65,536 | Trivially enumerable |
+| Birthday bound | 2^8 = 256 queries | Distinguisher with advantage ≈ 1/2 |
+| Empirical DP_max | ~2^-6.38 | 10^17× worse than 2^-64 single-trail |
+
+**No Q1 venue publishes a 16-bit bulk cipher.** The birthday bound of
+2^8 queries means QUARTET cannot be used for bulk encryption regardless
+of the trail bound. This is acknowledged, not a disclaimer.
+
+**What IS provable:**
+- Single-trail DP/LP ≤ 2^-64 at 16 rounds (machine-checked in Coq)
+- Complete differential diffusion after 2 rounds
+- Constant-time implementation (AST-verified)
+- Tight wide-trail bound (2 active/round, verified by construction at R=8)
+
+**What is NOT provable:**
+- Any security beyond 2^8 queries (birthday bound is fundamental)
+- A hull bound (empirical 2^-6.38 vs proven 2^-64 single-trail)
+
+**Positioning:** QUARTET is a **4-bit-native construction block** for
+use in larger constructions (Feistel, sponge, FPE), not a stand-alone
+bulk cipher. Its value is:
+1. Smallest 4-bit SPN with order-4 linear layer (M^4 = I)
+2. Machine-checked security proofs (Coq)
+3. ~166 GE serial hardware footprint
+4. Analysis methodology (hull enumeration, tightness verification)
+
+**NOT recommended:** Bulk encryption, any use requiring >2^8 queries.
 
 ---
 

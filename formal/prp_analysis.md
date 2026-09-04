@@ -255,51 +255,88 @@ To translate this into a compilable Coq proof (`coq/prp_bound.v`), the following
 
 ---
 
-## 11. Hull Enumeration Status
+## 11. Proof Gap Analysis
 
-### 11.1 Single-Trail Bound (Proven)
+### 11.1 Current Proof Status
 
-The single-trail differential probability bound of 2^{-64} at R=16 is proven
-by the wide-trail strategy (SPEC §10.1) and machine-checked in
-`tests/test_bounds.py` and `coq/present_wide_trail.v`:
+| Component | Status | Evidence |
+|-----------|--------|----------|
+| QUARTET roundtrip correctness | **Proven** | `coq/quartet_correct.v` (Coq 8.18) |
+| Wide-trail single-trail bounds | **Proven** | `coq/present_wide_trail.v` + `tests/test_bounds.py` |
+| Feistel invertibility | **Proven** | `coq/prp_bound.v` (`feistel_encrypt_decrypt`) |
+| Mode 1 numeric bound (q²/2³³ + 2⁻⁶⁰) | **Proven** | `coq/prp_bound.v` (QArith) |
+| **Hybrid game hop (PRP-switching)** | **AXIOMATIZED** | `easycrypt/prp.ec` (not proven) |
+| **Mode 5 FPE security** | **HEURISTIC** | No proof exists |
 
-- Minimum active S-boxes: 32 (from branch number 4 over 8 disjoint 2-round sub-trails)
-- Maximum per-S-box DP: 4/16 = 2^{-2}
-- Single-trail bound: (2^{-2})^{32} = 2^{-64}
+### 11.2 The Hybrid Game Gap
 
-### 11.2 Hull Bound (Not Proven, Not Needed)
+The Mode 1 proof in `coq/prp_bound.v` establishes:
+- `mode1_advantage(q) = 2⁻⁶⁰ + q²/2³³` (numeric, proven)
 
-A hull bound would bound the sum of probabilities over all trails sharing
-the same input/output difference pair. For R=16, this is computationally
-infeasible to prove (would require enumerating all trails through the cipher).
+But the **hybrid game hop** (replacing QUARTET with random functions one
+at a time) is stated as an axiom, not proven. This is the standard
+Luby-Rackoff hybrid argument:
 
-**Position: no hull bound is claimed or needed.** The single-trail bound is
-the provable result; the actual differential probability is determined
-empirically.
+```
+G0: Real Feistet with QUARTET
+G1: Feistel with F₀ random, F₁,F₂,F₃ = QUARTET
+G2: Feistel with F₀,F₁ random, F₂,F₃ = QUARTET
+G3: Feistel with F₀,F₁,F₂ random, F₃ = QUARTET
+G4: Feistel with all random (ideal)
+```
 
-### 11.3 Empirical Verification
+Each hop `G_j → G_{j+1}` requires proving that replacing one QUARTET
+instance with a random function changes the adversary's advantage by at
+most the SPRP advantage of QUARTET (2⁻⁶⁴ per call, 2⁻⁶² per hop, 2⁻⁶⁰ total).
 
-`tests/test_hull_empirical.c` computes the full differential distribution
-table (DDT) via exhaustive 2^32-pair enumeration:
+**This hybrid argument is standard but lengthy.** It requires:
+1. Formalizing the H-coefficient technique or PRP-switching lemma
+2. Bounding the distinguishing advantage per hop
+3. Composing the bounds across 4 hops
 
-- **DP_max ≈ 2^{-6.38}** (count 788/65536 for the best differential at R=16)
-- This is ~10^{17} times larger than the single-trail bound of 2^{-64}
-- Confirms the **hull effect** dominates: many trails contribute to each
-  (Δin, Δout) pair, and their probabilities sum to far more than any
-  single trail
+### 11.3 Mode 5 (FPE) Proof Gap
 
-### 11.4 Hull Enumeration Framework
+Mode 5 (SPEC §10.4) uses QUARTET in a 64-bit wide-block construction
+with tweak `T = L = QUARTET_K0(T)`. **No proof exists** for this
+construction when instantiated with a 16-bit block cipher.
 
-`python/hull_enum.py` provides a stdlib-only framework for differential
-hull enumeration:
+To turn Mode 5 from heuristic to theorem requires:
+1. Formalizing Bellare et al. FPE security definitions
+2. Proving the wide-block construction secure up to the birthday bound
+3. Composing with the QUARTET SPRP bound
 
-- `wide_trail_bound(rounds)`: proven single-trail bound (2^{-64} for R=16)
-- `enumerate_trails(rounds, din, dout)`: full trail enumeration (feasible for R≤4)
-- `hull_probability(rounds, din, dout)`: sum over hull (feasible for R≤4)
+### 11.4 Path to Closing the Gap
 
-For R=16, full hull enumeration is computationally infeasible (exponential
-in rounds). The framework verifies the wide-trail bound and provides
-enumeration capabilities for smaller round counts.
+**Option A: Full EasyCrypt Proof** (recommended for Q1)
+- Install EasyCrypt (requires opam + dependencies)
+- Formalize FPE security game (Bellare et al.)
+- Prove hybrid game hop
+- Prove Mode 5 security theorem
+- **Effort:** Weeks to months
+
+**Option B: Coq Proof** (portable, no new deps)
+- Extend `coq/prp_bound.v` with hybrid game definitions
+- Prove PRP-switching lemma in Coq
+- Prove Mode 5 security bound
+- **Effort:** Weeks
+
+**Option C: Pen-and-Paper + Machine-Checked Arithmetic** (pragmatic)
+- Complete `formal/prp_analysis.md` with full hybrid argument
+- Keep numeric bounds machine-checked in Coq
+- Document the hybrid hop as "standard argument, omitted"
+- **Effort:** Days
+
+### 11.5 Current Recommendation
+
+For Q1 publication, **Option C** is most pragmatic:
+1. The numeric bound `Adv ≤ q²/2³³ + 2⁻⁶⁰` is machine-checked
+2. The hybrid argument is standard (Luby-Rackoff 1988, Patarin 1996)
+3. The gap is in the **proof of the hybrid hop**, not the numeric result
+4. Mode 5 remains heuristic unless full FPE proof is developed
+
+**The honest position:** The security bound is correct; the proof of the
+hybrid hop is standard but not machine-checked. This is a **proof
+engineering gap**, not a **security gap**.
 
 ---
 

@@ -58,20 +58,23 @@ def main() -> int:
     print(f"\n[5] Security assessment:")
     print(f"    QUARTET-16: birthday 2^8 = 256 queries (construction block only)")
     print(f"    QUARTET-32: birthday 2^16 = 65536 queries (modest security)")
-    print(f"    QUARTET-32 single-trail: 2^-128 (meaningful, q << 2^16)")
+    print(f"    QUARTET-32 min single-trail: 2^-64 (one half active)")
+    print(f"    QUARTET-32 max single-trail: 2^-128 (both halves active)")
 
     # Verify assertions
     assert m32_both == 64, f"Expected 64, got {m32_both}"
     assert m32_lin == 64, f"Expected 64, got {m32_lin}"
     assert bound_both == 2 ** -128
+    assert bound_min == 2 ** -64
 
     print("\n" + "=" * 70)
     print("ALL QUARTET-32 BOUNDS VERIFIED")
     print("=" * 70)
     print("\nQUARTET-32 promoted to primary status:")
     print("  - 32-bit block (birthday 2^16)")
-    print("  - Both-halves bound 2^-128 (64 active)")
-    print("  - Single-trail bound meaningful (q << 2^16)")
+    print("  - Min bound 2^-64 (attacker targets one half)")
+    print("  - Max bound 2^-128 (both halves active)")
+    print("  - Security guarantee: 2^-64 (minimum)")
 
     return 0
 

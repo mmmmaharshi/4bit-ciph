@@ -100,6 +100,11 @@ QUARTET-16 instances. It is promoted to **primary status** because:
 - QUARTET-32: 2^16 birthday bound — usable for modest-security applications
 - QUARTET-32 in Feistel: 2^16 security (64-bit block)
 
+**Minimum security guarantee:** An attacker can target one half of QUARTET-32,
+achieving only 32 active S-boxes → 2^-64 single-trail bound. The 2^-128
+bound (both halves active) is the maximum, not the minimum. The security
+guarantee is **2^-64** (the minimum over attacker choices).
+
 **Files:** `python/cipher32.py`, `c/quartet32.h`, `tests/test_bounds32.py`
 
 ---

@@ -17,9 +17,9 @@ the PRESENT S-box. The linear layer is a 4x4 matrix over GF(2) with
 16 optimal matrices in `GL(4,2)`.
 
 **QUARTET-32 (primary):** 32-bit block, two independent QUARTET-16 lanes.
-Both-halves-active bound: 64 active S-boxes → 2^-128 single-trail DP/LP.
-Python enumerates the bound and Coq proves it. The 2^-128 bound is
-meaningful because the birthday bound is 2^16 (q << 2^16).
+Min bound (one half active): 32 active S-boxes → 2^-64 single-trail DP/LP.
+Max bound (both halves): 64 active S-boxes → 2^-128 single-trail DP/LP.
+Python enumerates the bound and Coq proves it. The birthday bound is 2^16.
 
 **QUARTET-16 (base):** 16-bit block, 2^-64 single-trail bound. Birthday
 bound 2^8 — construction block only.
@@ -34,9 +34,9 @@ operations in the linear layer. That adds cost in 4-bit hardware. A
 cipher that uses only 4-bit primitives reduces area and power.
 
 A 16-bit block has a 2^8 birthday bound — only usable as a construction
-block. **QUARTET-32 achieves a 2^16 birthday bound with a 2^-128
-single-trail bound**, making the trail bound meaningful for the first
-time in the Quartet family.
+block. **QUARTET-32 achieves a 2^16 birthday bound** with single-trail
+bounds ranging from 2^-64 (one half active) to 2^-128 (both halves active).
+The minimum security guarantee is **2^-64**.
 
 ## Construction
 

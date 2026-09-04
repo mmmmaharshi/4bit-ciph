@@ -855,12 +855,13 @@ effective security is the **min of**:
 larger tag and a 64-bit or larger IV; the construction is for
 short-tag, low-value authentication (e.g. sensor data, RFIDs).
 
-**Mode 5 — Tweakable wide-block encryption (PROVEN).**
+**Mode 5 — Tweakable wide-block encryption (birthday bound proven, hybrid stated).**
 
 This mode uses QUARTET as a building block in a 64-bit wide-block
-construction. **Security theorem proven** in `coq/prp_bound.v` §6 with
-both hybrid cost (2^-61) and birthday bound (q²/2^n ≤ 1) fully proven
-via QArith (no `Admitted`).
+construction. **Birthday bound proven** in `coq/prp_bound.v` §6 via
+QArith. **Hybrid game hop stated** as standard argument (Luby-Rackoff
+1988, Patarin 1996) but not fully formalized with probabilistic game
+semantics.
 
 **Construction: Mercy-style wide-block encryption (4 blocks = 64 bits).**
 
@@ -886,21 +887,20 @@ C_3' = QUARTET_{K_3}(C_3 XOR C_2')
 ciphertext = (C_0' || C_1' || C_2' || C_3')
 ```
 
-**Security theorem (PROVEN):** The distinguishing advantage for Mode 5 is:
+**Security theorem (birthday proven, hybrid stated):**
 
 ```
 Adv_Mode5(q) ≤ 2^-61 + q²/2^16
 ```
 
 where:
-- **2^-61** is the hybrid switching cost (4 hops × 2 QUARTET calls/hop × 2^-64/call) — **PROVEN** in `coq/prp_bound.v`
-- **q²/2^16** is the birthday bound on the 16-bit block size — **PROVEN** via QArith (`mode5_birthday_bound_le_1`)
+- **2^-61** is the hybrid switching cost — **STATED** (standard Luby-Rackoff argument, not formalized with game semantics)
+- **q²/2^16** is the birthday bound — **PROVEN** via QArith (`mode5_birthday_bound_le_1`)
 
 **Proof status:**
-- **Hybrid cost (2^-61):** Proven by construction in Coq (`mode5_total_hybrid_cost`)
 - **Birthday bound (q²/2^n ≤ 1):** **PROVEN** via QArith (no `Admitted`)
-- **Full theorem:** `mode5_advantage_bound` corollary proven
-- **Verification:** `coqc prp_bound.v && Print Assumptions mode5_security` shows no axioms
+- **Hybrid game hop:** **STATED** as standard argument; full formalization requires probabilistic game semantics (weeks-months of work)
+- **Construction in Coq:** Placeholder (XOR only, zero QUARTET calls); needs actual QUARTET integration
 
 **Effective security: ~2^8 queries (birthday bound on underlying 16-bit block).**
 The 2^-61 hybrid cost is negligible; security is limited by the birthday

@@ -177,11 +177,17 @@ Proof. vm_compute; reflexivity. Qed.
 (* ===================================================================== *)
 (* 6. MODE 5 FPE SECURITY — Mercy-style wide-block encryption             *)
 (* Tweakable wide-block mode: tweak T, L = QUARTET_K0(T), 4-block CBC     *)
-(* with final mixing. Proven secure via hybrid argument.                  *)
+(* with final mixing.                                                    *)
+(*                                                                        *)
+(* **STATUS: Security theorem stated; full hybrid game proof requires     *)
+(* modeling probabilistic games in Coq (weeks-months of work). The        *)
+(* birthday bound (q²/2^n ≤ 1) is proven; the hybrid game hop is stated   *)
+(* as a standard argument (Luby-Rackoff 1988, Patarin 1996) but not       *)
+(* fully formalized with game semantics.                                  *)
 (* ===================================================================== *)
 
 (* ------------------------------------------------------------------ *)
-(* 6.1 Mode 5 construction                                            *)
+(* 6.1 Mode 5 construction (PLACEHOLDER - needs QUARTET calls)       *)
 (* ------------------------------------------------------------------ *)
 
 (* A block is 4 x 16-bit words = 64 bits total *)
@@ -209,7 +215,7 @@ Definition mode5_encrypt_block (Ks : nat * nat * nat * nat) (P : block5) (T : na
   (C0',C1',C2',C3').
 
 (* ------------------------------------------------------------------ *)
-(* 6.2 Hybrid game definitions                                        *)
+(* 6.2 Hybrid game definitions (PLACEHOLDER - needs semantics)        *)
 (* ------------------------------------------------------------------ *)
 
 (* Game G0: Real Mode 5 with QUARTET instances *)
@@ -227,11 +233,13 @@ Inductive Game5 : Set :=
   | G4_5. (* All random *)
 
 (* ------------------------------------------------------------------ *)
-(* 6.3 Hybrid game hop lemma                                         *)
+(* 6.3 Hybrid game hop (STATED, not fully formalized)                *)
 (* ------------------------------------------------------------------ *)
 
 (* The hybrid hop: replacing one QUARTET with a random permutation
-   changes advantage by at most the SPRP advantage of QUARTET *)
+   changes advantage by at most the SPRP advantage of QUARTET.
+   This is a standard argument (Luby-Rackoff 1988, Patarin 1996)
+   but requires probabilistic game semantics to formalize. *)
 
 Definition quartet_sprp_per_query : Q := quartet_sprp_adv.  (* 2^-64 *)
 
@@ -256,7 +264,7 @@ Definition mode5_advantage (q : nat) : Q :=
   mode5_total_hybrid_cost + mode5_birthday_bound q 16.
 
 (* Theorem: Mode 5 birthday bound ≤ 1 for q ≤ 2^8 *)
-(* Proof: q ≤ 2^8 → q² ≤ 2^16 → q²/2^16 ≤ 1 *)
+(* PROVEN: q ≤ 2^8 → q² ≤ 2^16 → q²/2^16 ≤ 1 *)
 Theorem mode5_birthday_bound_le_1 : forall (q : nat),
   q <= 2^8 ->
   mode5_birthday_bound q 16 <= 1.
@@ -279,6 +287,7 @@ Proof.
 Qed.
 
 (* Corollary: Mode 5 advantage bound including hybrid cost *)
+(* STATED: Assumes hybrid cost 2^-61 is correct (standard argument) *)
 Corollary mode5_advantage_bound : forall (q : nat),
   q <= 2^8 ->
   mode5_advantage q <= 1 + mode5_total_hybrid_cost.
@@ -302,7 +311,7 @@ Definition mode5_32_advantage (q : nat) : Q :=
   mode5_total_hybrid_cost + mode5_32_birthday_bound q.
 
 (* Theorem: Mode 5 with QUARTET-32 birthday bound ≤ 1 for q ≤ 2^16 *)
-(* Proof: q ≤ 2^16 → q² ≤ 2^32 → q²/2^32 ≤ 1 *)
+(* PROVEN: q ≤ 2^16 → q² ≤ 2^32 → q²/2^32 ≤ 1 *)
 Theorem mode5_32_birthday_bound_le_1 : forall (q : nat),
   q <= 2^16 ->
   mode5_32_birthday_bound q <= 1.
@@ -325,6 +334,7 @@ Proof.
 Qed.
 
 (* Corollary: Mode 5 with QUARTET-32 advantage bound *)
+(* STATED: Assumes hybrid cost 2^-61 is correct (standard argument) *)
 Corollary mode5_32_advantage_bound : forall (q : nat),
   q <= 2^16 ->
   mode5_32_advantage q <= 1 + mode5_total_hybrid_cost.

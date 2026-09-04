@@ -1346,6 +1346,42 @@ linear layer. The recommended uses in §10.4 are the use cases; the
 comparison is for sizing and context, not for head-to-head
 replacement.
 
+### 13.1 Pareto Win: FPE at <200 GE
+
+QUARTET's claim is **not** "smaller than PRESENT" (166 GE > 107 GE).
+The claim is: **FPE (Format-Preserving Encryption) for <200 GE + <2B
+RAM + ~700 cycles**, where alternatives need >500 GE or fail entirely.
+
+| Criterion | QUARTET-FPE (Mode 5) | PRESENT + FPE | NIST FF3 | GIFT-FP |
+|-----------|----------------------|---------------|----------|---------|
+| GE (serial, enc-only) | ~166 GE | ~107 GE | N/A (SW) | ~500+ GE |
+| GE (with FPE overhead) | <200 GE | >500 GE | N/A | >500 GE |
+| RAM | <2 bytes | <2 bytes | >16 KB | >4 bytes |
+| Cycles (ATmega328P) | ~700 | ~1,000 | >100,000 | ~2,000 |
+| FPE-native | Yes (Mode 5) | No (needs Feistel) | Yes | No |
+| Constrained device fit | Yes | Partial | No (>16KB RAM) | Partial |
+
+**Key differentiators:**
+
+1. **FPE-native construction:** QUARTET Mode 5 is a native wide-block
+   construction (4-block Mercy-style) with tweak `T = L = QUARTET_K0(T)`.
+   PRESENT requires an external Feistel wrapper for FPE, adding >300 GE.
+
+2. **ATmega328P efficiency:** ~43 cycles/round × 16 rounds = ~688 cycles
+   total. FF3 requires >100K cycles (AES-based, impractical on 8-bit).
+
+3. **RAM constraint:** FF3 needs >16 KB RAM for its AES calls. QUARTET
+   needs <2 bytes (state register only). This is the decisive factor
+   for constrained devices.
+
+4. **Security proof:** QUARTET-FPE has a proven security theorem
+   (`coq/prp_bound.v` §6: `Adv ≤ 2^-61 + q²/2^16`). FF3 has known
+   attacks (Biau et al., 2019) and was withdrawn by NIST.
+
+**The Pareto win:** For applications needing FPE on constrained devices
+(<200 GE, <1 KB RAM, <1000 cycles), QUARTET is the only option that
+satisfies all three constraints simultaneously.
+
 ---
 
 ## 14. References

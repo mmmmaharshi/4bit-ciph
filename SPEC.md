@@ -1191,30 +1191,55 @@ publishable side-channel analysis contribution.** Level 1 software
 counters (psutil, wall clock) cannot measure actual leakage — they
 measure OS-level micro-architectural noise.
 
+**Current status:** L1 software TVLA only. L2 silicon proof requires
+physical hardware (oscilloscope, FPGA, shunt resistor) not available
+in this environment.
+
 | Requirement | Status | Needed For |
 |-------------|--------|------------|
-| Oscilloscope + shunt resistor | **NOT available** | Power trace capture |
-| Physical QUARTET hardware (FPGA/ASIC) | **NOT available** | Target device |
-| 1,000,000+ traces per group | **NOT collected** | Q1 publication |
-| CPA (Correlation Power Analysis) | **NOT performed** | Key recovery resistance |
-| Software counters (psutil, wall clock) | Available | L1 only (insufficient) |
+| Oscilloscope (e.g., ChipWhisperer-Lite) | **NOT acquired** | Power trace capture |
+| Shunt resistor + wiring | **NOT acquired** | Power measurement |
+| FPGA board (Artix-7, iCE40) | **NOT acquired** | Target hardware |
+| 1,000,000+ power traces | **NOT captured** | Q1 publication |
+| CPA analysis | **NOT performed** | Key recovery resistance |
+| Die photo | **NOT available** | Publication |
+| Software L1 TVLA (psutil, wall clock) | Available | Pre-screening only |
 
-**Path to L2 silicon proof:**
-1. **FPGA implementation:** Use RTL in `synth/` (176 cells generic, Sky130
-   liberty-mapped). Target: Xilinx Artix-7 or Lattice iCE40.
-2. **Power measurement:** ChipWhisperer-Lite or oscilloscope + 22Ω shunt
-   resistor in VDD line. Trigger from target GPIO.
-3. **Trace collection:** 1,000,000+ traces per group (fixed-key vs
-   random-key). Sampling rate ≥ 10× clock frequency.
-4. **Analysis:** Welch's t-test per sample point, |t| < 4.5 threshold
-   (Goodwill 2011). Report max |t| and location.
-5. **Comparison:** Table-based S-box (vulnerable to cache-timing DPA)
-   vs bitsliced `QUARTET_BITSLICED` (constant-time, no table lookups).
-6. **Publication:** Die photo + power measurements + TVLA results.
+**To complete L2 silicon proof, the following must be acquired and
+executed in a physical lab:**
 
-**Harness:** `tests/tvla_l2_harness.py` provides the methodology
-structure. **This artifact provides L1 methodology; Q1 SCA requires
-acquiring L2 hardware traces.**
+1. **Hardware setup (~$500-2000):**
+   - FPGA board (Xilinx Artix-7 or Lattice iCE40, ~$50-150)
+   - Oscilloscope or ChipWhisperer-Lite (~$300-1000)
+   - Shunt resistor (10-50Ω) + soldering equipment
+   - Power supply, connecting cables
+
+2. **Implementation:**
+   - Synthesize QUARTET RTL (`synth/quartet_logic.v`) for FPGA
+   - Program bitstream to FPGA
+   - Solder shunt resistor in VDD supply line
+   - Connect oscilloscope probe across shunt
+
+3. **Measurement:**
+   - Capture 1,000,000+ power traces (fixed-key vs random-key groups)
+   - Sampling rate ≥ 10× target clock frequency
+   - Trigger from GPIO during encryption
+
+4. **Analysis:**
+   - Welch's t-test per sample point
+   - Pass criterion: |t| < 4.5 (Goodwill 2011)
+   - Compare table-based vs bitsliced `QUARTET_BITSLICED`
+   - CPA to demonstrate key recovery resistance
+
+5. **Publication:**
+   - Die photo (requires silicon fabrication or FPGA board photo)
+   - Power measurement results
+   - TVLA t-test plots
+
+**Harness:** `tests/tvla_l2_harness.py` provides the analysis
+methodology structure. **This artifact provides L1 methodology and L2
+harness structure. Q1 SCA requires acquiring hardware and conducting
+physical experiments.**
 
 #### 12.4.2 What the software reference does *not* protect against
 

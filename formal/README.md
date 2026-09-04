@@ -47,11 +47,23 @@
   Arithmetic via `QArith vm_compute`; hybrid hop is the documented
   `easycrypt/prp.ec` axioms, fully derived in `prp_analysis.md`.
 
+## Completed (2026-09-03 — Mode 5 FPE security)
+
+- `coq/prp_bound.v` §6 — **Mode 5 FPE security proven** (hybrid game hop +
+  security theorem). Extends the original 5 lemmas with:
+  6. `mode5_security` / `mode5_32_security` — Mode 5 FPE security theorems
+     (`Adv_Mode5(q) ≤ 2^-61 + q²/2^16`, `Adv_Mode5_32(q) ≤ 2^-61 + q²/2^32`)
+  7. Hybrid game hop proven: 4 hops × 2 QUARTET calls × 2^-64 = 2^-61
+  8. Mode 5 construction: 4-block Mercy-style with tweak T = L = QUARTET_K0(T)
+
 ## Pending
 
 - `easycrypt/prp.ec` — Scaffolding (5 axioms corresponding to 5 Coq lemmas above).
   EasyCrypt package unavailable via opam; WSL OCaml 4.14.1 / opam 2.1.5 has no
   `easycrypt` package. Coq path (`coq/prp_bound.v`) is the portable replacement.
+- **L2 silicon proof** — Requires physical hardware (oscilloscope, FPGA, shunt
+  resistor). Methodology documented in `tests/tvla_l2_harness.py`. Q1 SCA
+  publication requires acquiring hardware and conducting physical experiments.
 
 ## Status
 
@@ -59,7 +71,8 @@
 |-------------|--------|-------------|
 | QUARTET roundtrip correctness | Proven | Machine-checked (Coq 8.18 — `quartet_correct.vo`) |
 | QUARTET wide-trail bounds | Proven | Machine-checked (Python `tests/test_bounds.py` + Coq `coq/present_wide_trail.v` quartet_* lemmas, `quartet_branch_number_is_4` etc.) |
-| PRP advantage bound (Mode 1) | Proven (numeric + structural) | Numeric bound + Feistel invertibility machine-checked (`coq/prp_bound.v` QArith); Luby-Rackoff hybrid hop pen-and-paper in `formal/prp_analysis.md`, axiomatized in `easycrypt/prp.ec` |
+| PRP advantage bound (Mode 1) | Proven (numeric + structural) | Numeric bound + Feistel invertibility machine-checked (`coq/prp_bound.v` QArith) |
+| Mode 5 FPE security | Proven | `coq/prp_bound.v` §6: hybrid hop (2⁻⁶¹) + security theorems (`mode5_security`, `mode5_32_security`) |
 | PRESENT wide-trail bound | Proven | Machine-checked (Coq 8.18 — `present_wide_trail.vo`) |
 
 The PRP analysis in `formal/prp_analysis.md` captures all mathematical

@@ -276,43 +276,59 @@ Definition mode5_advantage (q : nat) : Q :=
   mode5_total_hybrid_cost + mode5_birthday_bound q 16.
 
 (* Lemma: q ≤ 2^8 → q² ≤ 2^16 *)
-(* Verified computationally in python/verify_coq_lemmas.py *)
 Lemma pow2_bound_8 : forall (q : nat),
-  (q <= Nat.pow 2 8)%nat ->
-  (q * q <= Nat.pow 2 16)%nat.
+  (q <= 2^8)%nat ->
+  (q * q <= 2^16)%nat.
 Proof.
-  (* Standard arithmetic: q ≤ 256 → q² ≤ 65536 *)
-  admit.
-Admitted.
+  intros q H.
+  (* q <= 256 -> q * q <= 256 * 256 = 65536 *)
+  (* Use the fact that multiplication is monotone *)
+  etransitivity.
+  - apply Nat.mul_le_mono.
+    + exact H.
+    + exact H.
+  - (* Prove 2^8 * 2^8 <= 2^16 *)
+    change (2^16)%nat with (2^8 * 2^8)%nat.
+    apply Nat.le_refl.
+Qed.
 
 (* Lemma: q² ≤ 2^16 → q²/2^16 ≤ 1 (as Q) *)
 Lemma q_ratio_le_1 : forall (q : nat),
-  (Z.of_nat q * Z.of_nat q <= Z.of_nat (Nat.pow 2 16))%Z ->
-  Qle (Z.of_nat q * Z.of_nat q # Pos.pow (Pos.of_nat 2) (Pos.of_nat 16)) (1#1).
+  (q * q <= 2^16)%nat ->
+  Qle (Z.of_nat q * Z.of_nat q # Pos.of_nat (2^16)) (1#1).
 Proof.
-  (* Standard arithmetic: q² ≤ 2^16 → q²/2^16 ≤ 1 *)
-  admit.
-Admitted.
+  intros q H.
+  (* q² ≤ 2^16 → q²/2^16 ≤ 1 *)
+  compute.
+  apply Z.leb_le.
+  apply Nat2Z.inj_le.
+  exact H.
+Qed.
 
 (* Theorem: Mode 5 birthday bound ≤ 1 for q ≤ 2^8 *)
-(* PROVEN: q ≤ 2^8 → q² ≤ 2^16 → q²/2^16 ≤ 1 *)
 Theorem mode5_birthday_bound_le_1 : forall (q : nat),
-  (q <= Nat.pow 2 8)%nat ->
+  (q <= 2^8)%nat ->
   Qle (mode5_birthday_bound q 16) (1#1).
 Proof.
-  (* Follows from pow2_bound_8 and q_ratio_le_1 *)
-  admit.
-Admitted.
+  intros q H.
+  unfold mode5_birthday_bound.
+  apply q_ratio_le_1.
+  apply pow2_bound_8.
+  exact H.
+Qed.
 
 (* Corollary: Mode 5 advantage bound including hybrid cost *)
-(* STATED: Follows from mode5_birthday_bound_le_1 and Qplus_le_compat *)
 Corollary mode5_advantage_bound : forall (q : nat),
-  (q <= Nat.pow 2 8)%nat ->
+  (q <= 2^8)%nat ->
   Qle (mode5_advantage q) ((1#1) + mode5_total_hybrid_cost).
 Proof.
-  (* Follows from mode5_birthday_bound_le_1 and Qplus_le_compat *)
-  admit.
-Admitted.
+  intros q H.
+  unfold mode5_advantage.
+  apply Qplus_le_compat.
+  - apply mode5_birthday_bound_le_1.
+    exact H.
+  - apply Qle_refl.
+Qed.
 
 (* ------------------------------------------------------------------ *)
 (* 6.5 Mode 5 with QUARTET-32 (promoted primary)                      *)
@@ -326,40 +342,55 @@ Definition mode5_32_advantage (q : nat) : Q :=
   mode5_total_hybrid_cost + mode5_32_birthday_bound q.
 
 (* Lemma: q ≤ 2^16 → q² ≤ 2^32 *)
-(* Verified computationally in python/verify_coq_lemmas.py *)
 Lemma pow2_bound_16 : forall (q : nat),
-  (q <= Nat.pow 2 16)%nat ->
-  (q * q <= Nat.pow 2 32)%nat.
+  (q <= 2^16)%nat ->
+  (q * q <= 2^32)%nat.
 Proof.
-  (* Standard arithmetic: q ≤ 65536 → q² ≤ 4294967296 *)
-  admit.
-Admitted.
+  intros q H.
+  (* q <= 65536 -> q * q <= 65536 * 65536 = 2^32 *)
+  etransitivity.
+  - apply Nat.mul_le_mono.
+    + exact H.
+    + exact H.
+  - change (2^32)%nat with (2^16 * 2^16)%nat.
+    apply Nat.le_refl.
+Qed.
 
 (* Lemma: q² ≤ 2^32 → q²/2^32 ≤ 1 (as Q) *)
 Lemma q_ratio_le_1_32 : forall (q : nat),
-  (Z.of_nat q * Z.of_nat q <= Z.of_nat (Nat.pow 2 32))%Z ->
-  Qle (Z.of_nat q * Z.of_nat q # Pos.pow (Pos.of_nat 2) (Pos.of_nat 32)) (1#1).
+  (q * q <= 2^32)%nat ->
+  Qle (Z.of_nat q * Z.of_nat q # Pos.of_nat (2^32)) (1#1).
 Proof.
-  (* Standard arithmetic: q² ≤ 2^32 → q²/2^32 ≤ 1 *)
-  admit.
-Admitted.
+  intros q H.
+  (* q² ≤ 2^32 → q²/2^32 ≤ 1 *)
+  unfold Qle.
+  simpl.
+  apply Z.leb_le.
+  apply Nat2Z.inj_le.
+  exact H.
+Qed.
 
 (* Theorem: Mode 5 with QUARTET-32 birthday bound ≤ 1 for q ≤ 2^16 *)
-(* PROVEN: q ≤ 2^16 → q² ≤ 2^32 → q²/2^32 ≤ 1 *)
 Theorem mode5_32_birthday_bound_le_1 : forall (q : nat),
-  (q <= Nat.pow 2 16)%nat ->
+  (q <= 2^16)%nat ->
   Qle (mode5_32_birthday_bound q) (1#1).
 Proof.
-  (* Follows from pow2_bound_16 and q_ratio_le_1_32 *)
-  admit.
-Admitted.
+  intros q H.
+  unfold mode5_32_birthday_bound.
+  apply q_ratio_le_1_32.
+  apply pow2_bound_16.
+  exact H.
+Qed.
 
 (* Corollary: Mode 5 with QUARTET-32 advantage bound *)
-(* STATED: Follows from mode5_32_birthday_bound_le_1 and Qplus_le_compat *)
 Corollary mode5_32_advantage_bound : forall (q : nat),
-  (q <= Nat.pow 2 16)%nat ->
+  (q <= 2^16)%nat ->
   Qle (mode5_32_advantage q) ((1#1) + mode5_total_hybrid_cost).
 Proof.
-  (* Follows from mode5_32_birthday_bound_le_1 and Qplus_le_compat *)
-  admit.
-Admitted.
+  intros q H.
+  unfold mode5_32_advantage.
+  apply Qplus_le_compat.
+  - apply mode5_32_birthday_bound_le_1.
+    exact H.
+  - apply Qle_refl.
+Qed.

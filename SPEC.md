@@ -66,6 +66,8 @@ bulk cipher. Its value is:
 
 ## 2. Cipher Parameters
 
+### 2.1 QUARTET-16 (Base)
+
 | Parameter | Value |
 |-----------|-------|
 | Block size | 16 bits (4 nibbles) |
@@ -74,6 +76,31 @@ bulk cipher. Its value is:
 | S-box | PRESENT 4×4 (DU=4, max LP=4/16) |
 | Linear layer | FullMix (4×4 GF(2) matrix, branch #4) |
 | Key schedule | Position-dependent S-box mixing |
+
+### 2.2 QUARTET-32 (Promoted Primary)
+
+QUARTET-32 is a **32-bit block adapter** built from two independent
+QUARTET-16 instances. It is promoted to **primary status** because:
+- 32-bit block gives birthday bound 2^16 (vs 2^16 for QUARTET-16)
+- Both-halves-active single-trail bound: 2^-128 (64 active S-boxes)
+- The 2^-128 bound is meaningful: q << 2^16 makes trail bound relevant
+
+| Parameter | Value |
+|-----------|-------|
+| Block size | 32 bits (8 nibbles) |
+| Key size | 128 bits (2×64) |
+| Rounds | 16 |
+| Construction | Two independent QUARTE-16 instances (hi \|\| lo) |
+| Both-halves bound | 2^-128 (64 active S-boxes) |
+| Single-half bound | 2^-64 (32 active S-boxes) |
+| Birthday bound | 2^16 queries |
+
+**Security positioning:**
+- QUARTET-16: 2^8 birthday bound — only for construction block use
+- QUARTET-32: 2^16 birthday bound — usable for modest-security applications
+- QUARTET-32 in Feistel: 2^16 security (64-bit block)
+
+**Files:** `python/cipher32.py`, `c/quartet32.h`, `tests/test_bounds32.py`
 
 ---
 

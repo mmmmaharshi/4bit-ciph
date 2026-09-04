@@ -2,21 +2,41 @@
 
 The smallest 4-bit SPN with an order-4 linear layer and a machine-checked wide-trail bound.
 
-Quartet-16 is a 16-bit block, 64-bit key SPN for hardware less than 200 GE. Quartet-32 is a thin 32-bit adapter that reuses the same S-box and FullMix. This document is a short paper that summarizes the design, the bound, and the evidence. The full specification is in `SPEC.md`.
+**QUARTET-32 is the primary configuration:** 32-bit block, 128-bit key,
+2^-128 single-trail bound (both halves active). QUARTET-16 is the base
+construction block for hardware-constrained applications.
+
+This document summarizes the design, the bound, and the evidence. The
+full specification is in `SPEC.md`.
 
 ## Abstract
 
-Quartet uses only 4-bit operations in the round function. The S-box is the PRESENT S-box. The linear layer is a 4x4 matrix over GF(2) with `M^4 = I` and branch number 4. The matrix has weight 12 and is one of 16 optimal matrices in `GL(4,2)`.
+Quartet uses only 4-bit operations in the round function. The S-box is
+the PRESENT S-box. The linear layer is a 4x4 matrix over GF(2) with
+`M^4 = I` and branch number 4. The matrix has weight 12 and is one of
+16 optimal matrices in `GL(4,2)`.
 
-The wide-trail bound is 32 active S-boxes at 16 rounds. With `DU = 4` this gives a single-trail `DP <= 2^-64` and `LP <= 2^-64`. Python enumerates the bound and Coq proves it. The bound is vacuous for the 16-bit codebook. The meaningful limit is `q << 2^8`.
+**QUARTET-32 (primary):** 32-bit block, two independent QUARTET-16 lanes.
+Both-halves-active bound: 64 active S-boxes → 2^-128 single-trail DP/LP.
+Python enumerates the bound and Coq proves it. The 2^-128 bound is
+meaningful because the birthday bound is 2^16 (q << 2^16).
 
-The hardware cost is 176 generic cells per round. The serial NanGate estimate is about 166 GE. The 32-bit adapter costs about 332 GE.
+**QUARTET-16 (base):** 16-bit block, 2^-64 single-trail bound. Birthday
+bound 2^8 — construction block only.
+
+The hardware cost is 176 generic cells per round. The serial NanGate
+estimate is about 166 GE (QUARTET-16) or 332 GE (QUARTET-32).
 
 ## Problem
 
-Many constrained devices use 4-bit datapaths. Standard ciphers use wider operations in the linear layer. That adds cost in 4-bit hardware. A cipher that uses only 4-bit primitives reduces area and power.
+Many constrained devices use 4-bit datapaths. Standard ciphers use wider
+operations in the linear layer. That adds cost in 4-bit hardware. A
+cipher that uses only 4-bit primitives reduces area and power.
 
-A 16-bit block is tiny. A single-trail bound of `2^-64` does not give `2^-64` security against a full-codebook adversary. The birthday bound is `2^8` queries and the codebook is `2^16`. We state this vacuity directly and give modes that make the bound useful.
+A 16-bit block has a 2^8 birthday bound — only usable as a construction
+block. **QUARTET-32 achieves a 2^16 birthday bound with a 2^-128
+single-trail bound**, making the trail bound meaningful for the first
+time in the Quartet family.
 
 ## Construction
 

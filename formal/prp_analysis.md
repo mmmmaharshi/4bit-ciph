@@ -342,14 +342,28 @@ Effective security: **~2^16 queries** (birthday bound on 32-bit blocks).
    - Full integration with `quartet_correct.v` needed
 
 **To fully close the gap:**
-- Use EasyCrypt (has probabilistic semantics)
-- Or model probabilistic games in Coq (fcf/pnp framework)
-- Estimated effort: weeks to months
+
+**Option 1: FCF (Foundational Cryptography Framework)**
+- Provides probabilistic programming language for Coq
+- Supports game-based proofs with hybrid arguments
+- Repository: https://github.com/adampetcher/fcf (cloned to `coq-fcf/`)
+- Examples: ElGamal.v, PRF_Encryption_IND_CPA.v
+- Build: `cd coq-fcf && make` (requires Coq 8.13+)
+- Proof sketch: `coq/mode5_fcf_sketch.v`
+
+**Option 2: EasyCrypt**
+- Standalone tool for cryptographic proofs
+- Built-in probabilistic game semantics
+- Better documentation and tooling than FCF
+- Website: https://easycrypt.gitlab.io/
+
+**Estimated effort:** 2-4 weeks for full formalization in FCF or EasyCrypt
 
 **The honest position:** The birthday bound is fully proven. The hybrid
 cost is stated as a standard argument (Luby-Rackoff 1988). A full
-game-hop proof requires probabilistic semantics not available in
-standard Coq.
+game-hop proof requires probabilistic semantics available in FCF
+(cloned) or EasyCrypt. Proof sketch provided in
+`coq/mode5_fcf_sketch.v`.
 
 ---
 

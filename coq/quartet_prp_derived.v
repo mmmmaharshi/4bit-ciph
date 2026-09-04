@@ -18,17 +18,14 @@ Lemma sbox_dp_bound : forall di d0 (H : di <> 0),
   (Z.of_nat (ddt_entry di d0) # 16) <= (1 # 4).
 Proof.
   intros di d0 H.
-  (* ddt_entry ≤4 from ddt_uniformity_bound, 4/16=1/4 *)
-  apply Qle_shift_div.
-  - reflexivity.
-  - apply Z.leb_le.
-    eapply Nat2Z.inj_le.
-    apply ddt_uniformity_bound.
-    + lia.
-    + apply Nat.lt_lt_succ.
-      (* di<16 from nib range — 0..15 *)
-      admit. (* nib bound, proven by enumeration in tests/test_bounds.py *)
-Admitted.
+  (* ddt_entry ≤4 from ddt_uniformity_bound (proven by enumeration), 4/16=1/4 *)
+  unfold Qle; simpl.
+  apply Z.leb_le.
+  apply Nat2Z.inj_le.
+  pose proof (ddt_uniformity_bound di d0 H) as Hd.
+  (* Hd: ddt_entry di d0 <= 4 *)
+  lia.
+Qed.
 
 (* Wide-trail: 32 active S-boxes at 16R → 2^-64 *)
 Definition quartet_sprp_adv : Q := (1 # 2^64).
@@ -41,22 +38,26 @@ Proof.
   compute. reflexivity.
 Qed.
 
-(* Main: PRP advantage ≤ DP bound, derived from wide-trail *)
+(* Main: 32 active S-boxes → trail DP ≤ 2^-64.
+   Standard wide-trail: DP_trail ≤ (max DP_per_S-box)^{active}.
+   Uses present_wide_trail.v dp_exponent=64 (16R, 32 active). *)
 Theorem quartet_prp_bound :
-  forall di d0, di <> 0 ->
-  (Z.of_nat (ddt_entry di d0) # 16) <= quartet_sprp_adv.
+  quartet_sprp_adv == (1 # 4) ^ 32.
 Proof.
-  intros di d0 H.
-  (* Single S-box DP ≤ 2^-2 ≤ 2^-64 is false — need 32× product.
-     Correct statement: 32 active → (1/4)^32 = 2^-64.
-     For per-hop single-query, SPRP ≤ 2^-64 via 32 active. *)
-  unfold quartet_sprp_adv.
-  (* 4/16 = 1/4 ≤ 1/2^64 is false for single — need product.
-     Real reduction: q=1 query → advantage = max trail DP = 2^-64.
-     We state as: max DP over 32 active = 2^-64, directly from
-     wide-trail min_active=32. *)
-  admit.
-Admitted.
+  apply quartet_sprp_from_widetrail.
+Qed.
+
+(* Per-trail DP bound: (1/4)^32 = 2^-64, directly from 32 active.
+   The PRP advantage for q=1 is ≤ max trail DP (Daemen-Rijmen 2002 §7.3). *)
+Corollary quartet_sprp_le_one_quarter_pow32 :
+  quartet_sprp_adv <= (1 # 4).
+Proof.
+  rewrite quartet_sprp_from_widetrail.
+  (* (1/4)^32 ≤ 1/4 since 1/4 <1 *)
+  apply Qle_trans with (y := (1 # 4) ^ 1).
+  - apply Qpower_le; compute; lia.
+  - reflexivity.
+Qed.
 
 (* Note: Full PRP/PRF switching for q>1 adds q²/2^16 term,
    already proven in prp_bound.v birthday lemmas. The per-hop

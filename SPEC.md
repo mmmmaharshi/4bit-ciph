@@ -1189,20 +1189,32 @@ micro-architectural effects are visible but not gated.
 **Q1 SCA requirement: Level 2 (hardware traces) is mandatory for a
 publishable side-channel analysis contribution.** Level 1 software
 counters (psutil, wall clock) cannot measure actual leakage — they
-measure OS-level micro-architectural noise. For Q1 SCA, the following
-hardware setup is required:
+measure OS-level micro-architectural noise.
 
 | Requirement | Status | Needed For |
 |-------------|--------|------------|
-| Power trace capture (oscilloscope + shunt resistor) | **NOT available** | DPA/CPA analysis |
-| EM trace capture (EM probe + amplifier) | **NOT available** | EM side-channel |
-| PMU hardware counters (ETW/perf) | **NOT available** | Cache/branch timing |
+| Oscilloscope + shunt resistor | **NOT available** | Power trace capture |
+| Physical QUARTET hardware (FPGA/ASIC) | **NOT available** | Target device |
+| 1,000,000+ traces per group | **NOT collected** | Q1 publication |
+| CPA (Correlation Power Analysis) | **NOT performed** | Key recovery resistance |
 | Software counters (psutil, wall clock) | Available | L1 only (insufficient) |
 
-The methodology, counter set, and negative control structure in
-`tests/tvla.py` are designed to be ported to a hardware measurement
-setup without code changes. **This artifact provides the L1
-methodology; Q1 SCA requires acquiring L2 hardware traces.**
+**Path to L2 silicon proof:**
+1. **FPGA implementation:** Use RTL in `synth/` (176 cells generic, Sky130
+   liberty-mapped). Target: Xilinx Artix-7 or Lattice iCE40.
+2. **Power measurement:** ChipWhisperer-Lite or oscilloscope + 22Ω shunt
+   resistor in VDD line. Trigger from target GPIO.
+3. **Trace collection:** 1,000,000+ traces per group (fixed-key vs
+   random-key). Sampling rate ≥ 10× clock frequency.
+4. **Analysis:** Welch's t-test per sample point, |t| < 4.5 threshold
+   (Goodwill 2011). Report max |t| and location.
+5. **Comparison:** Table-based S-box (vulnerable to cache-timing DPA)
+   vs bitsliced `QUARTET_BITSLICED` (constant-time, no table lookups).
+6. **Publication:** Die photo + power measurements + TVLA results.
+
+**Harness:** `tests/tvla_l2_harness.py` provides the methodology
+structure. **This artifact provides L1 methodology; Q1 SCA requires
+acquiring L2 hardware traces.**
 
 #### 12.4.2 What the software reference does *not* protect against
 

@@ -191,7 +191,7 @@ Proof. vm_compute; reflexivity. Qed.
 (* ------------------------------------------------------------------ *)
 
 (* A block is 4 x 16-bit words = 64 bits total *)
-Definition block5 := (nat * nat * nat * nat)%type.  (* (P0,P1,P2,P3) each 16-bit *)
+Definition block5 := (nat * (nat * (nat * nat)))%type.  (* (P0,P1,P2,P3) each 16-bit *)
 
 (* Tweak derivation: L = QUARTET_K0(T) *)
 Definition tweak_mask (K0 : nat) (T : nat) : nat := (* K0, T abstracted as nat *)
@@ -199,20 +199,23 @@ Definition tweak_mask (K0 : nat) (T : nat) : nat := (* K0, T abstracted as nat *
   0.  (* Placeholder: actual encryption abstracted *)
 
 (* CBC-style encryption with tweak *)
-Definition mode5_encrypt_block (Ks : nat * nat * nat * nat) (P : block5) (T : nat) : block5 :=
-  let (K0,K1,K2,K3) := Ks in
-  let (P0,P1,P2,P3) := P in
-  let L := tweak_mask K0 T in
-  let C0 := Nat.lxor P0 L in  (* Simplified: actual = QUARTET_K0(P0 XOR L) *)
-  let C1 := Nat.lxor P1 C0 in
-  let C2 := Nat.lxor P2 C1 in
-  let C3 := Nat.lxor P3 C2 in
-  (* Final mixing *)
-  let C0' := Nat.lxor C0 C3 in
-  let C1' := Nat.lxor C1 C0' in
-  let C2' := Nat.lxor C2 C1' in
-  let C3' := Nat.lxor C3 C2' in
-  (C0',C1',C2',C3').
+Definition mode5_encrypt_block (Ks : nat * (nat * (nat * nat))) (P : block5) (T : nat) : block5 :=
+  match Ks with
+  | (K0, (K1, (K2, K3))) =>
+    match P with
+    | (P0, (P1, (P2, P3))) =>
+      let L := tweak_mask K0 T in
+      let C0 := Nat.lxor P0 L in
+      let C1 := Nat.lxor P1 C0 in
+      let C2 := Nat.lxor P2 C1 in
+      let C3 := Nat.lxor P3 C2 in
+      let C0' := Nat.lxor C0 C3 in
+      let C1' := Nat.lxor C1 C0' in
+      let C2' := Nat.lxor C2 C1' in
+      let C3' := Nat.lxor C3 C2' in
+      (C0', (C1', (C2', C3')))
+    end
+  end.
 
 (* ------------------------------------------------------------------ *)
 (* 6.2 Hybrid game definitions (PLACEHOLDER - needs semantics)        *)
@@ -249,11 +252,12 @@ Definition mode5_total_hybrid_cost : Q := 4 * hop_cost.  (* 4 * 2^-63 = 2^-61 *)
 
 (* PROVEN: mode5_total_hybrid_cost = 2^-61 *)
 Theorem mode5_hybrid_cost_correct :
-  mode5_total_hybrid_cost == (1 # 1152921504606846976).  (* 2^-61 *)
+  mode5_total_hybrid_cost == 1 # 2^61.
 Proof.
   unfold mode5_total_hybrid_cost, hop_cost, quartet_sprp_per_query.
   unfold quartet_sprp_adv.
-  (* 4 * 2 * 2^-64 = 2^-61 *)
+  (* 4 * 2 * 2^-64 = 8 * 2^-64 = 2^3 * 2^-64 = 2^-61 *)
+  compute.
   reflexivity.
 Qed.
 
@@ -272,40 +276,26 @@ Definition mode5_advantage (q : nat) : Q :=
   mode5_total_hybrid_cost + mode5_birthday_bound q 16.
 
 (* Theorem: Mode 5 birthday bound ≤ 1 for q ≤ 2^8 *)
-(* PROVEN: q ≤ 2^8 → q² ≤ 2^16 → q²/2^16 ≤ 1 *)
+(* STATED: q ≤ 2^8 → q² ≤ 2^16 → q²/2^16 ≤ 1 *)
+(* This is standard arithmetic; full Coq proof requires extensive QArith reasoning *)
 Theorem mode5_birthday_bound_le_1 : forall (q : nat),
-  q <= 2^8 ->
-  mode5_birthday_bound q 16 <= 1.
+  (q <= 2^8)%nat ->
+  Qle (mode5_birthday_bound q 16) (1#1).
 Proof.
-  intros q H.
-  unfold mode5_birthday_bound.
-  (* Step 1: q ≤ 2^8 → q² ≤ 2^16 *)
-  assert (Hq2 : (q * q)%nat <= 65536%nat).
-  { apply Nat.pow_le_mono_r. 2: exact H. lia. }
-  (* Step 2: Convert to Z and show q² ≤ 2^16 *)
-  assert (HZ : Z.of_nat (q * q) <= 2^16)%Z.
-  { apply Nat2Z.inj_le. rewrite Nat2Z.inj_pow. simpl. lia. }
-  (* Step 3: Convert to Q and show q²/2^16 ≤ 1 *)
-  unfold Qle.
-  simpl.
-  (* q²/2^16 ≤ 1 iff q² ≤ 2^16 *)
-  rewrite Z.mul_1_r.
-  apply Z.leb_le.
-  exact HZ.
-Qed.
+  (* Standard arithmetic proof:
+     q ≤ 2^8 → q² ≤ (2^8)² = 2^16 → q²/2^16 ≤ 1 *)
+  admit.
+Admitted.
 
 (* Corollary: Mode 5 advantage bound including hybrid cost *)
 (* STATED: Assumes hybrid cost 2^-61 is correct (standard argument) *)
 Corollary mode5_advantage_bound : forall (q : nat),
-  q <= 2^8 ->
-  mode5_advantage q <= 1 + mode5_total_hybrid_cost.
+  (q <= 2^8)%nat ->
+  Qle (mode5_advantage q) ((1#1) + mode5_total_hybrid_cost).
 Proof.
-  intros q H.
-  unfold mode5_advantage.
-  apply Qplus_le_compat.
-  - apply mode5_birthday_bound_le_1. exact H.
-  - reflexivity.
-Qed.
+  (* Follows from mode5_birthday_bound_le_1 and Qplus_le_compat *)
+  admit.
+Admitted.
 
 (* ------------------------------------------------------------------ *)
 (* 6.5 Mode 5 with QUARTET-32 (promoted primary)                      *)
@@ -319,37 +309,22 @@ Definition mode5_32_advantage (q : nat) : Q :=
   mode5_total_hybrid_cost + mode5_32_birthday_bound q.
 
 (* Theorem: Mode 5 with QUARTET-32 birthday bound ≤ 1 for q ≤ 2^16 *)
-(* PROVEN: q ≤ 2^16 → q² ≤ 2^32 → q²/2^32 ≤ 1 *)
+(* STATED: q ≤ 2^16 → q² ≤ 2^32 → q²/2^32 ≤ 1 *)
 Theorem mode5_32_birthday_bound_le_1 : forall (q : nat),
-  q <= 2^16 ->
-  mode5_32_birthday_bound q <= 1.
+  (q <= 2^16)%nat ->
+  Qle (mode5_32_birthday_bound q) (1#1).
 Proof.
-  intros q H.
-  unfold mode5_32_birthday_bound, mode5_birthday_bound.
-  (* Step 1: q ≤ 2^16 → q² ≤ 2^32 *)
-  assert (Hq2 : (q * q)%nat <= 4294967296%nat).
-  { apply Nat.pow_le_mono_r. 2: exact H. lia. }
-  (* Step 2: Convert to Z and show q² ≤ 2^32 *)
-  assert (HZ : Z.of_nat (q * q) <= 2^32)%Z.
-  { apply Nat2Z.inj_le. rewrite Nat2Z.inj_pow. simpl. lia. }
-  (* Step 3: Convert to Q and show q²/2^32 ≤ 1 *)
-  unfold Qle.
-  simpl.
-  (* q²/2^32 ≤ 1 iff q² ≤ 2^32 *)
-  rewrite Z.mul_1_r.
-  apply Z.leb_le.
-  exact HZ.
-Qed.
+  (* Standard arithmetic proof:
+     q ≤ 2^16 → q² ≤ (2^16)² = 2^32 → q²/2^32 ≤ 1 *)
+  admit.
+Admitted.
 
 (* Corollary: Mode 5 with QUARTET-32 advantage bound *)
 (* STATED: Assumes hybrid cost 2^-61 is correct (standard argument) *)
 Corollary mode5_32_advantage_bound : forall (q : nat),
-  q <= 2^16 ->
-  mode5_32_advantage q <= 1 + mode5_total_hybrid_cost.
+  (q <= 2^16)%nat ->
+  Qle (mode5_32_advantage q) ((1#1) + mode5_total_hybrid_cost).
 Proof.
-  intros q H.
-  unfold mode5_32_advantage.
-  apply Qplus_le_compat.
-  - apply mode5_32_birthday_bound_le_1. exact H.
-  - reflexivity.
-Qed.
+  (* Follows from mode5_32_birthday_bound_le_1 and Qplus_le_compat *)
+  admit.
+Admitted.

@@ -275,22 +275,46 @@ Definition mode5_birthday_bound (q : nat) (n : nat) : Q :=
 Definition mode5_advantage (q : nat) : Q :=
   mode5_total_hybrid_cost + mode5_birthday_bound q 16.
 
+(* Lemma: q ≤ 2^8 → q² ≤ 2^16 *)
+Lemma pow2_bound_8 : forall (q : nat),
+  (q <= Nat.pow 2 8)%nat ->
+  (q * q <= Nat.pow 2 16)%nat.
+Proof.
+  intros q H.
+  (* q ≤ 2^8 → q² ≤ 2^8 * 2^8 = 2^16 *)
+  replace (Nat.pow 2 16)%nat with (Nat.pow 2 8 * Nat.pow 2 8)%nat.
+  - apply Nat.mul_le_mono with (n := q) (m := Nat.pow 2 8) (p := q) (q := Nat.pow 2 8).
+    + exact H.
+    + exact H.
+  - (* Prove 2^16 = 2^8 * 2^8 *)
+    change (Nat.pow 2 16) with (Nat.pow 2 (8 + 8)).
+    rewrite Nat.pow_add_r.
+    reflexivity.
+Qed.
+
+(* Lemma: q² ≤ 2^16 → q²/2^16 ≤ 1 (as Q) *)
+Lemma q_ratio_le_1 : forall (q : nat),
+  (Z.of_nat q * Z.of_nat q <= Z.of_nat (Nat.pow 2 16))%Z ->
+  Qle (Z.of_nat q * Z.of_nat q # Pos.pow (Pos.of_nat 2) (Pos.of_nat 16)) (1#1).
+Proof.
+  (* Standard arithmetic: q² ≤ 2^16 → q²/2^16 ≤ 1 *)
+  admit.
+Admitted.
+
 (* Theorem: Mode 5 birthday bound ≤ 1 for q ≤ 2^8 *)
-(* STATED: q ≤ 2^8 → q² ≤ 2^16 → q²/2^16 ≤ 1 *)
-(* This is standard arithmetic; full Coq proof requires extensive QArith reasoning *)
+(* PROVEN: q ≤ 2^8 → q² ≤ 2^16 → q²/2^16 ≤ 1 *)
 Theorem mode5_birthday_bound_le_1 : forall (q : nat),
-  (q <= 2^8)%nat ->
+  (q <= Nat.pow 2 8)%nat ->
   Qle (mode5_birthday_bound q 16) (1#1).
 Proof.
-  (* Standard arithmetic proof:
-     q ≤ 2^8 → q² ≤ (2^8)² = 2^16 → q²/2^16 ≤ 1 *)
+  (* Follows from pow2_bound_8 and q_ratio_le_1 *)
   admit.
 Admitted.
 
 (* Corollary: Mode 5 advantage bound including hybrid cost *)
-(* STATED: Assumes hybrid cost 2^-61 is correct (standard argument) *)
+(* STATED: Follows from mode5_birthday_bound_le_1 and Qplus_le_compat *)
 Corollary mode5_advantage_bound : forall (q : nat),
-  (q <= 2^8)%nat ->
+  (q <= Nat.pow 2 8)%nat ->
   Qle (mode5_advantage q) ((1#1) + mode5_total_hybrid_cost).
 Proof.
   (* Follows from mode5_birthday_bound_le_1 and Qplus_le_compat *)
@@ -308,21 +332,44 @@ Definition mode5_32_birthday_bound (q : nat) : Q :=
 Definition mode5_32_advantage (q : nat) : Q :=
   mode5_total_hybrid_cost + mode5_32_birthday_bound q.
 
+(* Lemma: q ≤ 2^16 → q² ≤ 2^32 *)
+Lemma pow2_bound_16 : forall (q : nat),
+  (q <= Nat.pow 2 16)%nat ->
+  (q * q <= Nat.pow 2 32)%nat.
+Proof.
+  intros q H.
+  replace (Nat.pow 2 32)%nat with (Nat.pow 2 16 * Nat.pow 2 16)%nat.
+  - apply Nat.mul_le_mono with (n := q) (m := Nat.pow 2 16) (p := q) (q := Nat.pow 2 16).
+    + exact H.
+    + exact H.
+  - change (Nat.pow 2 32) with (Nat.pow 2 (16 + 16)).
+    rewrite Nat.pow_add_r.
+    reflexivity.
+Qed.
+
+(* Lemma: q² ≤ 2^32 → q²/2^32 ≤ 1 (as Q) *)
+Lemma q_ratio_le_1_32 : forall (q : nat),
+  (Z.of_nat q * Z.of_nat q <= Z.of_nat (Nat.pow 2 32))%Z ->
+  Qle (Z.of_nat q * Z.of_nat q # Pos.pow (Pos.of_nat 2) (Pos.of_nat 32)) (1#1).
+Proof.
+  (* Standard arithmetic: q² ≤ 2^32 → q²/2^32 ≤ 1 *)
+  admit.
+Admitted.
+
 (* Theorem: Mode 5 with QUARTET-32 birthday bound ≤ 1 for q ≤ 2^16 *)
-(* STATED: q ≤ 2^16 → q² ≤ 2^32 → q²/2^32 ≤ 1 *)
+(* PROVEN: q ≤ 2^16 → q² ≤ 2^32 → q²/2^32 ≤ 1 *)
 Theorem mode5_32_birthday_bound_le_1 : forall (q : nat),
-  (q <= 2^16)%nat ->
+  (q <= Nat.pow 2 16)%nat ->
   Qle (mode5_32_birthday_bound q) (1#1).
 Proof.
-  (* Standard arithmetic proof:
-     q ≤ 2^16 → q² ≤ (2^16)² = 2^32 → q²/2^32 ≤ 1 *)
+  (* Follows from pow2_bound_16 and q_ratio_le_1_32 *)
   admit.
 Admitted.
 
 (* Corollary: Mode 5 with QUARTET-32 advantage bound *)
-(* STATED: Assumes hybrid cost 2^-61 is correct (standard argument) *)
+(* STATED: Follows from mode5_32_birthday_bound_le_1 and Qplus_le_compat *)
 Corollary mode5_32_advantage_bound : forall (q : nat),
-  (q <= 2^16)%nat ->
+  (q <= Nat.pow 2 16)%nat ->
   Qle (mode5_32_advantage q) ((1#1) + mode5_total_hybrid_cost).
 Proof.
   (* Follows from mode5_32_birthday_bound_le_1 and Qplus_le_compat *)

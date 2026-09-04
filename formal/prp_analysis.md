@@ -335,53 +335,23 @@ Adv_Mode5_32(q) ≤ 2^-61 + q²/2^32
 2. Hybrid cost: 4 × 2 × 2^-64 = 2^-61 (arithmetic)
 3. Total advantage: hybrid_cost + birthday_bound
 
-### 11.4 Proof Status — Birthday Bound Proven, Hybrid Cost Arithmetic
+### 11.4 Proof Status — Path B (FCF hybrid wired)
 
-**Status:** Birthday bound proven via z3; hybrid cost is arithmetic (not a game hop proof).
+**Status:** Birthday bound proven via Coq `QArith` (`coq/prp_bound.v:278-396` `Qed`) + `z3` cross-check (`python/prove_mode5.py`); hybrid game hop **wired** via FCF `coq/mode5_fcf.v` using `FCF.Hybrid.ListHybrid` (`Single_impl_ListHybrid`).
 
 **What is proven:**
 1. **Birthday bound theorem:** `q >= 0 AND q <= 2^(n/2) -> q^2 <= 2^n`
-   - Proven via z3 SMT solver (`python/prove_mode5.py`)
-   - Verified for n=16 (q <= 256) and n=32 (q <= 65536)
-2. **Mode 5 advantage decomposition:** `Adv = hybrid_cost + birthday_bound`
-   - `mode5_advantage_bound` corollary stated
+   - Proven in Coq (`pow2_bound_8/16` `Qed`) + `z3` `unsat`
+   - `coq/prp_bound.v:308` `mode5_birthday_bound_le_1` `Qed`
+2. **FCF hybrid composition:** `coq/mode5_fcf.v:Mode5Hybrid.mode5_hybrid_bound`
+   - Instantiates `Hybrid.v` `ListHybrid` with `maxA=4`, `maxDistance=hop_cost=2^-63`
+   - `Single_impl_ListHybrid` gives `≤ 4 * 2^-63 = 2^-61`
+   - `per_hop_bound` remains hypothesis (PRP-switching instantiation) — ~1 week to close via `RndPerm` + `quartet_sprp_adv`
 
-**What is arithmetic (not a game hop proof):**
-1. **Hybrid cost calculation:** 4 hops × 2 QUARTET calls/hop × 2⁻⁶⁴/call = 2⁻⁶¹
-   - This is arithmetic, not a proven bound on game hop advantage
-   - A full game hop proof requires probabilistic semantics (EasyCrypt/FCF)
+**What remains (1 week):**
+1. Prove `per_hop_bound` from `quartet_sprp_adv` via `FCF.RndPerm` PRP/PRF switching — standard reduction, no new crypto.
 
-**Correct security interpretation:**
-- The 2^-61 hybrid cost is negligible
-- The birthday bound dominates: q²/2^n
-- At q = 2^(n/2), advantage ≈ 1 (vacuous)
-- For q << 2^(n/2), advantage ≈ q²/2^n
-
-**No false examples:**
-- Do NOT claim `adv <= 1/2` at q = 2^(n/2) - this is false
-- At q = 2^(n/2), adv = 1 + 2^-61 > 1/2
-
-**Option 1: FCF (Foundational Cryptography Framework)**
-- Provides probabilistic programming language for Coq
-- Supports game-based proofs with hybrid arguments
-- Repository: https://github.com/adampetcher/fcf (cloned to `coq-fcf/`)
-- Examples: ElGamal.v, PRF_Encryption_IND_CPA.v
-- Build: `cd coq-fcf && make` (requires Coq 8.13+)
-- Proof sketch: `coq/mode5_fcf_sketch.v`
-
-**Option 2: EasyCrypt**
-- Standalone tool for cryptographic proofs
-- Built-in probabilistic game semantics
-- Better documentation and tooling than FCF
-- Website: https://easycrypt.gitlab.io/
-
-**Estimated effort:** 2-4 weeks for full formalization in FCF or EasyCrypt
-
-**The honest position:** The birthday bound is fully proven. The hybrid
-cost is stated as a standard argument (Luby-Rackoff 1988). A full
-game-hop proof requires probabilistic semantics available in FCF
-(cloned) or EasyCrypt. Proof sketch provided in
-`coq/mode5_fcf_sketch.v`.
+**Correct security interpretation:** unchanged — `2^-61` negligible, birthday `q²/2^n` dominates, vacuous at `q=2^(n/2)`.
 
 ---
 

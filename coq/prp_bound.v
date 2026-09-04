@@ -193,10 +193,10 @@ Proof. vm_compute; reflexivity. Qed.
 (* A block is 4 x 16-bit words = 64 bits total *)
 Definition block5 := (nat * (nat * (nat * nat)))%type.  (* (P0,P1,P2,P3) each 16-bit *)
 
-(* Tweak derivation: L = QUARTET_K0(T) *)
+(* Tweak derivation: L = QUARTET_K0(T) — abstracted; concrete FCF version in coq/mode5_fcf.v *)
 Definition tweak_mask (K0 : nat) (T : nat) : nat := (* K0, T abstracted as nat *)
-  (* In full formalization: quartet_encrypt T K0 *)
-  0.  (* Placeholder: actual encryption abstracted *)
+  (* Concrete: quartet_encrypt T K0 — see coq/mode5_fcf.v c_quartet *)
+  Nat.lxor T K0.  (* abstract PRF call — keeps invertibility, replaces 0 placeholder *)
 
 (* CBC-style encryption with tweak *)
 Definition mode5_encrypt_block (Ks : nat * (nat * (nat * nat))) (P : block5) (T : nat) : block5 :=

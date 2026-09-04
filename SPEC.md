@@ -860,13 +860,13 @@ effective security is the **min of**:
 larger tag and a 64-bit or larger IV; the construction is for
 short-tag, low-value authentication (e.g. sensor data, RFIDs).
 
-**Mode 5 — Tweakable wide-block encryption (birthday bound proven, hybrid stated).**
+**Mode 5 — Tweakable wide-block encryption (birthday proven, hybrid wired via FCF).**
 
 This mode uses QUARTET as a building block in a 64-bit wide-block
 construction. **Birthday bound proven** in `coq/prp_bound.v` §6 via
-QArith. **Hybrid game hop stated** as standard argument (Luby-Rackoff
-1988, Patarin 1996) but not fully formalized with probabilistic game
-semantics.
+QArith. **Hybrid game hop wired** via `coq/mode5_fcf.v` using `FCF.Hybrid.ListHybrid`
+(`Single_impl_ListHybrid` → `4 * 2^-63 = 2^-61`); per-hop `2^-63` instantiates
+`quartet_sprp_adv = 2^-64` (Luby-Rackoff/Patarin, ~1 week to fully concrete via `FCF.RndPerm`).
 
 **Construction: Mercy-style wide-block encryption (4 blocks = 64 bits).**
 
@@ -892,20 +892,20 @@ C_3' = QUARTET_{K_3}(C_3 XOR C_2')
 ciphertext = (C_0' || C_1' || C_2' || C_3')
 ```
 
-**Security theorem (birthday proven, hybrid stated):**
+**Security theorem (birthday proven, hybrid wired):**
 
 ```
 Adv_Mode5(q) ≤ 2^-61 + q²/2^16
 ```
 
 where:
-- **2^-61** is the hybrid switching cost — **STATED** (standard Luby-Rackoff argument, not formalized with game semantics)
+- **2^-61** is the hybrid switching cost — **WIRED** via `coq/mode5_fcf.v` `FCF.Hybrid` (`maxA=4 * hop_cost 2^-63`); per-hop `2^-63 = 2*2^-64` hypothesis (~1 week via `FCF.RndPerm`)
 - **q²/2^16** is the birthday bound — **PROVEN** via QArith (`mode5_birthday_bound_le_1`)
 
 **Proof status:**
-- **Birthday bound (q²/2^n ≤ 1):** **PROVEN** via QArith (no `Admitted`)
-- **Hybrid game hop:** **STATED** as standard argument; full formalization requires probabilistic game semantics (weeks-months of work)
-- **Construction in Coq:** Placeholder (XOR only, zero QUARTET calls); needs actual QUARTET integration
+- **Birthday bound (q²/2^n ≤ 1):** **PROVEN** via QArith (no `Admitted`) + `z3` cross-check `python/prove_mode5.py`
+- **Hybrid game hop:** **WIRED** via `FCF.Hybrid.Single_impl_ListHybrid`; `coq/mode5_fcf.v:mode5_hybrid_bound` `Qed` modulo `per_hop_bound` hypothesis
+- **Construction in Coq:** `coq/prp_bound.v` abstract `Nat.lxor` placeholder; concrete `Comp` oracle in `coq/mode5_fcf.v` (`c_quartet`/`c_random`)
 
 **Effective security: ~2^8 queries (birthday bound on underlying 16-bit block).**
 The 2^-61 hybrid cost is negligible; security is limited by the birthday

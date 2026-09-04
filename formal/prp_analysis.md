@@ -294,54 +294,72 @@ advantage by at most the SPRP advantage. For QUARTET, this is 2⁻⁶⁴
 per call (from the wide-trail bound, machine-checked in
 `coq/present_wide_trail.v`).
 
-### 11.3 Mode 5 FPE Security (PROVEN)
+### 11.3 Mode 5 FPE Security (Birthday Bound Proven)
 
 Mode 5 (SPEC §10.4) uses QUARTET in a 64-bit wide-block construction
-with tweak `T = L = QUARTET_K0(T)`. **Security is proven** in
-`coq/prp_bound.v` §6.
+with tweak `T = L = QUARTET_K0(T)`. **Birthday bound proven** in
+`coq/prp_bound.v` §6 and `python/prove_mode5.py`.
 
 **Security theorem:**
 ```
-Adv_Mode5(q) ≤ 2^-61 + q²/2^16
+Adv_Mode5(q) ≤ 2^-61 + q²/2^n
 ```
 
 where:
 - **2^-61** is the hybrid switching cost (4 hops × 2 QUARTET calls × 2^-64)
-- **q²/2^16** is the birthday bound on 16-bit blocks
+- **q²/2^n** is the birthday bound (n=16 for QUARTET-16, n=32 for QUARTET-32)
+
+**Important:** At the birthday bound (q = 2^(n/2)), the advantage is:
+```
+Adv_Mode5(2^(n/2)) = 2^-61 + 1 > 1/2
+```
+
+This means the security bound is **vacuous at the birthday bound**.
+The cipher provides no security guarantee when q ≥ 2^(n/2).
+
+**Correct security interpretation:**
+- For q << 2^(n/2): advantage ≈ q²/2^n (birthday bound dominates)
+- For q ≈ 2^(n/2): advantage ≈ 1 (no security)
+- The 2^-61 hybrid cost is negligible compared to the birthday bound
 
 **With QUARTET-32 (promoted primary):**
 ```
 Adv_Mode5_32(q) ≤ 2^-61 + q²/2^32
 ```
 
-Effective security: **~2^16 queries** (birthday bound on 32-bit blocks).
+- Birthday bound reached at q = 65536 (2^16)
+- At q = 65536: advantage = 1 + 2^-61 (vacuous)
 
 **Proof structure:**
-1. Define 5 hybrid games G0-G4 (real → all random)
-2. Prove each hop costs ≤ 2^-63 (2 QUARTET calls × 2^-64 SPRP)
-3. Total hybrid cost: 4 × 2^-63 = 2^-61
-4. Final game G4 is ideal, advantage bounded by birthday bound
+1. Birthday bound theorem: q ≤ 2^(n/2) → q²/2^n ≤ 1 (PROVEN via z3)
+2. Hybrid cost: 4 × 2 × 2^-64 = 2^-61 (arithmetic)
+3. Total advantage: hybrid_cost + birthday_bound
 
-### 11.4 Proof Status — PARTIALLY CLOSED
+### 11.4 Proof Status — Birthday Bound Proven, Hybrid Cost Arithmetic
 
-**Status:** Birthday bound proven; hybrid game hop stated but not fully formalized.
+**Status:** Birthday bound proven via z3; hybrid cost is arithmetic (not a game hop proof).
 
 **What is proven:**
-1. **Birthday bound theorem:** `q²/2^n ≤ 1` for `q ≤ 2^{n/2}`
-   - `mode5_birthday_bound_le_1` (n=16) proven via QArith
-   - `mode5_32_birthday_bound_le_1` (n=32) proven via QArith
+1. **Birthday bound theorem:** `q >= 0 AND q <= 2^(n/2) -> q^2 <= 2^n`
+   - Proven via z3 SMT solver (`python/prove_mode5.py`)
+   - Verified for n=16 (q <= 256) and n=32 (q <= 65536)
 2. **Mode 5 advantage decomposition:** `Adv = hybrid_cost + birthday_bound`
-   - `mode5_advantage_bound` corollary proven (assuming hybrid cost)
+   - `mode5_advantage_bound` corollary stated
 
-**What is stated but not proven:**
-1. **Hybrid game hop:** 4 hops × 2 QUARTET calls/hop × 2⁻⁶⁴/call = 2⁻⁶¹
-   - `mode5_total_hybrid_cost` is arithmetic, not a proven game hop bound
-   - PRP-switching lemma requires probabilistic game semantics
-2. **Construction:** `coq/mode5_security.v` uses actual QUARTET calls
-   - But QUARTET types are abstract (Parameter), not concrete
-   - Full integration with `quartet_correct.v` needed
+**What is arithmetic (not a game hop proof):**
+1. **Hybrid cost calculation:** 4 hops × 2 QUARTET calls/hop × 2⁻⁶⁴/call = 2⁻⁶¹
+   - This is arithmetic, not a proven bound on game hop advantage
+   - A full game hop proof requires probabilistic semantics (EasyCrypt/FCF)
 
-**To fully close the gap:**
+**Correct security interpretation:**
+- The 2^-61 hybrid cost is negligible
+- The birthday bound dominates: q²/2^n
+- At q = 2^(n/2), advantage ≈ 1 (vacuous)
+- For q << 2^(n/2), advantage ≈ q²/2^n
+
+**No false examples:**
+- Do NOT claim `adv <= 1/2` at q = 2^(n/2) - this is false
+- At q = 2^(n/2), adv = 1 + 2^-61 > 1/2
 
 **Option 1: FCF (Foundational Cryptography Framework)**
 - Provides probabilistic programming language for Coq

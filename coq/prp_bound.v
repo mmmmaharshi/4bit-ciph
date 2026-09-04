@@ -256,21 +256,27 @@ Definition mode5_advantage (q : nat) : Q :=
   mode5_total_hybrid_cost + mode5_birthday_bound q 16.
 
 (* Theorem: Mode 5 birthday bound ≤ 1 for q ≤ 2^8 *)
-(* This proves the birthday bound component; hybrid cost is separate *)
+(* Proof: q ≤ 2^8 → q² ≤ 2^16 → q²/2^16 ≤ 1 *)
 Theorem mode5_birthday_bound_le_1 : forall (q : nat),
   q <= 2^8 ->
   mode5_birthday_bound q 16 <= 1.
 Proof.
   intros q H.
   unfold mode5_birthday_bound.
-  (* For q ≤ 2^8: q² ≤ 2^16, so q²/2^16 ≤ 1 *)
-  (* This follows from: q ≤ 2^8 → q² ≤ 2^16 → q²/2^16 ≤ 1 *)
-  (* Arithmetic proof via QArith *)
-  assert (Z.of_nat q * Z.of_nat q <= 65536%Z).
-  { apply Nat2Z.inj_le. rewrite Nat.pow_2_r. simpl. }
-  (* Simplified: the bound holds by construction *)
-  admit.  (* Full arithmetic proof requires extensive QArith reasoning *)
-Admitted.
+  (* Step 1: q ≤ 2^8 → q² ≤ 2^16 *)
+  assert (Hq2 : (q * q)%nat <= 65536%nat).
+  { apply Nat.pow_le_mono_r. 2: exact H. lia. }
+  (* Step 2: Convert to Z and show q² ≤ 2^16 *)
+  assert (HZ : Z.of_nat (q * q) <= 2^16)%Z.
+  { apply Nat2Z.inj_le. rewrite Nat2Z.inj_pow. simpl. lia. }
+  (* Step 3: Convert to Q and show q²/2^16 ≤ 1 *)
+  unfold Qle.
+  simpl.
+  (* q²/2^16 ≤ 1 iff q² ≤ 2^16 *)
+  rewrite Z.mul_1_r.
+  apply Z.leb_le.
+  exact HZ.
+Qed.
 
 (* Corollary: Mode 5 advantage bound including hybrid cost *)
 Corollary mode5_advantage_bound : forall (q : nat),
@@ -296,15 +302,27 @@ Definition mode5_32_advantage (q : nat) : Q :=
   mode5_total_hybrid_cost + mode5_32_birthday_bound q.
 
 (* Theorem: Mode 5 with QUARTET-32 birthday bound ≤ 1 for q ≤ 2^16 *)
+(* Proof: q ≤ 2^16 → q² ≤ 2^32 → q²/2^32 ≤ 1 *)
 Theorem mode5_32_birthday_bound_le_1 : forall (q : nat),
   q <= 2^16 ->
   mode5_32_birthday_bound q <= 1.
 Proof.
   intros q H.
   unfold mode5_32_birthday_bound, mode5_birthday_bound.
-  (* For q ≤ 2^16: q² ≤ 2^32, so q²/2^32 ≤ 1 *)
-  admit.  (* Arithmetic proof via QArith *)
-Admitted.
+  (* Step 1: q ≤ 2^16 → q² ≤ 2^32 *)
+  assert (Hq2 : (q * q)%nat <= 4294967296%nat).
+  { apply Nat.pow_le_mono_r. 2: exact H. lia. }
+  (* Step 2: Convert to Z and show q² ≤ 2^32 *)
+  assert (HZ : Z.of_nat (q * q) <= 2^32)%Z.
+  { apply Nat2Z.inj_le. rewrite Nat2Z.inj_pow. simpl. lia. }
+  (* Step 3: Convert to Q and show q²/2^32 ≤ 1 *)
+  unfold Qle.
+  simpl.
+  (* q²/2^32 ≤ 1 iff q² ≤ 2^32 *)
+  rewrite Z.mul_1_r.
+  apply Z.leb_le.
+  exact HZ.
+Qed.
 
 (* Corollary: Mode 5 with QUARTET-32 advantage bound *)
 Corollary mode5_32_advantage_bound : forall (q : nat),

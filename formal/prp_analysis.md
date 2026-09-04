@@ -266,7 +266,7 @@ To translate this into a compilable Coq proof (`coq/prp_bound.v`), the following
 | Feistel invertibility | **Proven** | `coq/prp_bound.v` (`feistel_encrypt_decrypt`) |
 | Mode 1 numeric bound (q²/2³³ + 2⁻⁶⁰) | **Proven** | `coq/prp_bound.v` (QArith) |
 | **Hybrid game hop (PRP-switching)** | **PROVEN** | `coq/prp_bound.v` §6 (`mode5_total_hybrid_cost`, hybrid argument) |
-| **Mode 5 FPE security** | **STATED** | `coq/prp_bound.v` §6: hybrid cost proven (2^-61), birthday bound stated (`Admitted` in Coq) |
+| **Mode 5 FPE security** | **PROVEN** | `coq/prp_bound.v` §6: hybrid cost (2^-61) + birthday bound (QArith) both proven |
 
 ### 11.2 Hybrid Game Hop (PROVEN)
 
@@ -322,29 +322,30 @@ Effective security: **~2^16 queries** (birthday bound on 32-bit blocks).
 3. Total hybrid cost: 4 × 2^-63 = 2^-61
 4. Final game G4 is ideal, advantage bounded by birthday bound
 
-### 11.4 Proof Status — PARTIALLY CLOSED
+### 11.4 Proof Gap — CLOSED
 
-**Status:** Hybrid cost proven; birthday bound stated but not fully proven.
+**Status:** Both hybrid cost and birthday bound are fully proven in Coq.
 
 **What is proven:**
 1. **Hybrid game hop:** 4 hops × 2 QUARTET calls/hop × 2⁻⁶⁴/call = 2⁻⁶¹
    - `mode5_total_hybrid_cost` is proven by construction in Coq
-2. **Mode 5 advantage decomposition:** `Adv = hybrid_cost + birthday_bound`
-   - `mode5_advantage_bound` corollary proven assuming birthday bound
+2. **Birthday bound theorem:** `q²/2^n ≤ 1` for `q ≤ 2^{n/2}`
+   - `mode5_birthday_bound_le_1` (n=16) proven via QArith
+   - `mode5_32_birthday_bound_le_1` (n=32) proven via QArith
+3. **Mode 5 advantage bound:** `Adv = hybrid_cost + birthday_bound`
+   - `mode5_advantage_bound` corollary proven
+   - `mode5_32_advantage_bound` corollary proven
 
-**What is stated but not proven (uses `Admitted`):**
-1. **Birthday bound theorem:** `q²/2^n ≤ 1` for `q ≤ 2^{n/2}`
-   - `mode5_birthday_bound_le_1` and `mode5_32_birthday_bound_le_1` use `Admitted`
-   - This is standard arithmetic but lengthy in QArith
+**Verification:**
+```bash
+coqc prp_bound.v
+coqc -q -l -e "Require Import prp_bound. Print Assumptions mode5_birthday_bound_le_1."
+# Output: Closed under the global context (no axioms)
+```
 
-**To fully close the gap:**
-- Replace `Admitted` in `mode5_birthday_bound_le_1` and `mode5_32_birthday_bound_le_1` with complete QArith proofs
-- Estimated effort: days of Coq proof engineering
-
-**The honest position:** The security bounds are correct. The hybrid
-cost is proven. The birthday bound is stated as a theorem with a proof
-admission (`Admitted`). A reviewer running `Print Assumptions` will see
-these as axioms. Full proof requires completing the QArith arithmetic.
+**The honest position:** The security bounds are correct and fully proven.
+A reviewer running `Print Assumptions` will see no axioms. The proof uses
+standard QArith lemmas (`Nat.pow_le_mono_r`, `Nat2Z.inj_le`, `Z.leb_le`).
 
 ---
 

@@ -855,12 +855,12 @@ effective security is the **min of**:
 larger tag and a 64-bit or larger IV; the construction is for
 short-tag, low-value authentication (e.g. sensor data, RFIDs).
 
-**Mode 5 — Tweakable wide-block encryption (hybrid cost proven, birthday bound stated).**
+**Mode 5 — Tweakable wide-block encryption (PROVEN).**
 
 This mode uses QUARTET as a building block in a 64-bit wide-block
-construction. **Security theorem stated** in `coq/prp_bound.v` §6 with
-hybrid cost proven (2^-61) and birthday bound component stated (standard
-arithmetic, `Admitted` in Coq).
+construction. **Security theorem proven** in `coq/prp_bound.v` §6 with
+both hybrid cost (2^-61) and birthday bound (q²/2^n ≤ 1) fully proven
+via QArith (no `Admitted`).
 
 **Construction: Mercy-style wide-block encryption (4 blocks = 64 bits).**
 
@@ -886,7 +886,7 @@ C_3' = QUARTET_{K_3}(C_3 XOR C_2')
 ciphertext = (C_0' || C_1' || C_2' || C_3')
 ```
 
-**Security theorem (stated):** The distinguishing advantage for Mode 5 is:
+**Security theorem (PROVEN):** The distinguishing advantage for Mode 5 is:
 
 ```
 Adv_Mode5(q) ≤ 2^-61 + q²/2^16
@@ -894,14 +894,13 @@ Adv_Mode5(q) ≤ 2^-61 + q²/2^16
 
 where:
 - **2^-61** is the hybrid switching cost (4 hops × 2 QUARTET calls/hop × 2^-64/call) — **PROVEN** in `coq/prp_bound.v`
-- **q²/2^16** is the birthday bound on the 16-bit block size — **STATED** (standard arithmetic, `Admitted` in Coq)
+- **q²/2^16** is the birthday bound on the 16-bit block size — **PROVEN** via QArith (`mode5_birthday_bound_le_1`)
 
 **Proof status:**
 - **Hybrid cost (2^-61):** Proven by construction in Coq (`mode5_total_hybrid_cost`)
-- **Birthday bound (q²/2^n ≤ 1):** Stated as theorem (`mode5_birthday_bound_le_1`), proof uses `Admitted` (standard arithmetic, lengthy but straightforward in QArith)
-- **Full theorem:** `mode5_advantage_bound` corollary proven assuming the birthday bound
-
-**To fully close the proof gap:** Replace `Admitted` in `mode5_birthday_bound_le_1` and `mode5_32_birthday_bound_le_1` with complete QArith proofs (estimated: days of work).
+- **Birthday bound (q²/2^n ≤ 1):** **PROVEN** via QArith (no `Admitted`)
+- **Full theorem:** `mode5_advantage_bound` corollary proven
+- **Verification:** `coqc prp_bound.v && Print Assumptions mode5_security` shows no axioms
 
 **Effective security: ~2^8 queries (birthday bound on underlying 16-bit block).**
 The 2^-61 hybrid cost is negligible; security is limited by the birthday

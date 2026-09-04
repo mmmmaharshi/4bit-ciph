@@ -22,5 +22,19 @@ __pycache__/
 Thumbs.db
 
 # Tooling state (kept in tree for editor support; uncomment to ignore)
-# .commandcode/
+.commandcode/
 .opencode/
+
+# Coq build artifacts
+*.vo
+*.vos
+*.vok
+*.vos
+*.glob
+*.aux
+.coq-native/
+.lia.cache
+.nia.cache
+
+# FCF submodule build (keep source, ignore build)
+coq-fcf/

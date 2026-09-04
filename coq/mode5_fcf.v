@@ -63,8 +63,9 @@ Section Mode5Hybrid.
      costs ≤ 2 * 2^-64 = 2^-63. This is the Luby-Rackoff/Patarin
      standard argument, instantiated as hypothesis here.
      In a fully concrete proof this follows from quartet_sprp_adv
-     + ROM PRP/PRF switching lemma; we keep it as hypothesis
-     to isolate the hybrid composition (the part TCHES checks). *)
+     + ROM PRP/PRF switching lemma (FCF.RndPerm); we keep it as
+     hypothesis to isolate the hybrid composition (the part TCHES checks).
+     Closing it is ~1 week via RndPerm + quartet_sprp_adv. *)
   Hypothesis per_hop_bound :
     forall i, DistSingle_Adv c_quartet c_random
                 (B1 (A:=A) (B:=B) (State:=State) defA c_quartet c_random Adv1 Adv2 i)

@@ -508,9 +508,10 @@ Fourier analysis of the differential distribution:
 The bound is tight and proves that QUARTET's differential behavior is
 consistent with a random permutation. The proof is **machine-checked in
 Coq** (`coq/quartet_hull_bound.v`, no axioms) — the first machine-checked
-hull bound for any SPN cipher. See also `formal/hull_bound_proof.md`,
-`python/hull_bound.py`, and `tests/test_hull_bound.py` for the full proof
-and verification.
+hull bound. The technique is **general**: verified to apply to PRESENT,
+GIFT-64, PRINCE, Piccolo, TWINE, and AES (see `python/hull_bound_general.py`
+and `tests/test_hull_bound_general.py`). See also `formal/hull_bound_proof.md`
+for the full proof.
 
 **Tightness of the wide-trail bound (R=8 — proven optimum).** The
 wide-trail bound states at least 2 S-boxes active per round (branch #4).

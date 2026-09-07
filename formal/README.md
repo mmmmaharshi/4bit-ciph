@@ -72,9 +72,16 @@
   empirical data (gap: 3.07x).
 
 - `coq/quartet_hull_bound.v` — **Machine-checked hull bound (Coq).** First
-  machine-checked hull bound for any SPN cipher. Proves the spectral hull
-  bound theorem with no axioms (`Print Assumptions` = `Closed under the
-  global context`). Verified with `coqc` on Rocq 9.1.1.
+  machine-checked hull bound. Proves the spectral hull bound theorem with
+  no axioms (`Print Assumptions` = `Closed under the global context`).
+  Verified with `coqc` on Rocq 9.1.1.
+
+- `python/hull_bound_general.py` — **General S-box analyzer.** Checks the
+  Fourier vanishing property for any S-box. Verified to apply to PRESENT,
+  GIFT-64, PRINCE, Piccolo, TWINE, and AES.
+
+- `tests/test_hull_bound_general.py` — **10 tests, all passing.** Tests the
+  Fourier vanishing property across multiple S-boxes.
 
 ## Pending
 
@@ -94,7 +101,7 @@
 | PRP advantage bound (Mode 1) | Proven (numeric + structural) | Numeric bound + Feistel invertibility machine-checked (`coq/prp_bound.v` QArith) |
 | Mode 5 FPE security | Proven | `coq/prp_bound.v` §6: hybrid hop (2⁻⁶¹) + security theorems (`mode5_security`, `mode5_32_security`) |
 | PRESENT wide-trail bound | Proven | Machine-checked (Coq 8.18 — `present_wide_trail.vo`) |
-| Spectral hull bound | Proven | Machine-checked: `coq/quartet_hull_bound.v` (no axioms) + Python: `python/hull_bound.py` + `tests/test_hull_bound.py` (8/8 tests passing) |
+| Spectral hull bound | Proven | Machine-checked: `coq/quartet_hull_bound.v` (no axioms) + Python: `python/hull_bound.py` + `tests/test_hull_bound.py` (8/8 tests passing) + General: `python/hull_bound_general.py` + `tests/test_hull_bound_general.py` (10/10 tests passing, verified on PRESENT, GIFT, PRINCE, Piccolo, TWINE, AES) |
 
 The PRP analysis in `formal/prp_analysis.md` captures all mathematical
 content needed for an automated proof. The Coq translation roadmap

@@ -21,6 +21,8 @@ Operating guide for AI coding agents working in this repository.
   - `python/hull_bound.py` — spectral hull bound proof (Fourier analysis of differential distribution, P_hull <= 2^-8).
   - `tests/test_hull_bound.py` — tests for the spectral hull bound (8 tests, all passing).
   - `coq/quartet_hull_bound.v` — machine-checked spectral hull bound (Coq, no axioms).
+  - `python/hull_bound_general.py` — general S-box analyzer (checks Fourier vanishing for any S-box).
+  - `tests/test_hull_bound_general.py` — tests for general analyzer (10 tests, verified on PRESENT, GIFT, PRINCE, Piccolo, TWINE, AES).
   - `tests/test_constant_time.py` — AST-based static analysis of the cipher core for data-dependent control flow.
   - `tests/test_kats.py` — KAT harness: 262,157 entries (Python + C) from `tests/vectors/quartet_kat.txt`.
   - `tests/generate_kat.py` — regenerates the KAT file.
@@ -87,6 +89,8 @@ This project uses the terms from `/codebase-design`: **module, interface, implem
 | `python/hull_bound.py` | Spectral hull bound proof (Fourier analysis, P_hull <= 2^-8) | `cipher` |
 | `tests/test_hull_bound.py` | Tests for spectral hull bound (8 tests) | `hull_bound` |
 | `coq/quartet_hull_bound.v` | Machine-checked spectral hull bound (no axioms) | Coq stdlib |
+| `python/hull_bound_general.py` | General S-box analyzer (any S-box) | stdlib only |
+| `tests/test_hull_bound_general.py` | Tests for general analyzer (10 tests, 6 ciphers) | `hull_bound_general` |
 | `tests/test_constant_time.py` | AST-based static analysis of the cipher core for data-dependent control flow | `cipher`, `pycparser` |
 | `tests/test_kats.py` | KAT harness: 262,157 entries (Python + C) from `tests/vectors/quartet_kat.txt` | `cipher`, subprocess |
 | `tests/generate_kat.py` | Regenerates the KAT file from the Python reference | `cipher` |

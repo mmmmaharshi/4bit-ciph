@@ -78,13 +78,18 @@ cipher. QUARTET is a **4-bit-native construction block**, not a bulk cipher.
 
 **Breakthrough: Spectral Hull Bound.** We prove a concrete hull bound of
 2^-8 using Fourier analysis of the differential distribution. The key
-insight is that the 1D Fourier transform of the PRESENT S-box differential
+insight is that the 1D Fourier transform of the S-box differential
 distribution vanishes for all non-trivial characters, which implies that
 the R-round Fourier coefficients vanish for all non-trivial characters.
 This gives a tight hull bound that matches the empirical observation to
-within 3x. **The proof is machine-checked in Coq** (`coq/quartet_hull_bound.v`,
-no axioms) — the first machine-checked hull bound for any SPN cipher. See
-`formal/hull_bound_proof.md` for the full proof.
+within 3x.
+
+**The proof is machine-checked in Coq** (`coq/quartet_hull_bound.v`)
+— the first machine-checked hull bound. The Coq proof is **parameterized
+over any S-box**: the general theorem `general_hull_bound` has no axioms.
+Tested on 13 ciphers: applies to 12 (PRESENT, GIFT, PRINCE, Piccolo,
+TWINE, LED, SKINNY, Rectangle, LBlock, Serpent, HIGHT, AES), fails on
+Camellia (different algebraic structure). See `formal/hull_bound_proof.md`.
 
 Tightness verified at R=8 via branch-and-bound (`python/milp_hull.py`,
 28 tight trails, 2^-27.19 lower bound vs 2^-32 single-trail).

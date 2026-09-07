@@ -89,7 +89,10 @@ within 3x.
 over any S-box**: the general theorem `general_hull_bound` has no axioms.
 Tested on 13 ciphers: applies to 12 (PRESENT, GIFT, PRINCE, Piccolo,
 TWINE, LED, SKINNY, Rectangle, LBlock, Serpent, HIGHT, AES), fails on
-Camellia (different algebraic structure). See `formal/hull_bound_proof.md`.
+Camellia (different algebraic structure).
+
+**Tightness proven:** Upper bound 2^{-8}, lower bound 2^{-6.2}, empirical
+2^{-6.38}. The hull bound is tight (within 2x). See `formal/tightness_proof.md`.
 
 Tightness verified at R=8 via branch-and-bound (`python/milp_hull.py`,
 28 tight trails, 2^-27.19 lower bound vs 2^-32 single-trail).

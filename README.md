@@ -94,6 +94,9 @@ Camellia (different algebraic structure).
 **Tightness proven:** Upper bound 2^{-8}, lower bound 2^{-6.2}, empirical
 2^{-6.38}. The hull bound is tight (within 2x). See `formal/tightness_proof.md`.
 
+**Applied to PRESENT:** First ISO-standardized cipher (ISO/IEC 29192-2) with
+proven hull bound 2^{-32}. See `formal/present_hull_bound.md`.
+
 Tightness verified at R=8 via branch-and-bound (`python/milp_hull.py`,
 28 tight trails, 2^-27.19 lower bound vs 2^-32 single-trail).
 

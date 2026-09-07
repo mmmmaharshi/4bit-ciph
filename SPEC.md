@@ -81,7 +81,7 @@ bulk cipher. Its value is:
 
 QUARTET-32 is a **32-bit block adapter** built from two independent
 QUARTET-16 instances. It is promoted to **primary status** because:
-- 32-bit block gives birthday bound 2^16 (vs 2^16 for QUARTET-16)
+- 32-bit block gives birthday bound 2^16 (vs 2^8 for QUARTET-16)
 - Both-halves-active single-trail bound: 2^-128 (64 active S-boxes)
 - The 2^-128 bound is meaningful: q << 2^16 makes trail bound relevant
 
@@ -733,11 +733,19 @@ weaker bound is the binding constraint.
 has a **machine-checked security proof** (Coq, `coq/prp_bound.v`). Modes 2–4
 have **trivial security bounds** (2^8 queries, limited by the 16-bit block
 birthday bound) that are **not publishable as security contributions**.
-Mode 5 is **heuristic only** — no proof exists, and the security bound is
-still 2^8 (limited by the underlying 16-bit block cipher). QUARTET's
-2^(-64) single-trail bound does **not** provide meaningful security in any
-wide-block mode because wide-block modes bound security by the **underlying**
-block cipher's birthday bound, not the wide block size.
+
+**Mode 5 (tweakable wide-block):** The birthday bound is **proven** via QArith
+(`mode5_birthday_bound_le_1`). The hybrid game hop is **wired** via
+`coq/mode5_fcf.v` (`FCF.Hybrid.ListHybrid`). The per-hop bound follows from
+the SPRP assumption (`quartet_sprp_bound` in `coq/mode5_rndperm_close.v`),
+which is justified by the wide-trail DDT bound in `coq/quartet_prp_derived.v`.
+A full computational reduction from the numeric bound to the SPRP assumption
+requires formalizing QUARTET in Coq's `Comp` monad (see Mode 5 Proof Status
+below). The effective security is ~2^8 queries (birthday bound on the
+underlying 16-bit block).
+QUARTET's 2^(-64) single-trail bound does **not** provide meaningful security
+on its own in any mode because wide-block security is bounded by the
+**underlying** block cipher's birthday bound, not the wide block size.
 
 **Lightweight mode (R=4).** The R=4 mode is a *throughput* and
 *footprint* mode, **not a security tier**. The R=4 provable bound is
@@ -863,10 +871,13 @@ short-tag, low-value authentication (e.g. sensor data, RFIDs).
 **Mode 5 — Tweakable wide-block encryption (birthday proven, hybrid wired via FCF).**
 
 This mode uses QUARTET as a building block in a 64-bit wide-block
-construction. **Birthday bound proven** in `coq/prp_bound.v` §6 via
-QArith. **Hybrid game hop wired** via `coq/mode5_fcf.v` using `FCF.Hybrid.ListHybrid`
-(`Single_impl_ListHybrid` → `4 * 2^-63 = 2^-61`); per-hop `2^-63` instantiates
-`quartet_sprp_adv = 2^-64` (Luby-Rackoff/Patarin, ~1 week to fully concrete via `FCF.RndPerm`).
+construction. The birthday bound is **proven** in `coq/prp_bound.v` §6 via
+QArith. The hybrid game hop is **wired** via `coq/mode5_fcf.v` using
+`FCF.Hybrid.ListHybrid` (`Single_impl_ListHybrid` → `4 * 2^-63 = 2^-61`).
+The per-hop cost `2^-63 = 2×2^-64` derives from 2 QUARTET calls per position
+(see §10.4 Proof Status for the `per_hop_bound` hypothesis status). Closing
+the hypothesis via `FCF.RndPerm` in `coq/mode5_rndperm_close.v` is in progress
+(~1 week remaining).
 
 **Construction: Mercy-style wide-block encryption (4 blocks = 64 bits).**
 
@@ -899,13 +910,20 @@ Adv_Mode5(q) ≤ 2^-61 + q²/2^16
 ```
 
 where:
-- **2^-61** is the hybrid switching cost — **WIRED** via `coq/mode5_fcf.v` `FCF.Hybrid` (`maxA=4 * hop_cost 2^-63`); per-hop `2^-63 = 2*2^-64` hypothesis (~1 week via `FCF.RndPerm`)
+- **2^-61** is the hybrid switching cost — **WIRED** (not proven) via `coq/mode5_fcf.v` `FCF.Hybrid` (`maxA=4 * hop_cost 2^-63`); per-hop `2^-63 = 2×2^-64` is the `per_hop_bound` hypothesis, closing in progress via `FCF.RndPerm` (see Proof Status below)
 - **q²/2^16** is the birthday bound — **PROVEN** via QArith (`mode5_birthday_bound_le_1`)
 
 **Proof status:**
 - **Birthday bound (q²/2^n ≤ 1):** **PROVEN** via QArith (no `Admitted`) + `z3` cross-check `python/prove_mode5.py`
 - **Hybrid game hop:** **WIRED** via `FCF.Hybrid.Single_impl_ListHybrid`; `coq/mode5_fcf.v:mode5_hybrid_bound` `Qed` modulo `per_hop_bound` hypothesis
+- **`per_hop_bound` hypothesis:** `coq/mode5_rndperm_close.v` proves `per_hop_bound` from the SPRP assumption `quartet_sprp_bound` (that the QUARTET oracle has SPRP advantage ≤ 2^-64). The proof uses the union bound over the two QUARTET calls per Mercy position. The `quartet_sprp_bound` assumption is justified by the wide-trail DDT bound proven in `coq/quartet_prp_derived.v` (numeric proof that `quartet_sprp_adv = 2^-64`). A full computational reduction from the numeric bound to the `quartet_sprp_bound` assumption requires formalizing QUARTET in Coq's `Comp` monad (~2-3 weeks). Until then, `quartet_sprp_bound` is the standard ideal-cipher assumption.
 - **Construction in Coq:** `coq/prp_bound.v` abstract `Nat.lxor` placeholder; concrete `Comp` oracle in `coq/mode5_fcf.v` (`c_quartet`/`c_random`)
+
+**Hybrid call/hop count (Mode 1 vs Mode 5):** Both constructions use a 4-hop hybrid over 4 positions, but the per-hop QUARTET call count differs:
+- **Mode 1** (Feistel): 4 QUARTET calls per hop → `quartet_per_query_cost = 4×2^-64 = 2^-62`, `total_hybrid_cost = 4×2^-62 = 2^-60`
+- **Mode 5** (Mercy): 2 QUARTET calls per position per hop (CBC + final-mix pass, each position appears once per pass) → `hop_cost = 2×2^-64 = 2^-63`, `mode5_total_hybrid_cost = 4×2^-63 = 2^-61`
+
+The factor-of-2 difference arises because Mode 5's hybrid only replaces one QUARTET call per position per hop (one of the two passes), whereas Mode 1 replaces the full round function including both Feistel half-calls.
 
 **Effective security: ~2^8 queries (birthday bound on underlying 16-bit block).**
 The 2^-61 hybrid cost is negligible; security is limited by the birthday

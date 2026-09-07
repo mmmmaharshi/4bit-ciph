@@ -48,8 +48,13 @@ FAKE_LIBC = _REPO_ROOT / "tests" / "fake_libc"
 
 # The cipher core: the 6 static inline functions in quartet.h that
 # implement encrypt, decrypt, round, key schedule. quartet_self_test
-# is excluded (it is a test, not cipher code). main() and I/O loops
+# is excluded (it is test code, not cipher code). main() and I/O loops
 # in .c files are also excluded — the check is cipher-core only.
+#
+# Two passes are run: one for the table-based path (non-bitsliced) and one
+# for the bitsliced path (QUARTET_BITSLICED). The bitsliced path uses
+# quartet_sbox_bitsliced (pure computation, no table lookups) and must also
+# pass the constant-time check.
 CIPHER_FUNCS = {
     "quartet_fullmix",
     "quartet_round_key",
@@ -59,30 +64,52 @@ CIPHER_FUNCS = {
     "quartet_decrypt",
 }
 
+# Bitsliced-path function names (defined inside #ifdef QUARTET_BITSLICED).
+CIPHER_FUNCS_BITSLICED = {
+    "quartet_fullmix",
+    "quartet_round_key_bitsliced",
+    "quartet_round_bitsliced",
+    "quartet_inv_round_bitsliced",
+    "quartet_encrypt_bitsliced",
+    "quartet_decrypt_bitsliced",
+}
 
-def preprocess_quartet_core() -> str:
+
+def preprocess_quartet_core(bitsliced: bool = False) -> str:
     """Run the C preprocessor on quartet_core.h (the cipher core,
     which is what we check for constant-time) and return the
     preprocessed text.
+
+    When bitsliced=True, preprocess with QUARTET_BITSLICED defined and
+    include the real sbox.h (which provides quartet_sbox_bitsliced).
     """
     cpp = shutil.which("cpp") or shutil.which("gcc")
     if cpp is None:
         raise RuntimeError("cpp/gcc not found on PATH; cannot preprocess")
-    cmd = [cpp, "-E",
-           "-I", str(_REPO_ROOT / "c"),
-           "-I", str(FAKE_LIBC),
-           "-include", str(FAKE_LIBC / "sbox_for_ast.h"),
-           "-DQUARTET_NO_AVR",
-           str(_REPO_ROOT / "c/quartet_core.h")]
+    if bitsliced:
+        cmd = [cpp, "-E",
+               "-I", str(_REPO_ROOT / "c"),
+               "-I", str(FAKE_LIBC),
+               "-DQUARTET_BITSLICED",
+               "-include", str(_REPO_ROOT / "c/sbox.h"),
+               str(_REPO_ROOT / "c/quartet_core.h")]
+    else:
+        cmd = [cpp, "-E",
+               "-I", str(_REPO_ROOT / "c"),
+               "-I", str(FAKE_LIBC),
+               "-include", str(FAKE_LIBC / "sbox_for_ast.h"),
+               "-DQUARTET_NO_AVR",
+               str(_REPO_ROOT / "c/quartet_core.h")]
     result = subprocess.run(cmd, capture_output=True, text=True, check=True)
     return result.stdout
 
 
-def find_function_nodes(ast: c_ast.FileAST) -> dict[str, c_ast.FuncDef]:
-    """Find all function definitions in the AST, indexed by name."""
+def find_function_nodes(ast: c_ast.FileAST, func_set: set[str]) -> dict[str, c_ast.FuncDef]:
+    """Find all function definitions in the AST, indexed by name.
+    Only functions in func_set are returned."""
     out: dict[str, c_ast.FuncDef] = {}
     for node in ast.ext:
-        if isinstance(node, c_ast.FuncDef) and node.decl.name in CIPHER_FUNCS:
+        if isinstance(node, c_ast.FuncDef) and node.decl.name in func_set:
             out[node.decl.name] = node
     return out
 
@@ -267,35 +294,43 @@ def main() -> int:
     print("flow or memory access. A passing check is a NECESSARY condition")
     print("for a constant-time implementation; it is not sufficient.")
     print()
-
-    try:
-        preprocessed = preprocess_quartet_core()
-    except (RuntimeError, subprocess.CalledProcessError) as e:
-        print(f"SKIP: cannot preprocess — {e}")
-        print("Install gcc/cpp to run this check.")
-        return 0  # Treat as SKIP, not FAIL.
-
-    parser = pycparser.CParser()
-    try:
-        ast = parser.parse(preprocessed, filename="<preprocessed quartet_core.h>")
-    except pycparser.plyparser.ParseError as e:
-        print(f"FAIL: parse error: {e}")
-        return 1
-
-    funcs = find_function_nodes(ast)
-    if not funcs:
-        print("FAIL: no cipher core functions found in preprocessed quartet_core.h")
-        return 1
+    print("Two passes are run: table-based path and bitsliced path.")
+    print()
 
     all_findings: list[tuple[str, str]] = []
-    for name in sorted(funcs):
-        findings = check_function(funcs[name])
-        all_findings.extend(findings)
-        loc = "yes" if findings else "none"
-        print(f"  {name:25s} findings: {loc}")
+
+    for bitsliced, label, func_set in [
+        (False, "table-based", CIPHER_FUNCS),
+        (True, "bitsliced", CIPHER_FUNCS_BITSLICED),
+    ]:
+        print(f"--- {label} path ---")
+        try:
+            preprocessed = preprocess_quartet_core(bitsliced=bitsliced)
+        except (RuntimeError, subprocess.CalledProcessError) as e:
+            print(f"SKIP: cannot preprocess ({label}) — {e}")
+            print("Install gcc/cpp to run this check.")
+            return 0  # Treat as SKIP, not FAIL.
+
+        parser = pycparser.CParser()
+        try:
+            ast = parser.parse(preprocessed, filename="<preprocessed quartet_core.h>")
+        except pycparser.plyparser.ParseError as e:
+            print(f"FAIL: parse error ({label}): {e}")
+            return 1
+
+        funcs = find_function_nodes(ast, func_set)
+        if not funcs:
+            print(f"FAIL: no cipher core functions found ({label})")
+            return 1
+
+        for name in sorted(funcs):
+            findings = check_function(funcs[name])
+            all_findings.extend(findings)
+            loc = "yes" if findings else "none"
+            print(f"  {name:30s} findings: {loc}")
+        print()
 
     if all_findings:
-        print()
         print(f"FAIL: {len(all_findings)} data-dependent construct(s) "
               f"in cipher core:")
         for f, _ in all_findings:
@@ -306,9 +341,8 @@ def main() -> int:
         print("=" * 70)
         return 1
 
-    print()
     print("=" * 70)
-    print("CONSTANT-TIME AST CHECK: PASS")
+    print("CONSTANT-TIME AST CHECK: PASS (table-based + bitsliced)")
     print("=" * 70)
     print()
     print("  Caveat: this is a code-inspection claim, not a measurement.")

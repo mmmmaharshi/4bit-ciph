@@ -96,31 +96,30 @@ def verify_mode5_security(q_max, n):
 # 6. Z3 symbolic verification
 # ===========================================================================
 
-def z3_verify_birthday_bound():
-    """Use z3 to verify birthday bound symbolically"""
-    print("Z3 symbolic verification of birthday bound")
+def z3_verify_birthday_bound(n_bits):
+    """Use z3 to symbolically verify: q >= 0 AND q <= 2^(n/2) -> q^2 <= 2^n.
+
+    Encodes the negation (q >= 0 AND q <= 2^(n/2) AND q^2 > 2^n) and checks
+    for unsatisfiability, which proves the theorem.
+    """
+    half_n = n_bits // 2
+    bound = 2 ** half_n
+    target = 2 ** n_bits
 
     q = Int('q')
-    n = Int('n')
-
-    # birthday_bound(q, n) = q²/2^n
-    # We want to verify: q <= 2^(n/2) -> q²/2^n <= 1
-
-    # For z3, we verify for specific values and use induction
     s = Solver()
+    s.add(q >= 0)
+    s.add(q <= bound)
+    s.add(q * q > target)
 
-    # Base case: q = 0
-    assert birthday_bound(0, 16) <= 1.0
-
-    # Inductive step: assume true for q, prove for q+1
-    # This is handled by the loop below
-
-    # Verify for q = 2^8 (boundary)
-    q_val = 2**8
-    bb = birthday_bound(q_val, 16)
-    assert bb <= 1.0, f"Birthday bound violated at boundary: q={q_val}, bb={bb}"
-
-    print(f"  ✓ Z3 verification: birthday_bound(2^8, 16) = {bb} <= 1")
+    result = s.check()
+    if result == unsat:
+        print(f"  ✓ Z3: q >= 0 AND q <= 2^{half_n} -> q^2 <= 2^{n_bits} (UNSAT — proven)")
+        return True
+    else:
+        model = s.model()
+        print(f"  ✗ Z3: counterexample found: q = {model[q]}")
+        return False
 
 # ===========================================================================
 # 7. Main verification
@@ -145,7 +144,8 @@ def main():
     verify_mode5_security(2**8, 16)  # q <= 2^8, n=16
 
     # Z3 symbolic verification
-    z3_verify_birthday_bound()
+    z3_verify_birthday_bound(16)
+    z3_verify_birthday_bound(32)
 
     print()
     print("=" * 70)

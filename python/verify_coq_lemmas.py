@@ -1,10 +1,13 @@
 """
-Computational verification of Coq lemmas that use Admitted.
+Computational verification of Coq lemmas.
 
-This script verifies the mathematical correctness of lemmas that cannot
-be proven in Coq due to large number limitations in the tactics.
+This script provides an independent computational cross-check of the lemmas
+proven in coq/prp_bound.v. The lemmas themselves are fully machine-checked in
+Coq (no Admitted); this script verifies them computationally as a secondary
+check, consistent with the project's policy of cross-validating formal proofs
+with independent Python scripts.
 
-Verified lemmas:
+Verified lemmas (all proven in coq/prp_bound.v):
 - pow2_bound_8: q <= 2^8 -> q^2 <= 2^16
 - pow2_bound_16: q <= 2^16 -> q^2 <= 2^32
 - q_ratio_le_1: q^2 <= 2^16 -> q^2/2^16 <= 1
@@ -134,8 +137,8 @@ def main():
     print("  - mode5_advantage_bound: q <= 2^8 -> adv(q) <= 1 + hc")
     print("  - mode5_32_advantage_bound: q <= 2^16 -> adv(q) <= 1 + hc")
     print()
-    print("These lemmas are stated in coq/prp_bound.v with Admitted proofs.")
-    print("This script provides computational verification of their correctness.")
+    print("These lemmas are proven in coq/prp_bound.v (no Admitted).")
+    print("This script provides an independent computational cross-check of their correctness.")
 
 if __name__ == "__main__":
     main()

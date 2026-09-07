@@ -158,15 +158,23 @@ static inline uint16_t quartet_decrypt(uint16_t ciphertext, uint64_t key)
 
 #ifdef QUARTET_BITSLICED
 
-/* Bitsliced round key: uses table-based S-box in key schedule (still constant-time) */
+/* Bitsliced round key: uses bitsliced S-box (no table lookups, constant-time) */
 static inline uint8_t quartet_round_key_bitsliced(uint64_t key, uint8_t round)
 {
     uint8_t rk = (key >> (4 * (round % 16))) & 0x0F;
-    for (uint8_t j = 0; j < 16; j++) {
-        uint8_t kj = (key >> (4 * j)) & 0x0F;
-        /* Use a small constant-time S-box lookup for key schedule */
-        static const uint8_t sbox[16] = QUARTET_SBOX_INIT;
-        rk ^= sbox[(kj ^ (round + j + 1)) & 0x0F];
+    /* Process 16 key nibbles in 4 batches of 4 via bitsliced S-box,
+       avoiding any data-dependent table lookup on secret key material. */
+    for (uint8_t batch = 0; batch < 4; batch++) {
+        uint16_t inputs = 0;
+        for (uint8_t i = 0; i < 4; i++) {
+            uint8_t j = batch * 4 + i;
+            uint8_t kj = (key >> (4 * j)) & 0x0F;
+            inputs |= (uint16_t)((kj ^ (round + j + 1)) & 0x0F) << (4 * i);
+        }
+        uint16_t outputs = quartet_sbox_bitsliced(inputs);
+        for (uint8_t i = 0; i < 4; i++) {
+            rk ^= (uint8_t)(outputs >> (4 * i)) & 0x0F;
+        }
     }
     return rk;
 }

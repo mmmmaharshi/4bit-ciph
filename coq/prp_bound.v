@@ -66,13 +66,22 @@ Proof. intros F0 F1 F2 F3 st; exact (feistel_rev_inv [F0;F1;F2;F3] st). Qed.
 
 (* ------------------------------------------------------------------ *)
 (* 2. luby_rackoff_bound — r-round Feistel with n-bit halves         *)
-(* SPEC §10.4 / prp_analysis.md §4: Adv <= (r-2)*g^2 / 2 / 2^n       *)
+(* Spec §10.4 / prp_analysis.md §4: Adv <= (r-2)*g^2 / 2 / 2^n       *)
 (* ------------------------------------------------------------------ *)
 
+(* General LR bound formula. NOTE: this general form includes the (r-2)
+   factor, which for r=4 gives 2*g^2 / 2^{n+1} = g^2 / 2^n. The specific
+   bound LR_bound_4_32 below is used for mode1_advantage — it is the
+   tighter q^2 / 2^{n+1} form (see LR_bound_4_32_correct). The general
+   LR_bound and the two tautological lemmas below (luby_rackoff_bound,
+   luby_rackoff_bound_nonneg) are retained for documentation but are NOT
+   used in any security theorem. *)
 Definition LR_bound (r n g : nat) : Q :=
   ((Z.of_nat (r - 2)%nat * (Z.of_nat g * Z.of_nat g)) # (2 * Pos.pow (Pos.of_nat 2) (Pos.of_nat n))%positive).
 
-(* Instantiation: r=4, n=32 → g^2 / 2^33 (document §4.1); LR_bound generic is 2× this, see lemma *)
+(* Specific LR bound for Mode 1 (r=4, n=32 halves → 64-bit block).
+   Used in mode1_advantage. This is the tighter form q^2 / 2^{33}
+   (the (r-2)=2 factor cancels with the 2 in the denominator). *)
 Definition LR_bound_4_32 (g : nat) : Q := (Z.of_nat g * Z.of_nat g # 8589934592). (* 2^33 *)
 
 Lemma LR_bound_4_32_correct : forall g,

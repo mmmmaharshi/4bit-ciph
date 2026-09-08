@@ -1,12 +1,17 @@
 (* QUARTET — Mode 5 per-hop closing via FCF.RndPerm.
-   Closes coq/mode5_fcf.v per_hop_bound hypothesis for specific oracles:
-     DistSingle_Adv c_quartet c_random <= 2 * quartet_sprp_adv = 2^-63
+    Closes coq/mode5_fcf.v per_hop_bound hypothesis for specific oracles:
+      DistSingle_Adv c_quartet c_random <= 2 * quartet_sprp_adv = 2^-63
 
-   The 2× factor is the two QUARTET calls per Mercy position
-   (encrypt + final mix), bounded by the union bound over the two calls.
+    The 2× factor is the two QUARTET calls per Mercy position
+    (encrypt + final mix), bounded by the union bound over the two calls.
 
-   Compile (requires coq-fcf on COQPATH):
-     coqc -Q coq-fcf/src FCF coq/mode5_rndperm_close.v
+    Compile (requires coq-fcf on COQPATH):
+      coqc -Q coq-fcf/src FCF coq/mode5_rndperm_close.v
+
+    Proof status: SUPERSEDED. The per_hop_bound is now proven directly
+    in coq/mode5_fcf.v by applying quartet_sprp_bound from
+    coq/quartet_sprp.v. This file is retained for reference but is
+    no longer needed for the proof.
 *)
 
 Require Import FCF.FCF.

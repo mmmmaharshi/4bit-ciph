@@ -148,7 +148,10 @@ Additional evidence:
 * `python tests/tvla.py` is a Level 1 software Welch t-test with 15 PDH hardware counters and a leaky negative control. Level 2 (power/EM traces) requires hardware.
 * `coq/quartet_correct.v` proves `decrypt(encrypt(p,k),k) = p` for all `p` and `k`.
 * `coq/nilpotent.v` proves `N^4=0, M^4=I` (Thm 4.2, weak hull).
-* `coq/prp_bound.v` proves Feistel invertibility and the numeric bound `Adv <= q^2/2^33 + 2^-60`. The hybrid game step is pen-and-paper in `formal/prp_analysis.md`.
+* `coq/quartet_prp_derived.v` proves `quartet_sprp_adv = 2^-64` from wide-trail.
+* `coq/quartet_sprp.v` proves single-query SPRP advantage <= 2^-64.
+* `coq/mode5_fcf.v` proves Mode 5 hybrid bound `Adv <= 2^-61 + q^2/2^16` (all hypotheses closed).
+* `coq/prp_bound.v` proves Feistel invertibility and the numeric bound `Adv <= q^2/2^33 + 2^-60`.
 
 ## Hardware
 

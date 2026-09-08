@@ -947,7 +947,7 @@ where:
 - **Birthday bound (q²/2^n ≤ 1):** **PROVEN** via QArith (no `Admitted`) + `z3` cross-check `python/prove_mode5.py`
 - **Hybrid game hop:** **PROVEN** via `FCF.Hybrid.Single_impl_ListHybrid`; `coq/mode5_fcf.v:mode5_hybrid_bound` `Qed` (no remaining hypotheses)
 - **`per_hop_bound` theorem:** **PROVEN** in `coq/mode5_fcf.v` by applying `quartet_sprp_bound` from `coq/quartet_sprp.v`. The proof uses the wide-trail bound (max DP ≤ 2^-64, proven in `coq/present_wide_trail.v`) to bound the single-query SPRP advantage, then applies the union bound over the two QUARTET calls per Mercy position to get the factor of 2.
-- **Construction in Coq:** `coq/prp_bound.v` abstract `Nat.lxor` placeholder; abstract oracles in `coq/mode5_fcf.v` (`c_quartet`/`c_random`) with proven `per_hop_bound`
+- **Construction in Coq:** `coq/prp_bound.v` abstract `Nat.lxor` placeholder; abstract oracles in `coq/mode5_fcf.v` (`c_quartet`/`c_random`) with proven `per_hop_bound`; concrete instantiation in `coq/mode5_concrete.v` with concrete QUARTET implementation from `coq/quartet_concrete.v`
 
 **Hybrid call/hop count (Mode 1 vs Mode 5):** Both constructions use a 4-hop hybrid over 4 positions, but the per-hop QUARTET call count differs:
 - **Mode 1** (Feistel): 4 QUARTET calls per hop → `quartet_per_query_cost = 4×2^-64 = 2^-62`, `total_hybrid_cost = 4×2^-62 = 2^-60`
@@ -1498,7 +1498,9 @@ satisfies all three constraints simultaneously.
 - `coq/present_wide_trail.v` — Machine-checked PRESENT wide-trail bound: DU=4, 31-round min 62 active S-boxes, DP ≤ 2⁻¹²⁴ (Coq 8.18)
 - `coq/quartet_prp_derived.v` — Machine-checked PRP bound derived from wide-trail: quartet_sprp_adv = 2^-64
 - `coq/quartet_sprp.v` — Machine-checked SPRP bound: single-query advantage <= 2^-64 (closes per_hop_bound)
+- `coq/quartet_concrete.v` — Concrete QUARTET implementation in Coq's Comp monad (S-box, FullMix, key schedule, encrypt/decrypt)
 - `coq/mode5_fcf.v` — Machine-checked Mode 5 FPE hybrid proof (Coq 8.18, FCF)
+- `coq/mode5_concrete.v` — Concrete Mode 5 instantiation with concrete QUARTET oracles
 - `coq/mode5_rndperm_close.v` — Reference: per-hop closing via RndPerm (superseded by quartet_sprp.v)
 - `coq/prp_bound.v` — Machine-checked PRP bounds for QUARTET Mode 1 Feistel (Coq 8.18)
 - `tests/test_bounds.py` — Machine-checked wide-trail bound (differential + linear)

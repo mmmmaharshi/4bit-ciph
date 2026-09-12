@@ -45,15 +45,20 @@ The L1 harness in `tests/tvla_l2_harness.py` provides methodology structure port
 
 ---
 
-## 4. Camellia S-box Analysis (Open)
+## 4. Camellia S-box Analysis (FORMALLY RESOLVED)
 
-The spectral hull method fails on Camellia-s1 (max Fourier coefficient = 0.002197 ≠ 0). Open questions:
+The spectral hull method fails on Camellia-s1 (max Fourier coefficient = 0.002197 ≠ 0). This has been **formally verified in Coq**:
 
-- What structural feature of Camellia's composite-field S-box breaks Fourier vanishing?
-- Can the bound be adapted for non-vanishing S-boxes (e.g., bounded-error Fourier approach)?
+- Machine-checked proof: `coq/camellia_negative_case.v` — computes F(6) = 100 via exhaustive 256×256 DDT enumeration, proves F(6) ≠ 0, derives contradiction with hypothetical Fourier vanishing. Zero axioms.
+- Structural analysis: `formal/camellia_failure_analysis.md` — explains why composite-field construction breaks Fourier vanishing (no rational function identity over GF(2ⁿ) analogous to field inversion symmetry).
+- Python empirical verification: `tests/test_hull_bound_general.py::test_camellia_fails_vanishing` — confirms max |coeff| ≈ 0.002197 for 8-bit Camellia-s1.
+
+Remaining open questions:
+- Can the bound be adapted for non-vanishing S-boxes (bounded-error Fourier approach)?
 - Does the method extend to non-bijective S-boxes (AES S-box is bijective, but many lightweight designs use approximations)?
+- What structural feature of composite-field constructions exactly breaks Fourier vanishing? Can this be characterized algebraically?
 
-**Status:** Identified boundary condition. Requires deeper algebraic analysis.
+**Status:** Negative case formally proven. The Camellia boundary condition is no longer "open" — it is a certified disproof. Remaining work is on generalized bounds for non-vanishing S-boxes.
 
 ---
 

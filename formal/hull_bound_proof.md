@@ -50,9 +50,16 @@ $$P_{hull}(d_{in}, d_{out}) \leq \sqrt{CP(d_{in})} = 2^{-n/2}$$
 
 ## General Applicability
 
-The Coq proofs (`coq/quartet_hull_bound.v`, `python/hull_bound_general.py`) are fully computational — zero axioms, no `Admitted`. All Fourier coefficients computed via `vm_compute` + `reflexivity`.
+**Coq proofs (zero axioms, fully computational):**
 
-**Applied to 13 ciphers (12/13 satisfy Fourier vanishing):**
+| File | Result | Witness |
+|------|--------|---------|
+| `coq/quartet_hull_bound.v` | PRESENT S-box HAS Fourier vanishing | $\hat{S}(\chi) = 0$ for all $\chi \in \{1..15\}$ |
+| `coq/camellia_negative_case.v` | Camellia-s1 does NOT have Fourier vanishing | $\hat{S}(6) = 100/65536 \neq 0$ |
+
+Both files prove their claims by exhaustive $vm\_compute$ + $reflexivity$. Together they demonstrate that Fourier vanishing is a real property of certain S-boxes, not vacuous or universal.
+
+Applied to 13 ciphers (12/13 satisfy Fourier vanishing):
 
 | Cipher | S-box width | Block size | Condition met? | Bound |
 |--------|-------------|------------|----------------|-------|

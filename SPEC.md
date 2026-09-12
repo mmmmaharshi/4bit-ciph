@@ -408,6 +408,7 @@ The following artifacts provide end-to-end reproducibility:
 | SPRP advantage | `coq/quartet_sprp.v` | Single-query adv ≤ 2⁻⁶⁴ from wide-trail |
 | PRP bound (Mode 1) | `coq/prp_bound.v` | Feistel: Adv ≤ q²/2³³ + 2⁻⁶⁰ |
 | **Spectral hull bound** | **`coq/quartet_hull_bound.v`** | **P_hull ≤ 2⁻⁸, zero axioms** |
+| Spectral hull negative | `coq/camellia_negative_case.v` | F(6) = 100 ≠ 0; disproves Fourier vanishing for Camellia-s1 |
 | Nilpotent decomposition | `coq/nilpotent.v` | M = I+N, N⁴ = 0, M⁴ = I |
 | Mode 5 hybrid | `coq/mode5_fcf.v` | Game-hop bound, birthday bound, concrete instantiation |
 

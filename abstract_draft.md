@@ -26,6 +26,8 @@ The wide-trail strategy (Daemen & Rijmen, 2002) remains the primary tool for bou
 
 This gap — between single-trail bounds and actual differential probabilities — has long been acknowledged in the literature. Published cipher specifications routinely report single-trail bounds while measuring empirical differential probabilities orders of magnitude higher. For example, the ISO-standardized PRESENT cipher claims a 31-round single-trail bound of approximately 2⁻¹²⁴, yet exhaustive enumeration reveals empirical values closer to 2⁻³² (at the birthday limit for its 64-bit block). No published work has provided a *general analytical bound* on this hull effect that is both *machine-checked* and *tight*.
 
+MILP-based single-trail enumeration (Bai et al., CHES 2014; Sun et al., FSE 2014) addresses one direction of the problem by computing minimum active S-box counts over R rounds, yielding tight bounds for individual characteristics. But even optimally-tightened single-trail bounds ignore the aggregate probability mass accumulated when thousands of moderate-probability trails coalesce. The spectral hull method completes this picture: where MILP bounds a single path, spectral bounds their sum. Together they establish both directions of the security guarantee — the best-case trail and the worst-case accumulation.
+
 ### Contributions
 
 This paper makes three contributions:

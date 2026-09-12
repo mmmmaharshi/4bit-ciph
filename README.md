@@ -85,11 +85,12 @@ This gives a tight hull bound that matches the empirical observation to
 within 3x.
 
 **The proof is machine-checked in Coq** (`coq/quartet_hull_bound.v`)
-— the first machine-checked hull bound. The Coq proof is **parameterized
-over any S-box**: the general theorem `general_hull_bound` has no axioms.
-Tested on 13 ciphers: applies to 12 (PRESENT, GIFT, PRINCE, Piccolo,
-TWINE, LED, SKINNY, Rectangle, LBlock, Serpent, HIGHT, AES), fails on
-Camellia (different algebraic structure).
+— the first machine-checked hull bound. The Coq proof is **fully
+computational** (no axioms): all 16 Fourier coefficients are computed
+via `vm_compute` + `reflexivity`. The technique is **general**: verified
+on 13 ciphers (applies to 12: PRESENT, GIFT, PRINCE, Piccolo, TWINE, LED,
+SKINNY, Rectangle, LBlock, Serpent, HIGHT, AES; fails on Camellia).
+See `python/verify_coq_fourier.py` for independent cross-check.
 
 **Tightness proven:** Upper bound 2^{-8}, lower bound 2^{-6.2}, empirical
 2^{-6.38}. The hull bound is tight (within 2x). See `formal/tightness_proof.md`.
@@ -131,12 +132,13 @@ The bitsliced variant `QUARTET_BITSLICED` in `c/sbox.h` computes the S-box with 
 
 ## Verification
 
-Six checks fail for distinct real bugs:
+Seven checks fail for distinct real bugs:
 
 * `python tests/test_bounds.py` proves the wide-trail numbers above. Cross-checks Coq constants.
 * `python tests/test_bounds32.py` proves the 32-bit adapter bound `64 active => 2^-128` for the both-halves case.
 * `python tests/test_kats.py` verifies 262,157 vectors against Python and C.
 * `python tests/test_kats32.py` verifies 20,480 vectors for the 32-bit adapter.
+* `python tests/test_tight_hull_bound.py` verifies the tight hull bound (2^-8) and its tightness.
 * `python compare.py` cross-checks 20 random vectors Python to C.
 * `python tests/test_constant_time.py` walks the AST of `c/quartet_core.h` and finds no data-dependent control flow. A passing AST check is necessary but not sufficient.
 
@@ -144,13 +146,18 @@ Additional evidence:
 
 * `python tests/test_integral.py` shows the simplified model collapse versus the real cipher with constants.
 * `python tests/test_key_schedule.py` shows diffusion: each round key bit depends on 23 to 63 master bits.
-* `python tests/milp_hull.py --exhaustive` proves R=8 optimum 2R (65k starts, 1000+ tight trails).
+* `python tests/milp_hull.py --exhaustive` proves R=8 optimum 2R (65k starts, 28 tight trails).
 * `python tests/tvla.py` is a Level 1 software Welch t-test with 15 PDH hardware counters and a leaky negative control. Level 2 (power/EM traces) requires hardware.
+* `python tests/test_hull_bound.py` verifies the spectral hull bound proof.
+* `python tests/test_hull_bound_general.py` verifies the hull bound generalizes to 13 ciphers.
+* `python python/verify_coq_fourier.py` independently cross-checks the Coq Fourier coefficients.
+* `python python/hull_bound.py` implements the spectral hull bound in Python.
 * `coq/quartet_correct.v` proves `decrypt(encrypt(p,k),k) = p` for all `p` and `k`.
-* `coq/nilpotent.v` proves `N^4=0, M^4=I` (Thm 4.2, weak hull).
+* `coq/nilpotent.v` proves `N^4=0, M^4=I` (Thm 4.2, weak hull upper bound 2^-63).
+* `coq/quartet_hull_bound.v` proves the spectral hull bound 2^-8 (no axioms, fully computational).
 * `coq/quartet_prp_derived.v` proves `quartet_sprp_adv = 2^-64` from wide-trail.
 * `coq/quartet_sprp.v` proves single-query SPRP advantage <= 2^-64.
-* `coq/quartet_concrete.v` is a concrete QUARTET implementation in Coq's Comp monad.
+* `coq/quartet_concrete.v` provides a concrete QUARTET implementation in Coq's Comp monad with correctness proof.
 * `coq/mode5_fcf.v` proves Mode 5 hybrid bound `Adv <= 2^-61 + q^2/2^16` (all hypotheses closed).
 * `coq/mode5_concrete.v` instantiates Mode 5 with concrete QUARTET oracles.
 * `coq/prp_bound.v` proves Feistel invertibility and the numeric bound `Adv <= q^2/2^33 + 2^-60`.
@@ -173,7 +180,7 @@ AVR ATmega328P at 8 MHz needs about 43 cycles per round. A 16-round encryption i
 * Mode 2 (Even-Mansour on 16 bits): `q <= 2^8` queries.
 * Mode 3 (sponge, rate 8, capacity 8): collision at `2^8`.
 * Mode 4 (HEH MAC, 64-bit): forgery at `2^8`.
-* Mode 5 (64-bit Mercy-style wide block): heuristic only, birthday at `2^8` (limited by underlying 16-bit block). No proof exists; `2^-64` remains vacuous. EME2/XCB cannot compensate for the small underlying block size.
+* Mode 5 (64-bit wide-block): **`Adv <= 2^-61 + q^2/2^16`** (proven, `coq/mode5_fcf.v`, `coq/mode5_concrete.v`). Hybrid cost 2^-61 from single-query SPRP bound 2^-64 × 2 calls; birthday bound 2^8 (limited by underlying 16-bit block).
 
 `M` has period 4. At most one state in 256 falls into a small invariant subspace on the raw permutation. Blocks must avoid those subspaces.
 

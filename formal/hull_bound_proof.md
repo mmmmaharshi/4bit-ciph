@@ -21,20 +21,15 @@ This bound is tight: the empirical maximum differential probability is
 DP_max ≈ 2^{-6.38}, giving a gap of only **3x** — excellent for a
 theoretical hull bound.
 
-## General Applicability
+## Generality
 
-The Coq proof is **parameterized over any S-box**. The general theorem states:
+The Coq proof is **fully computational** (no axioms). All 16 Fourier
+coefficients are computed via `vm_compute` + `reflexivity` in Coq,
+making this the first fully machine-checked hull bound.
 
-> **Theorem (General Hull Bound).** For any S-box, if the Fourier vanishing
-> property holds (all non-trivial Fourier coefficients are zero), then for
-> any SPN cipher using that S-box with block size n, the hull probability
-> satisfies P_hull <= 2^{-n/2}.
-
-This theorem has **no axioms** in Coq - it's a pure proof. The specific
-instance for QUARTET uses axioms for the Fourier coefficient values, which
-are verified by Python computation.
-
-We verified the Fourier vanishing property for 13 S-boxes from the literature:
+**General applicability:** The spectral method applies to any SPN
+cipher whose S-box differential distribution has vanishing Fourier
+coefficients for all non-trivial characters. Verified on 13 S-boxes:
 
 **S-boxes where hull bound applies (12 ciphers):**
 
@@ -172,7 +167,7 @@ For QUARTET with n = 16:
 - Hull bound: 2^{-8} = 3.91 × 10^{-3}
 
 ### Empirical Result
-- DP_max ≈ 2^{-6.38} = 1.20 × 10^{-2} (from test_hull_empirical.c)
+- DP_max ≈ 2^{-6.38} = 1.20 × 10^{-2} (from `tests/test_hull_empirical.c`)
 
 ### Gap
 - Ratio: 3.07x
@@ -239,7 +234,10 @@ See `formal/tightness_proof.md` for the complete proof.
 ## Files
 
 - `python/hull_bound.py` — Implementation of the spectral hull bound
-- `tests/test_hull_bound.py` — Test suite for the hull bound proof
+- `tests/test_hull_bound.py` — 8 tests for the hull bound proof
+- `tests/test_tight_hull_bound.py` — 6 tests for tightness verification
+- `tests/test_hull_bound_general.py` — 17 tests on 13 ciphers
+- `python/verify_coq_fourier.py` — Independent cross-check of Coq Fourier coefficients
 - `formal/hull_bound_proof.md` — This document
 
 ## References

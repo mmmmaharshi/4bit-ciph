@@ -183,15 +183,16 @@ def main() -> int:
 
     # --- Show periodic orbits ---
     orbits = find_periodic_orbits()
-            if len(orb) == 1:
-                avg_w = _popcount(orb[0])
-                print(f"  [{orb[0]:#06x}] fixed-point, weight={avg_w}")
-            else:
-                weights = [_popcount(m) for m in orb]
-                avg = sum(weights) / len(weights)
-                orb_str = ','.join(f'{m:#02x}' for m in orb)
-                print(f"  {orb_str:>25s} → weights={weights}, "
-                      f"avg={avg:.2f}, period={len(orb)}")
+    for orb in orbits:
+        if len(orb) == 1:
+            avg_w = _popcount(orb[0])
+            print(f"  [{orb[0]:#06x}] fixed-point, weight={avg_w}")
+        else:
+            weights = [_popcount(m) for m in orb]
+            avg = sum(weights) / len(weights)
+            orb_str = ','.join(f'{m:#02x}' for m in orb)
+            print(f"  {orb_str:>25s} → weights={weights}, "
+                  f"avg={avg:.2f}, period={len(orb)}")
 
     print()
 

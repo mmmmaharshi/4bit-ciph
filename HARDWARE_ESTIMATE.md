@@ -1,4 +1,6 @@
-# QUARTET Hardware Estimate — Reproducible Synthesis & Post-P&R
+# Quartet Case-Study Hardware Estimate — Reproducible Synthesis & Post-P&R
+
+**Case Study:** The QUARTET cipher serves as the primary case study demonstrating the spectral hull bound method (SPEC §3). These hardware figures are reproducible for any SPN with identical S-box + linear layer structure.
 
 **Date:** 2026-09-03 | **Tools:** yowasp-yosys 0.68, OpenROAD (docker), Sky130 PDK
 **RTL:** `synth/quartet_logic.v` (ANF S-box), `synth/quartet_sky130.v` (Sky130 mapped)

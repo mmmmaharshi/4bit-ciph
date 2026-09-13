@@ -4,7 +4,7 @@
 
 ## Abstract
 
-Application of the spectral hull bound method (Formal §hull_bound_proof.md) to PRESENT, the ISO/IEC 29192-2 standardized lightweight block cipher. The result: first production-ready cipher with a proven tight hull bound.
+Application of the spectral hull bound method (Formal §hull_bound_proof.md) to PRESENT, the ISO/IEC 29192-2 standardized lightweight block cipher. The result: an S-box whose Fourier vanishing premise is machine-checked (Coq), with a hull bound derived via standard real-analysis (Parseval + Cauchy-Schwarz).
 
 $$P_{hull}(d_{in}, d_{out}) \leq 2^{-32}$$
 
@@ -65,7 +65,7 @@ This is a consequence of the general theorem in `formal/hull_bound_proof.md`.
 
 1. **Method validation on a standard.** Applying the spectral hull method to an ISO-standardized cipher demonstrates that the technique is not just applicable in theory but to real-world designs.
 
-2. **First standardized cipher with proven hull bound.** AES relies on wide-trail bounds only. PRESENT is now the first ISO-standardized cipher with a machine-checked hull bound.
+2. **Standardized cipher with Fourier-verified premise.** AES relies on wide-trail bounds only. Present is the first ISO-standardized cipher whose spectral hull bound premise (Fourier vanishing) is machine-checked in Coq; the derivation uses standard real-analysis (Parseval + Cauchy-Schwarz).
 
 3. **Contribution scope.** This file documents one instantiation of the general method. The primary contribution is the spectral hull method itself (`formal/hull_bound_proof.md`); PRESENT is the strongest evidence of applicability.
 

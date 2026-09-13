@@ -18,9 +18,9 @@ Operating guide for AI coding agents working in this repository.
   - `compare.py` — thin 20-vector sanity check (random Python vs C).
   - `cross_check.py` — full-space 65536×4 roundtrip + C self-test.
   - `tests/test_bounds.py` — machine-checked wide-trail bound (diff + linear, S-box DU/LAT, branch number, min active S-boxes per 2/4/8/16 rounds).
-  - `python/hull_bound.py` — spectral hull bound proof (Fourier analysis of differential distribution, P_hull <= 2^-8).
+  - `python/hull_bound.py` — spectral hull method implementation (Fourier analysis; formula returns 2^{-n/2} assuming Fourier vanishing)
   - `tests/test_hull_bound.py` — tests for the spectral hull bound (8 tests, all passing).
-  - `coq/quartet_hull_bound.v` — machine-checked spectral hull bound (Coq, no axioms).
+  - `coq/quartet_hull_bound.v` — spectral hull framework (machine-checked Fourier vanishing premise; derivation uses pen-and-paper math)
   - `python/hull_bound_general.py` — general S-box analyzer (checks Fourier vanishing for any S-box).
   - `tests/test_hull_bound_general.py` — tests for general analyzer (10 tests, verified on PRESENT, GIFT, PRINCE, Piccolo, TWINE, AES).
   - `tests/test_constant_time.py` — AST-based static analysis of the cipher core for data-dependent control flow.
@@ -86,9 +86,9 @@ This project uses the terms from `/codebase-design`: **module, interface, implem
 | `coq/present_wide_trail.v` | Machine-checked PRESENT wide-trail bound (ISO/IEC 29192-2): DU=4, 31-round min 62 active S-boxes, single-trail DP ≤ 2⁻¹²⁴ | Coq stdlib |
 | `coq/prp_bound.v` | Machine-checked numeric PRP bounds for QUARTET Mode 1 (Feistel) | Coq stdlib, QArith |
 | `tests/test_bounds.py` | Machine-checked wide-trail bound (S-box DU/LAT, branch number, min active S-boxes per 2/4/8/16 rounds, diff + linear) | `cipher` |
-| `python/hull_bound.py` | Spectral hull bound proof (Fourier analysis, P_hull <= 2^-8) | `cipher` |
+| `python/hull_bound.py` | Spectral hull method (Fourier analysis; computes 2⁻ⁿᐟ² assuming vanishing) | `cipher` |
 | `tests/test_hull_bound.py` | Tests for spectral hull bound (8 tests) | `hull_bound` |
-| `coq/quartet_hull_bound.v` | Machine-checked spectral hull bound (no axioms) | Coq stdlib |
+| `coq/quartet_hull_bound.v` | Spectral hull framework (Fourier vanishing checked in Coq; derivation uses pen-and-paper math) | Coq stdlib |
 | `python/hull_bound_general.py` | General S-box analyzer (any S-box) | stdlib only |
 | `tests/test_hull_bound_general.py` | Tests for general analyzer (10 tests, 6 ciphers) | `hull_bound_general` |
 | `tests/test_constant_time.py` | AST-based static analysis of the cipher core for data-dependent control flow | `cipher`, `pycparser` |
@@ -108,6 +108,6 @@ This project uses the terms from `/codebase-design`: **module, interface, implem
 | `quartet_round_asm.s` | One-round AVR assembly reference, cycle count | `<avr/io.h>` |
 | `compare.py` | Cross-validation harness (Python vs C, 20 random vectors) | `cipher`, subprocess |
 | `cross_check.py` | C self-test + full 65536×4 roundtrip | `cipher`, subprocess |
-| `formal/hull_bound_proof.md` | Spectral hull bound proof document | — |
+| `formal/hull_bound_proof.md` | Spectral hull bound derivation document (Fourier premise machine-checked; real-analysis steps documented as pen-paper) | — |
 | `SPEC.md` | Spec, test vectors, file map | — |
 | `CODING_STANDARDS.md` | Project policy, **must follow** | — |

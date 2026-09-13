@@ -6,7 +6,7 @@
 
 ## 1. Tight Hull Bound (COMPLETED)
 
-The spectral hull bound has been **proven** using Fourier analysis of differential distributions. Applied to 13 ciphers with 12/13 showing provable bounds. See `formal/hull_bound_proof.md` and `formal/tightness_proof.md`.
+The spectral hull method provides a computable upper bound on hull accumulation when S-boxes exhibit Fourier vanishing. Applied to 13 ciphers with 12/13 showing provable bounds via machine-checked Fourier verification. See `formal/hull_bound_proof.md` and `formal/tightness_proof.md`.
 
 | Bound | Value | Method | Status |
 |-------|-------|--------|--------|

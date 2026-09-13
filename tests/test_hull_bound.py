@@ -1,7 +1,7 @@
 """
 QUARTET — Spectral Hull Bound Test.
 
-Tests the spectral hull bound proof for QUARTET. The key theorem is:
+Tests the spectral hull method verification for QUARTET. The key checks:
 
     P_hull(din, dout) <= 2^{-n/2} = 2^{-8}
 
@@ -104,18 +104,24 @@ def test_r_round_fourier_vanishing():
 
     Since hat_S_layer(chi') = 0 for any chi' != 0, and M is invertible,
     we have hat_P_R(chi) = 0 for all chi != 0.
+
+    Exhaustive over all 65,535 non-zero characters (block_size=16).
     """
     ddt = build_ddt()
     fourier_coeffs = compute_sbox_fourier_coefficients(ddt)
 
     R = 16
+    block_size = 16
 
     # chi = 0 gives 1
     assert abs(compute_r_round_fourier(0, R, fourier_coeffs) - 1.0) < 1e-10
 
-    # Any chi != 0 gives 0
-    for chi in [0x0001, 0x0010, 0x0100, 0x1000, 0x1234, 0xFFFF]:
-        assert abs(compute_r_round_fourier(chi, R, fourier_coeffs)) < 1e-10
+    # ALL 65,535 non-zero characters give 0 (exhaustive)
+    total = 0
+    for chi in range(1, 2**block_size):
+        coeff = compute_r_round_fourier(chi, R, fourier_coeffs)
+        assert abs(coeff) < 1e-10, f"hat_P_R({chi:#x}) != 0 at round 0"
+        total += 1
 
 
 def test_collision_probability():
@@ -162,15 +168,23 @@ def test_empirical_consistency():
     """
     Test that the hull bound is consistent with empirical observations.
 
-    Empirical DP_max ~ 2^{-6.38} (from test_hull_empirical.c)
-    Theoretical hull bound: 2^{-8}
-    Gap: ~3x (excellent for a theoretical bound)
+    NOTE: This test compares two theoretical formulas against each other.
+    It does NOT measure DP_max from a real cipher implementation. The actual
+    empirical measurement would require a full-space differential enumeration
+    script (not present in this repo). The value 2^{-6.38} is cited from prior
+    analysis; see cryptanalysis.py for related measurements.
+
+    Theoretical hull bound: 2^{-8}. The "empirical" gap of ~3× is based on
+    previously-reported values, not measured here.
     """
     hull_bound = compute_hull_bound(16)
-    empirical_dp_max = 2 ** -6.38
 
-    # The bound should be within a reasonable factor of the empirical value
-    ratio = empirical_dp_max / hull_bound
+    # Cited from prior analysis (cryptanalysis.py / benchmark runs)
+    # Not measured by this test. Actual DP_max should be computed via full-space enum.
+    cited_empirical_dp_max = 2 ** -6.38
+
+    # The bound should be within a reasonable factor of the cited empirical value
+    ratio = cited_empirical_dp_max / hull_bound
     assert ratio < 10.0, f"Gap too large: {ratio:.2f}x"
     assert ratio > 0.1, f"Bound too loose: {ratio:.2f}x"
 

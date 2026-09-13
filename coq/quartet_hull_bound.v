@@ -1,23 +1,17 @@
-(* QUARTET — Machine-checked spectral hull bound.
-    Compile: coqc quartet_hull_bound.v
+(* QUARTET — Machine-checked verification of Fourier vanishing for the
+     PRESENT S-box. This file checks that the 15 non-trivial Fourier
+     coefficients of the S-box DDT are zero — fully computational, no axioms.
 
-    FULLY COMPUTATIONAL — no axioms, no Admitted.
-    Every Fourier coefficient is computed in Coq via `vm_compute`/`reflexivity`
-    from the PRESENT S-box and its DDT, exactly as present_wide_trail.v computes
-    the DDT/LAT. The hull bound theorem is then proven from the Fourier
-    vanishing property.
+     IMPORTANT: The cryptographic implication (Fourier vanishing → P_hull ≤ 2⁻⁸)
+     relies on standard real-analysis arguments (Parseval's identity +
+     Cauchy-Schwarz) that are NOT formalized in this file. Those steps
+     require the Reals or Coquelicot library and are documented as pen-paper
+     in formal/hull_bound_proof.md. This file proves only the arithmetic premise.
 
-    Proof strategy (matches formal/hull_bound_proof.md):
-    1. Define the PRESENT S-box computationally.
-    2. Build the DDT by exhaustive enumeration (count_ddt).
-    3. Define the normalized 1D Fourier coefficient
-           hat_S(chi) = (1/16^2) * sum_{dx,dy} DDT[dx][dy] * (-1)^{<chi,dy>}
-       as a Coq Fixpoint (fourier_coeff_chi).
-    4. Prove hat_S(0) = 16  (normalization, before dividing by 16^2)
-       and hat_S(chi) = 0 for chi = 1..15 (vanishing) — all by `reflexivity`
-       after `vm_compute`, i.e. Coq evaluates the sum itself.
-    5. From Fourier vanishing, prove CP = 2^{-n} and P_hull <= 2^{-n/2}.
-*)
+     What IS verified here: 15 × vm_compute on concrete 4-bit DDT tables → reflexivity.
+     What IS NOT verified here: the mathematical derivation from those zeros to
+     the hull probability bound. See formal/hull_bound_proof.md §Steps 1–3.
+     *)
 
 Require Import Arith PeanoNat BinPos Lia ZArith.
 Require Import List.
@@ -200,26 +194,28 @@ Lemma fourier_normalization_QUARTET : fourier_coeff_num 0 = 256%Z.
 Proof. apply fourier_coeff_0. Qed.
 
 (* ===========================================================================
-    Hull bound theorem.
+     Hull bound theorem — arithmetic placeholder.
 
-    For an SPN cipher with block size n whose S-box satisfies Fourier
-    vanishing (hat_S(chi)=0 for all chi != 0) and normalization
-    (hat_S(0)=1), the hull probability satisfies P_hull <= 2^{-n/2}.
+     The cryptographic implication "Fourier vanishing → P_hull ≤ 2⁻⁸" follows
+     from Parseval's identity + Cauchy-Schwarz (standard real analysis). These
+     derivation steps are NOT formalized in Coq — they require the Reals or
+     Coquelicot library, which is not part of stdlib.
 
-    The chain of reasoning (see formal/hull_bound_proof.md):
-      1. Parseval: CP(din) = (1/2^n) * sum_{chi} |hat(chi)|^2
-      2. Fourier vanishing => only chi=0 contributes => CP = 2^{-n}
-      3. Cauchy-Schwarz: P_hull(din,dout) <= sqrt(CP(din)) = 2^{-n/2}
-    For QUARTET with n = 16:  P_hull <= 2^{-8} = 1/256.
+     This theorem states that IF the PRESENT S-box satisfies Fourier vanishing,
+     THEN the hull probability for QUARTET (16-bit block) is bounded by 2⁻⁸ = 1/256.
+     The proof here only checks 2^8 = 256 in Z; the logical link from Fourier
+     vanishing to the bound uses pen-and-paper arguments documented in
+     formal/hull_bound_proof.md §Steps 1–3.
 
-    Steps 1-3 are pen-paper (they need real-analysis formalization —
-    Reals/Coquelicot libraries, not stdlib). Step 2's premise — Fourier
-    vanishing — is exactly fourier_vanishing_QUARTET_holds, proven above
-    by computation. This theorem states the implication cleanly.
-   =========================================================================== *)
+     For a full machine-checked proof of the hull bound itself, one would need
+     to formalize: (1) CP(d_in) = (1/2^n)·Σ|P̂_R(χ)|² (Parseval),
+     (2) Fourier vanishing ⇒ Σ_{χ≠0}|P̂_R(χ)|² = 0, (3) P ≤ √CP (Cauchy-Schwarz).
+    =========================================================================== *)
 
 (* QUARTET hull bound: IF the PRESENT S-box has Fourier vanishing, THEN the
    hull probability for QUARTET (16-bit block) is bounded by 2^{-8} = 1/256.
+   NOTE: The proof here checks 2^8 = 256 in Z; the cryptographic derivation
+   from Fourier vanishing to this bound uses standard real-analysis (pen-paper).
    Expressed as: the bound denominator 2^8 equals 256. *)
 Theorem quartet_hull_bound :
   fourier_vanishing_QUARTET ->
@@ -230,11 +226,14 @@ Proof.
 Qed.
 
 (* ===========================================================================
-    Security summary — all bounds, NO axioms.
+     Security summary — Fourier vanishing verified computationally (no axioms).
 
-    This replaces the old quartet_hull_bound_security_summary which was built
-    on 16 axioms. Every component below is computationally proven.
-   =========================================================================== *)
+     NOTE: Only the 15 Fourier coefficients + normalization are machine-checked here.
+     The hull bound P_hull ≤ 2⁻⁸ follows from these via standard real-analysis
+     (Parseval + Cauchy-Schwarz), which is documented as pen-paper in
+     formal/hull_bound_proof.md §Steps 1–3. That derivation is not formalized in
+     this file; it would require Reals/Coquelicot libraries.
+    =========================================================================== *)
 
 Theorem quartet_hull_bound_security_summary :
   (* Fourier vanishing: hat_S(chi) = 0 for chi != 0 *)

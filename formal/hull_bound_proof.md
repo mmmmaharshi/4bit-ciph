@@ -50,7 +50,7 @@ $$P_{hull}(d_{in}, d_{out}) \leq \sqrt{CP(d_{in})} = 2^{-n/2}$$
 
 ## General Applicability
 
-**Coq proofs (zero axioms, fully computational):**
+**Coq proofs (machine-checked Fourier vanishing premise only):**
 
 | File | Result | Witness |
 |------|--------|---------|
@@ -58,6 +58,8 @@ $$P_{hull}(d_{in}, d_{out}) \leq \sqrt{CP(d_{in})} = 2^{-n/2}$$
 | `coq/camellia_negative_case.v` | Camellia-s1 does NOT have Fourier vanishing | $\hat{S}(6) = 100/65536 \neq 0$ |
 
 Both files prove their claims by exhaustive $vm\_compute$ + $reflexivity$. Together they demonstrate that Fourier vanishing is a real property of certain S-boxes, not vacuous or universal.
+
+**Important:** These files verify only the arithmetic premise — that specific DDT Fourier coefficients are zero. The cryptographic implication (Fourier vanishing → P_hull ≤ 2⁻ⁿᐟ²) uses Parseval's identity + Cauchy-Schwarz in ℝ, which is NOT formalized in Coq. Those derivation steps require Reals/Coquelicot libraries and are documented as pen-and-paper above.
 
 Applied to 13 ciphers (12/13 satisfy Fourier vanishing):
 

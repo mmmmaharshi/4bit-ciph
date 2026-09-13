@@ -113,7 +113,7 @@ Lemma N_squared_nonzero : gf2_mul4 N N <> [0;0;0;0].
 Proof. vm_compute. discriminate. Qed.
 
 (* Trail-count corollary: at most 2 choices per period-4 step where N^2 branches.
-   This gives proven hull upper bound 2 * 2^{-4R} at R=16 -> 2^{-63}.
+   This gives nilpotent algebra hull upper bound 2 * 2^{-4R} at R=16 -> 2^{-63}.
    Proof idea: M^r expansion in N has only terms N^0..N^3, so per 4-round
    window at most binomial(4,2)=6 patterns collapse to 2 distinct active counts
    after pruning by branch-number 4 constraint. Formal counting is pen-and-paper

@@ -2,7 +2,7 @@
 
 > **⚠️ Research pre-release — unverified by peer review.** All results are author-directed cryptanalysis pending independent verification. Related-key security is not addressed; side-channel resistance is untested at Level 2 (hardware). Claims about tightness relative to published bounds are based on internal analysis only and have not been confirmed by third parties. For academic citation purposes, treat all numbers as provisional.
 
-Machine-checked proofs (Coq, zero axioms) showing that when an S-box's DDT Fourier coefficients vanish, the R-round differential hull probability is bounded by $2^{-n/2}$ regardless of rounds or linear layer structure. Verified on 13 ciphers. Tightness within 2× for 12 of 13.
+Machine-checked proofs (Coq, zero axioms) verifying that when an S-box's DDT Fourier coefficients vanish, the bound P_hull ≤ 2^{-n/2} *follows* from standard real-analysis arguments (Parseval + Cauchy-Schwarz). For QUARTET (PRESENT S-box, 16-bit block): the 15 Fourier coefficients are machine-checked; the derivation to a hull bound of 2⁻⁸ uses pen-and-paper math not formalized in Coq. Verified on 13 ciphers (Fourier vanishing holds for 12/13).
 
 This repository also contains **QUARTET**, a 16-bit block cipher using the PRESENT S-box, used as the primary case study to demonstrate the spectral hull method. See `SPEC.md` for the full specification.
 
@@ -16,11 +16,11 @@ $$P_{hull}(d_{in}, d_{out}) \leq 2^{-n/2}$$
 
 where n is the block size. Independent of rounds and linear layer structure.
 
-**Result:** Proven bound $2^{-8}$ vs empirical DP_max $2^{-6.38}$ → gap = **3×** (tightest published bound/empirical ratio in symmetric-key cryptography).
+**Result:** Spectral bound $2^{-8}$ vs cited empirical DP_max $2^{-6.38}$ → gap = **3×**. This uses pen-and-paper real-analysis (Parseval + Cauchy-Schwarz) not formalized in Coq. The underlying Fourier vanishing premise IS machine-checked.
 
-### 2. First Machine-Checked Hull Bound
+### 2. First Machine-Checked Fourier Vanishing Proof
 
-All 15 non-trivial Fourier coefficients computed via Coq `vm_compute` + `reflexivity`. Zero axioms, zero `Admitted`. Every step machine-verifiable.
+All 15 non-trivial Fourier coefficients computed via Coq `vm_compute` + `reflexivity`. Zero axioms, zero `Admitted`. Every coefficient checked computationally. The cryptographic implication (Fourier vanishing → hull bound) follows from standard real-analysis (Parseval + Cauchy-Schwarz), documented as pen-paper in `formal/hull_bound_proof.md`.
 
 ### 3. Generalization Across S-boxes
 
@@ -75,17 +75,15 @@ Hardware cost: ~166 GE serial enc-only (NanGate 45nm, Yosys verified).
 | 8 | 16 | DP ≤ 2⁻³² |
 | 16 | 32 | DP ≤ 2⁻⁶⁴ |
 
-### Spectral Hull Bound (Proven, Tight)
+### Spectral Hull Bound (Unformalized derivation, Fourier premise machine-checked)
 
 | Metric | Value |
 |--------|-------|
-| Proven upper bound | 2⁻⁸ = 3.91 × 10⁻³ |
-| Empirical DP_max | 2⁻⁶·³⁸ = 1.20 × 10⁻² |
+| Spectral bound (derived from Fourier vanishing via pen-and-paper Parseval+Cauchy-Schwarz) | 2⁻⁸ = 3.91 × 10⁻³ |
+| Cited empirical DP_max | 2⁻⁶·³⁸ = 1.20 × 10⁻² |
 | Gap | **3.07×** |
 
-Previously, published single-trail bounds were orders-of-magnitude away from empirical values (gap > 10¹⁷×). The spectral method closes this gap.
-
-See `SPEC.md` section 5 for the proof and `formal/hull_bound_proof.md` for the full mathematical derivation.
+See `formal/hull_bound_proof.md` for the derivation and `coq/quartet_hull_bound.v` for machine-checked Fourier coefficients.
 
 ## Verification
 
@@ -102,7 +100,7 @@ Additional evidence:
 * `tests/test_invariant.py` — invariant subspace search
 * `tests/test_hull_bound.py` — spectral hull bound verification (8 tests)
 * `tests/test_hull_bound_general.py` — generalizer across 6 ciphers (10 tests)
-* `coq/quartet_hull_bound.v` — spectral hull proof (no axioms)
+* `coq/quartet_hull_bound.v` — spectral hull framework (machine-checked Fourier vanishing; derivation uses pen-and-paper math)
 * `coq/mode5_fcf.v` — Mode 5 FPE hybrid proof
 
 ## Implementation

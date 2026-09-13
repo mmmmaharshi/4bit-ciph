@@ -1,11 +1,11 @@
 """
-QUARTET — Spectral Hull Bound Proof.
+QUARTET — Spectral Hull Bound method.
 
-Proves a concrete hull bound for QUARTET using Fourier analysis of the
-differential distribution. The key insight is that the 1D Fourier transform
-of the PRESENT S-box differential distribution vanishes for all non-trivial
-characters, which implies that the R-round Fourier coefficients vanish for
-all non-trivial characters. This gives a tight hull bound.
+Verifies that the PRESENT S-box DDT Fourier coefficients vanish for all non-trivial
+characters (machine-checked in coq/quartet_hull_bound.v). The hull bound P_hull ≤ 2⁻ⁿᐟ²
+follows from standard real-analysis (Parseval + Cauchy-Schwarz), documented as pen-paper
+in formal/hull_bound_proof.md. This module implements both the Fourier check and the
+theoretical formula.
 
 Theorem (Spectral Hull Bound):
     For QUARTET with R rounds and block size n = 16, the hull probability
@@ -117,15 +117,28 @@ def compute_r_round_fourier(chi: int, R: int, sbox_fourier: dict[int, float]) ->
     return prod
 
 
-def compute_hull_bound(block_size: int = 16) -> float:
+def theoretical_hull_bound_formula(block_size: int = 16) -> float:
     """
-    Compute the spectral hull bound.
+    THEORETICAL FORMULA ONLY — not derived from the cipher.
 
-    P_hull(din, dout) <= sqrt(CP(din)) = sqrt(2^{-n}) = 2^{-n/2}
+    This returns 2^{-n/2} as a closed-form expression. It encodes the
+    spectral hull bound *result* (if Fourier vanishing holds, then P_hull ≤ 2⁻ⁿᐟ²).
+    It does NOT compute or verify the bound from the cipher; verification of
+    the premise (Fourier vanishing) is done separately via
+    build_ddt() + compute_sbox_fourier_coefficients().
 
-    where n is the block size.
+    To derive this bound from the cipher, one would need to:
+    1. Compute the DDT (done — build_ddt())
+    2. Prove Fourier coefficients vanish (done — compute_sbox_fourier_coefficients())
+    3. Apply Parseval's identity + Cauchy-Schwarz in ℝ (NOT implemented here)
+       This step requires real-analysis libraries; documented as pen-paper
+       in formal/hull_bound_proof.md §Steps 1–3.
     """
     return 2.0 ** (-block_size / 2)
+
+
+# Alias for backwards compatibility
+compute_hull_bound = theoretical_hull_bound_formula
 
 
 def compute_collision_probability(block_size: int = 16) -> float:
@@ -141,7 +154,12 @@ def compute_collision_probability(block_size: int = 16) -> float:
 
 def verify_hull_bound(R: int = 16, block_size: int = 16) -> dict:
     """
-    Verify the hull bound proof for QUARTET.
+    Verify the hull bound verification steps for QUARTET.
+
+    Note: This verifies the Fourier vanishing premise computationally.
+    The hull bound derivation from Fourier vanishing uses standard real-analysis
+    (Parseval + Cauchy-Schwarz), documented as pen-and-paper in
+    formal/hull_bound_proof.md §Steps 1–3. It is NOT derived from cipher computation here.
 
     Returns a dictionary with the verification results.
     """
@@ -204,6 +222,6 @@ if __name__ == "__main__":
     print()
 
     if all([results['fourier_vanishing'], results['sbox_layer_vanishing'], results['r_round_vanishing']]):
-        print("PROOF VERIFIED: The spectral hull bound is proven.")
+        print("VERIFICATION COMPLETE: Fourier vanishing premise verified. Spectral bound derived via standard real-analysis (pen-and-paper).")
     else:
         print("PROOF FAILED: Some verification steps did not pass.")

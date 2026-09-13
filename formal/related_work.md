@@ -52,7 +52,7 @@ None of these works exploit Fourier analysis to bound aggregate differential pro
 
 ## 2.6 Machine-Checked Proofs in Cryptography
 
-Machine-checked verification has seen growing adoption in cryptographic analysis. The EasyCrypt framework [15] enables game-hopping proofs for cryptographic schemes. Foucrier et al. [16] verified PRP/PRF switching lemmas in Coq. More recently, Coq proofs have been produced for lightweight cipher correctness [17], wide-trail bounds [18], and PRP-security of Feistel constructions [19]. However, none of these prior machine-checked results addresses hull accumulation — the subject of the spectral hull theorem proven herein. The Coq formalization in `quartet_hull_bound.v` (zero axioms, verified with `Print Assumptions`) constitutes the first machine-checked result concerning differential hull bounds.
+Machine-checked verification has seen growing adoption in cryptographic analysis. The EasyCrypt framework [15] enables game-hopping proofs for cryptographic schemes. Foucrier et al. [16] verified PRP/PRF switching lemmas in Coq. More recently, Coq proofs have been produced for lightweight cipher correctness [17], wide-trail bounds [18], and PRP-security of Feistel constructions [19]. However, none of these prior machine-checked results addresses hull accumulation — the subject of the spectral hull method. While the Fourier vanishing premise of QUARTET is verified computationally in `quartet_hull_bound.v` (zero axioms), the derivation from those zeros to P_hull ≤ 2⁻ⁿᐟ² relies on standard real-analysis (Parseval + Cauchy-Schwarz), documented as pen-paper in `hull_bound_proof.md`. This is the first effort to apply Fourier-analytic techniques to bound hull accumulation.
 
 ---
 

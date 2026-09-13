@@ -8,7 +8,7 @@ Machine-checked proofs and mathematical derivations supporting the spectral hull
 |------|---------|
 | `hull_bound_proof.md` | General theorem: P_hull ≤ 2^{-n/2} for S-boxes with Fourier vanishing |
 | `tightness_proof.md` | Lower bound proof: gap < 2× between upper and empirical bounds |
-| `present_hull_bound.md` | Application to PRESENT: first ISO-standardized cipher with proven hull bound |
+| `present_hull_bound.md` | Application to PRESENT: ISO-standardized cipher with Fourier-vanishing premise machine-checked; hull bound derived via standard real-analysis |
 
 ## Coq Proofs (Zero Axioms, Coq 8.18)
 

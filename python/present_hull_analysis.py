@@ -203,7 +203,7 @@ if __name__ == "__main__":
     print("CONCLUSION")
     print("=" * 70)
     print()
-    print("PRESENT is the first ISO-standardized cipher with a proven hull bound.")
+    print("PRESENT has machine-checked Fourier vanishing. Hull bound derived via standard real-analysis.")
     print()
     print("Our contribution:")
     print("  1. Proved PRESENT has hull bound 2^{-32}")

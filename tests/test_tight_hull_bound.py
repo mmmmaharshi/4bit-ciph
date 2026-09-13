@@ -2,13 +2,13 @@
 QUARTET — Tight Hull Bound Verification Tests.
 
 Verifies that the spectral hull bound (2^-8) is tight:
-1. The bound is proven in Coq (coq/quartet_hull_bound.v)
+1. Spectral hull bound premise (Fourier vanishing) verified in Coq (coq/quartet_hull_bound.v). Derivation uses standard real-analysis.
 2. The empirical DP_max (2^-6.38) is within 3x of the bound
 3. The bound cannot be improved without additional assumptions
 
 The tightness is demonstrated by:
 - Existence of differentials achieving close to the bound
-- The 3x gap between proven bound and empirical is the best possible
+- The 3x gap between spectral bound and empirical is the best possible
   for a spectral bound based on Fourier vanishing
 
 Mano H. | 2026
@@ -96,7 +96,7 @@ def verify_tightness(proven_bound: float, empirical_dp_max: float, max_gap: floa
 # ===========================================================================
 
 def test_fourier_vanishing() -> None:
-    """Verify Fourier vanishing property (core of the hull bound proof)."""
+    """Verify Fourier vanishing property (core of the spectral hull method)."""
     ddt = build_ddt()
     fourier_coeffs = compute_sbox_fourier_coefficients(ddt)
     
@@ -118,7 +118,7 @@ def test_spectral_bound_value() -> None:
 
 
 def test_tightness() -> None:
-    """Verify the bound is tight (empirical within 3x of proven)."""
+    """Verify the bound is tight (empirical within 3x of spectral)."""
     proven_bound = compute_spectral_hull_bound(16)
     empirical_dp_max = 2.0 ** -6.38  # From test_hull_empirical.c
     
@@ -233,7 +233,7 @@ def main() -> int:
     if failed == 0:
         print()
         print("TIGHT HULL BOUND VERIFIED")
-        print(f"  Proven bound: 2^-8 = {2**-8:.6e}")
+        print(f"  Spectral bound: 2^-8 = {2**-8:.6e}")
         print(f"  Empirical:    2^-6.38 = {2**-6.38:.6e}")
         print(f"  Gap:          3.07x (tight)")
 

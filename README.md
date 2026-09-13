@@ -1,5 +1,7 @@
 # A General Spectral Hull Method for Tight Differential Bounds in SPN Ciphers
 
+> **⚠️ Research pre-release — unverified by peer review.** All results are author-directed cryptanalysis pending independent verification. Related-key security is not addressed; side-channel resistance is untested at Level 2 (hardware). Claims about tightness relative to published bounds are based on internal analysis only and have not been confirmed by third parties. For academic citation purposes, treat all numbers as provisional.
+
 Machine-checked proofs (Coq, zero axioms) showing that when an S-box's DDT Fourier coefficients vanish, the R-round differential hull probability is bounded by $2^{-n/2}$ regardless of rounds or linear layer structure. Verified on 13 ciphers. Tightness within 2× for 12 of 13.
 
 This repository also contains **QUARTET**, a 16-bit block cipher using the PRESENT S-box, used as the primary case study to demonstrate the spectral hull method. See `SPEC.md` for the full specification.
